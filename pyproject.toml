@@ -1,0 +1,49 @@
+[project]
+name = "kma_chat_agent"
+version = "0.1.0"
+description = ""
+authors = [
+    {name = "Giang Hoang Van",email = "hoang.van.giang@sun-asterisk.com"}
+]
+readme = "README.md"
+requires-python = ">=3.12, <4.0"
+dependencies = [
+    "python-dotenv (>=1.1.0,<2.0.0)",
+    "black (>=25.1.0,<26.0.0)",
+    "isort (>=6.0.1,<7.0.0)",
+    "langchain (>=0.3.22,<0.4.0)",
+    "langgraph (>=0.3.21,<0.4.0)",
+    "grandalf (>=0.8,<0.9)",
+    "langchain-ollama (>=0.3.0,<0.4.0)",
+    "langchain-openai (>=0.3.11,<0.4.0)",
+    "langchain-experimental (>=0.3.4,<0.4.0)",
+    "streamlit (>=1.44.1,<2.0.0)",
+    "faiss-cpu (>=1.10.0,<2.0.0)",
+    "rank-bm25 (>=0.2.2,<0.3.0)",
+    "numpy (>=2.2.4,<3.0.0)",
+    "torch (>=2.6.0,<3.0.0)",
+    "transformers (>=4.51.2,<5.0.0)",
+    "fastapi (>=0.115.12,<0.116.0)",
+    "uvicorn[standard] (>=0.34.0,<0.35.0)",
+    "motor (>=3.7.0,<4.0.0)",
+    "pydantic (>=2.11.3,<3.0.0)",
+    "pydantic-settings (>=2.8.1,<3.0.0)",
+    "python-multipart (>=0.0.20,<0.0.21)",
+    "passlib[bcrypt] (>=1.7.4,<2.0.0)",
+    "python-jose[cryptography] (>=3.3.0,<4.0.0)"
+]
+
+[tool.poetry]
+packages = [
+    {include = "agent", from = "src"},
+    {include = "app", from = "src"}
+]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+backend = "app.main:run_backend"
+backend-dev = "app.main:run_backend_dev"
+backend-prod = "app.main:run_backend_prod"

@@ -1,0 +1,218 @@
+# Học viện kỹ thuật mật mã
+## Quy chế , tổ chức đào tạo, đánh giá và xếp loại học lực
+### Quy chế, quy định đào tạo trình độ đại học
+1.1. Đối với các khoá tuyển sinh từ năm 2020 trở về trước áp dụng các văn bản sau:
+
+1. Quyết định số 17/VBHN-Bộ GD&ĐT ngày 17 tháng 05 năm 2014 của Bộ trưởng Bộ GD&ĐT ban hành quy chế đào tạo đại học và cao đẳng hệ chính quy theo hệ thống tín chỉ;
+
+2. Quyết định số 119/QĐ-HVM ngày 24/01/2019 của Giám đốc Học viện Kỹ thuật mật mã ban hành Quy định về việc thực hiện chi tiết một số điểm trong “Quy chế đào tạo đại học hệ chính quy theo hệ thống tín chỉ”
+
+ 1.2. Các khoá đào tạo tín chỉ từ năm 2021 áp dụng các văn bản sau:
+
+ 1. Thông tư số 08/2021/TT-BGDĐT ngày 18 tháng 3 năm 2021 thông tư ban hành Quy chế đào tạo trình độ đại học;
+
+
+2. QĐ số 1194/QĐ-HVM ngày 25 tháng 11 nă 2021 của Giám đốc Học viện Kỹ thuật mật mã ban hành Quy chế đào tạo trình độ đại học của Học viện Kỹ thuật mật mã;
+
+
+### Đăng ký khối lượng học tập
+2.1. Đối với các khoá tuyển sinh từ năm 2020 trở về trước
+
+1. Trước khi bước vào học kỳ mới, Học viện công bố kế hoạch học tập (kèm theo thời khóa biểu), sinh viên đăng ký các học phần dưới sự tư vấn của Cố vấn học tập và theo lịch đăng ký của Học viện.
+
+2. Khối lượng học tập tối thiểu mỗi sinh viên phải đăng ký trong mỗi học kỳ chính (trừ học kỳ cuối cùng) như sau:
+
+a) Đối với sinh viên xếp hạng học lực mức trung bình trở lên thì phải đăng ký học tập theo kế hoạch đào tạo của Học viện đã bố trí.
+
+b) Đối với sinh viên xếp hạng học lực yếu thì phải đăng ký tối thiểu 10 tín chỉ cho mỗi học kỳ (trừ học kỳ cuối và các học kỳ phụ).
+
+2.2. Đối với các khoá tuyển sinh từ năm 2021 trở đi
+
+1. Trước khi bắt đầu mỗi học kỳ (tối thiểu là 02 tuần trước thời điểm bắt đầu học kỳ), Học viện tổ chức và hướng dẫn cho sinh viên đăng ký học tập trên hệ thống.
+
+2. Sinh viên được quyền rút bớt học phần đã đăng ký trong vòng 01 tuần kể từ ngày bắt đầu học kỳ mới.
+
+3. Thông tin lưu trữ việc đăng ký của sinh viên ở mỗi học kỳ được lưu trữ trên hệ thống đăng ký của Học viện với thời hạn kéo dài thêm 03 năm kể từ thời điểm sinh viên tốt nghiệp.
+
+4. Khối lượng học tập mỗi sinh viên phải đăng ký trong mỗi học kỳ chính như sau:
+
+a) Đối với sinh viên xếp hạng học lực mức trung bình trở lên (theo điểm trung bình tích lũy tính đến học kỳ gần nhất) thì phải đăng ký học tập tối thiểu khối lượng theo kế hoạch đào tạo của Học viện đã bố trí và tối đa không quá 3/2 khối lượng trung bình một học kỳ theo kế hoạch học tập chuẩn được quy định trong chương trình đào tạo.
+
+b) Đối với sinh viên xếp hạng học lực dưới mức trung bình thì phải đăng ký học tập tối thiểu là 2/3 khối lượng trung bình một học kỳ theo kế hoạch học tập chuẩn được quy định trong chương trình đào tạo.
+
+
+c) Những sinh viên không đảm bảo đăng ký khối lượng học tập phải có lý do chính đáng và được Học viện cho phép.
+
+### Đăng ký học lại và học cải thiện điểm
+1. Đăng ký học lại
+
+a) Sinh viên có học phần bị điểm F phải đăng ký học lại học phần đó ở một trong các học kỳ tiếp theo hoặc học kỳ phụ cho đến khi đạt điểm A, A+, B, B+, C, C+, D, D+.
+
+b) Sinh viên có học phần bắt buộc bị điểm F sẽ phải đăng ký học lại học phần đó hoặc học một học phần tương đương theo quy định trong chương trình đào tạo, hoặc học một học thay thế nếu học phần đó không còn giảng dạy.
+
+c) Sinh viên có học phần tự chọn bị điểm F phải đăng ký học lại học phần đó hoặc có thể chọn học một học phần thay thế theo quy định trong chương trình đào tạo.
+
+2. Đăng ký học để cải thiện điểm
+
+a) Đối với các sinh viên tuyển sinh từ 2020 trở về trước, nếu có các học phần bị D, D+ (thang điểm 10 là từ 4.0 đến 5.4) được đăng ký học lại các học phần đó để cải thiện điểm trung bình chung tích lũy. Điểm tích lũy cuối cùng của các học phần này sẽ là điểm cao nhất trong các lần học.
+
+b) Đối với các sinh viên tuyển sinh từ 2021 trở đi, nếu có các học phần bị D, D+ (thang điểm 10 là từ 4.0 đến 5.4) được xem xét đăng ký học lại các học phần đó để cải thiện điểm trung bình chung tích lũy. Điểm tích lũy cuối cùng của các học phần này sẽ là điểm cao nhất trong các lần học.
+
+Tuỳ theo tình hình thực tế khi triển khai đào tạo các lớp học phần trong học kỳ, sinh viên đăng ký học lại để cải điểm học phần được xem xét chấp thuận.
+
+3. Sau đợt đăng ký chính thức của học kỳ, Học viện sẽ mở thêm một đợt đăng ký, để sinh viên đăng ký bổ sung các học phần học lại và học cải thiện điểm.
+
+4. Hình thức học lại và học cải thiện điểm
+
+a) Học ghép với các lớp khóa sau, nếu Học viện có kế hoạch dạy học phần đó trong học kỳ.
+
+
+b) Mở lớp học lại riêng, nếu Học viện không có kế hoạch dạy học phần đó trong học kỳ và số lượng đăng ký học tối thiểu 15 sinh viên trên một học phần. Trường hợp đặc biệt Giám đốc Học viện sẽ quyết định.
+
+### Đánh giá học phần
+(Thực hiện theo Quyết định số 1441/QĐ-HVM ngày 30/12/2020 của Giám đốc Học viện Kỹ thuật mật mã)
+
+1. Điểm tổng hợp đánh giá học phần được tính căn cứ vào điềm đánh giá quá trình và điểm thi kết thúc học phần.
+
+2. Tùy theo đặc điểm của mỗi học phần, điềm đánh giá quá trình được tính căn cứ vào một hoặc một số điểm đánh giá bộ phận, bao gồm: điểm chuyên cần, điểm kiểm tra thường xuyên trong quá trình học tập, điểm đánh giá nhận thức và thái độ tham gia thảo luận, điểm thực hành/thí nghiệm, điểm tiểu luận, điểm bài tập lớn, điểm thi giữa kỳ.
+
+3. Việc lựa chọn các điềm đánh giá, trọng số của mỗi điêm đánh giá và cách tính điểm tổng hợp đánh giá học phần được quy định trong đề cương chi tiết học phần. Điểm thi kết thúc học phần phải có trọng số tối thiểu là 50%.
+
+4. Điểm thi kết thúc học phần bị coi là không đạt nếu nhỏ hơn 4,0 tính theo thang điểm 10.
+
+
+5. Việc đánh giá quá trình do giảng viên phụ trách học phần thực hiện theo kế hoạch của bộ môn. Việc tồ chức thi kết thúc học phần được thực hiện theo kế hoạch của Học viện.
+
+### Điều kiện và số lần dự thi kết thúc học phần
+ (Thực hiện theo Quyết định số 1441/QĐ-HVM ngày 30/12/2020 của giám đốc Học viện Kỹ thuật mật mã)
+
+1. Học viên sinh viên (viết tắt là HVSV) được phép dự thi kết thúc học phần khi đáp úng đồng thời các điều kiện sau:
+
+a) Đóng học phí, lệ phí đầy đủ.
+
+b) Đạt điểm quá trình từ 4.0 trở lên tính theo thang điểm 10.
+
+c) Tham gia tối thiều 75% số giờ học trên lớp theo thời khóa biêu, bao gồm giờ học truyền thống và giờ học trực tuyến.
+
+d) Chưa được công nhận thi đạt.
+
+e) Chưa sử dụng hết số lần dự thi.
+
+2. Số lần dự thi kết thúc học phần
+
+a) Với mỗi học phần, mỗi HVSV được phép dự thi kết thúc học phần tối đa 2 lần trên một lần đăng ký.
+
+b) HVSV đủ điều kiện tham dự kỳ thi nhưng vắng thi không có lý do chính đáng (theo quy định khoản 3), hoặc không được tham dự kỳ thi vì không đáp ứng điều kiện quy định tại điểm a khoản 1 hoặc vì lý do đến muộn thì coi như đã tham dự kỳ thi đó và phải nhận điểm 0.
+
+c) HVSV tham dự kỳ thi chính có kết quả không đạt phải đóng lệ phí thi lại và tham dự kỳ thi phụ ngay sau đó.
+
+d) HVSV đủ điều kiện tham dự kỳ thi chính nhưng vắng thi có lý do chính đáng (theo quy định tại khoản 3) thì phải tham gia kỳ thi phụ ngay sau đó, không cần đóng lệ phí thi lại, kết quả thi được tính là thi lần 1.
+
+e) HVSV theo quy định tại các điểm c và d có kết quá không đạt ở kỳ thi phụ thì coi như đã tham dự kỳ thi phụ và phải nhận điểm 0.
+
+f) HVSV đủ điều kiện tham dự kỳ thi phụ nhưng vắng thi có lý do chính đáng (theo quy định tại khoản 3) hoặc HVSV có kết quả không đạt ở kỳ thi phụ nhưng chưa sử dụng hết 2 lần thi thì có thể tham gia thi trả nợ trong các kỳ thi được tô chức cho các khóa học sau. Trong trường hợp này, HVSV cần làm đơn dự thi, nộp về cho đơn vị quản lý HVSV chậm nhất 10 ngày trước ngày thi.
+
+g) HVSV bị xử lý kỷ luật ở mức "Đình chỉ thi" thì coi như đã sử dụng hết tất cả các lượt thi.
+
+3. Điều kiện và thủ tục vắng thi
+
+a) HVSV được coi là vắng thi có lý do chính đáng nếu thuộc một trong các trường hợp:
+
+- Đang điều trị nội trú ở cơ sở y tế trong thời gian thi;
+
+- Bị tai nạn vào ngày thi, trước thời gian thi;
+
+- Có người thân qua đời trong vòng 3 ngày trước ngày thi.
+
+b) HVSV vắng thi phải làm đơn vắng thi nêu rõ lý do, kèm theo hồ sơ có liên quan và nộp về đơn vị quản lý HVSV chậm nhất 03 ngày làm việc trước ngày thi; trường hợp đặc biệt, chậm nhất 03 ngày làm việc sau ngày thi. Đơn vắng thi phải được thủ trưởng đơn vị quản lý HVSV xét duyệt và trả lời bằng văn bản.
+
+
+c) Hết thời hạn tiếp nhận đơn vắng thi, đơn vị quản lý HVSV tổng hợp và thông báo cho đơn vị quản lý khảo thí danh sách HVSV vắng thi có lý do chính đáng
+
+### Điểm học phần
+1. Các thang điểm và quy đổi điểm học phần
+
+a) Các thang điểm và quy đổi điểm học phần
+Xếp loại:
+<Đạt>
+<Điểm A+>
+<Thang 10>9,0 đến 10,0</Thang 10>
+<Thang 4>4,0</Thang 4>
+</Điểm A+>
+<Điểm A>
+<Thang 10>8,5 đến 8,9</Thang 10>
+<Thang 4>3,8</Thang 4>
+</Điểm A>
+<Điểm B+>
+<Thang 10>7,8 đến 8,4</Thang 10>
+<Thang 4>3,5</Thang 4>
+</Điểm B+>
+<Điểm B>
+<Thang 10>7 đến 7,7</Thang 10>
+<Thang 4>3,0</Thang 4>
+</Điểm B>
+<Điểm C+>
+<Thang 10>6,3 đến 6,9</Thang 10>
+<Thang 4>2,4</Thang 4>
+</Điểm C+>
+<Điểm C>
+<Thang 10>5,5 đến 6,2</Thang 10>
+<Thang 4>2,0</Thang 4>
+</Điểm C>
+<Điểm D+>
+<Thang 10>4,8 đến 5,4</Thang 10>
+<Thang 4>1,5</Thang 4>
+</Điểm D+>
+<Điểm D>
+<Thang 10>4,0 đến 4,7</Thang 10>
+<Thang 4>1</Thang 4>
+</Điểm D>
+<Điểm F>
+<Thang 10>0,0 đến 3,9</Thang 10>
+<Thang 4>0,0</Thang 4>
+</Điểm F>
+</Đạt>
+<Không Đạt>
+</Không Đạt>
+b) Một số điểm chữ đặc biệt
+
+P (từ 5,0 trở lên) là loại đạt không phân mức, áp dụng cho các học phần chỉ yêu cầu đạt.
+
+I: Điểm chưa hoàn thiện do được phép hoãn thi, kiểm tra;
+
+X: Điểm chưa hoàn thiện do chưa đủ dữ liệu;
+
+R: Điểm học phần được miễn học và công nhận tín chỉ.
+
+Các điểm chữ P, I, X, R không được tính vào điểm trung bình học tập:
+
+2. Điểm thành phần
+
+Mỗi học phần, được đánh giá qua tối thiểu hai điểm thành phần, bao gồm:
+
+a) Điểm thành phần 1 (ký hiệu là ĐTP1) là điểm kiểm tra học phần, gồm: (1) Điểm kiểm tra thường xuyên (ĐKTTX) có thể là điểm bài kiểm tra tự luận, trắc nghiệm, thực hành, bảo vệ bài tập lớn, được quy định trong Đề cương chi tiết học phần. Nếu học phần có nhiều lần kiểm tra thì sẽ lấy kết quả trung bình cộng làm điểm kiểm tra thường xuyên. (2) Điểm đánh giá ý thức (ĐĐGYT) là điểm đánh giá ý thức, thái độ tham gia học tập, tuân thủ kỷ luật học tập.
+
+Điểm thành phần 1 được tính theo công thức:
+ĐTP1 = 0,7 x ĐKTTX + 0,3 x ĐĐGYT
+Điểm kiểm tra thường xuyên và điểm đánh giá ý thức được giảng viên công bố và trả bài kiểm tra cho sinh viên trên lớp học.
+
+b) Điểm thành phần 2 (ký hiệu là ĐTP2) là điểm thi kết thúc học phần. Hình thức thi kết thúc học phần được quy định trong đề cương chi tiết học phần, trong trường hợp cần thiết Giám đốc Học viện sẽ ra quyết định thay đổi hình thức thi.
+
+3. Điểm học phần và cách tính
+
+a) Điểm học phần (ký hiệu là ĐHP) được tính từ tổng các điểm thành phần nhân với trọng số tương ứng. Trọng số của mỗi điểm thành phần được quy định trong đề cương chi tiết của mỗi học phần. Nếu trong đề cương chi tiết học phần chưa quy định thì được tính theo công thức sau:
+ĐHP = 0,7 x TP2 + 0,3 x TP1
+b) Các điểm thành phần 1 và điểm thành phần 2 (điểm thi kết thúc học phần) được chấm theo thang điểm 10 (từ 0 đến 10), làm tròn đến một chữ số thập phân.
+
+c) Điểm học phần làm tròn đến một chữ số thập phân, sau đó được chuyển thành điểm chữ (thang điểm chữ). Điểm chữ của học phần được quy đổi về điểm số theo thang từ 0 đến 4 (thang điểm 4).
+
+
+d) Sinh viên vắng mặt trong buổi kiểm tra, thi kết thúc học phần không có lý do chính đáng phải nhận điểm 0. Sinh viên vắng mặt có lý do chính đáng được dự thi, đánh giá ở một đợt khác và được tính điểm lần đầu.
+
+### Điểm trung bình học kỳ
+### Điểm trung bình tích lũy
+### Xếp loại học lực học kỳ
+### Điều kiện xét tốt nghiệp và công nhận tốt nghiệp
+### Xếp loại tốt nghiệp
+### Cảnh báo kết quả học tập, buộc thôi học
+### Nghỉ học tạm thời

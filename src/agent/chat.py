@@ -1,24 +1,26 @@
-from langchain.prompts import PromptTemplate
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.chains import ConversationalRetrievalChain
-from langchain.memory import ConversationBufferMemory
-from langchain_community.vectorstores import FAISS
-from langchain_ollama import OllamaLLM, OllamaEmbeddings
-from langchain_community.retrievers import BM25Retriever
-from langchain.retrievers.ensemble import EnsembleRetriever
-from langchain.schema import Document, BaseRetriever
-from typing import List, Dict, Any
-import os
-from dotenv import load_dotenv
-from langsmith import Client
-from langchain.callbacks.tracers import LangChainTracer
-from langchain.callbacks.manager import CallbackManager
-import traceback
-import sys
 import io
-import numpy as np
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import torch
+import os
+import sys
+import traceback
+from typing import List
+from typing import Literal
+
+from dotenv import load_dotenv
+from langchain.callbacks.manager import CallbackManager
+from langchain.callbacks.tracers import LangChainTracer
+from langchain.chains import ConversationalRetrievalChain
+from langchain.retrievers import BM25Retriever
+from langchain.schema import Document, BaseRetriever
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import FAISS
+from langchain_core.tools import create_retriever_tool
+from langchain_ollama import ChatOllama
+from langchain_ollama import OllamaEmbeddings
+from langgraph.graph import MessagesState
+from langgraph.graph import StateGraph, START, END
+from langgraph.prebuilt import ToolNode
+from langgraph.prebuilt import tools_condition
+from langsmith import Client
 from pydantic import Field, BaseModel
 
 # Set UTF-8 encoding for stdout and stdin
@@ -32,47 +34,7 @@ load_dotenv()
 langsmith_client = Client()
 
 # Initialize callback manager with LangSmith tracer
-callback_manager = CallbackManager([LangChainTracer()])
-
-# Initialize reranking model
-reranker_model = None
-reranker_tokenizer = None
-
-
-def initialize_reranker():
-    """Initialize the NVIDIA reranking model"""
-    global reranker_model, reranker_tokenizer
-    model_name = "nvidia/nemo-reranker-base"  # or nvidia/nemo-reranker-large
-    reranker_tokenizer = AutoTokenizer.from_pretrained(model_name)
-    reranker_model = AutoModelForSequenceClassification.from_pretrained(model_name)
-    if torch.cuda.is_available():
-        reranker_model = reranker_model.cuda()
-    reranker_model.eval()
-
-
-def rerank_documents(query: str, documents: List[str], top_k: int = 4) -> List[str]:
-    """Rerank documents using NVIDIA's reranking model"""
-    if reranker_model is None or reranker_tokenizer is None:
-        initialize_reranker()
-
-    pairs = [[query, doc] for doc in documents]
-    features = reranker_tokenizer(
-        pairs,
-        padding=True,
-        truncation=True,
-        return_tensors="pt",
-        max_length=512
-    )
-
-    if torch.cuda.is_available():
-        features = {k: v.cuda() for k, v in features.items()}
-
-    with torch.no_grad():
-        scores = reranker_model(**features).logits.squeeze(-1)
-        scores = scores.cpu().numpy()
-
-    ranked_indices = np.argsort(scores)[::-1][:top_k]
-    return [documents[i] for i in ranked_indices]
+callback_manager = CallbackManager([LangChainTracer(project_name="KMARegulation")])
 
 
 class HybridRetriever(BaseRetriever, BaseModel):
@@ -99,18 +61,18 @@ class HybridRetriever(BaseRetriever, BaseModel):
                 all_docs.append(doc.page_content)
                 seen_content.add(doc.page_content)
 
-        # Rerank combined documents
-        reranked_contents = rerank_documents(query, all_docs, self.k)
+        print("--" * 50)
 
         # Convert back to Documents
-        return [Document(page_content=content) for content in reranked_contents]
+        return [Document(page_content=content) for content in all_docs]
 
     async def _aget_relevant_documents(self, query: str) -> List[Document]:
         """Async version of get_relevant_documents"""
         raise NotImplementedError("Async retrieval not implemented")
 
 
-def create_vector_database(output_path, data_path="/Users/hoang.van.giang/Projects/kma_chat/kma_chat_agent/KMA Chat Agent/src/agent/regulation.txt"):
+def create_vector_database(output_path,
+                           data_path="../../../data/regulation.txt"):
     """Create and save the vector database"""
     try:
         # Load the regulation document with UTF-8 encoding
@@ -118,13 +80,9 @@ def create_vector_database(output_path, data_path="/Users/hoang.van.giang/Projec
             regulations = f.read()
 
         # Split the text into chunks with Vietnamese-aware settings
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=400,
-            chunk_overlap=200,
-            length_function=len,
+        text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=200, length_function=len,
             separators=["\n\n", "\n", " ", ""],  # Prioritize natural breaks
-            keep_separator=False
-        )
+            keep_separator=False)
         chunks = text_splitter.split_text(regulations)
 
         # Create embeddings using Linq-Embed-Mistral
@@ -156,16 +114,13 @@ def load_vector_database(output_path):
             chunks = create_vector_database(output_path)
         else:
             # If vector database exists, we still need to get the chunks
-            with open("/Users/hoang.van.giang/Projects/kma_chat/kma_chat_agent/KMA Chat Agent/src/agent/regulation.txt", "r", encoding="utf-8") as f:
+            with open(
+                    "../../../data/regulation.txt",
+                    "r", encoding="utf-8") as f:
                 regulations = f.read()
 
-            text_splitter = RecursiveCharacterTextSplitter(
-                chunk_size=400,
-                chunk_overlap=200,
-                length_function=len,
-                separators=["\n\n", "\n", " ", ""],
-                keep_separator=False
-            )
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=400, chunk_overlap=200, length_function=len,
+                separators=["\n\n", "\n", " ", ""], keep_separator=False)
             chunks = text_splitter.split_text(regulations)
 
         print("Loading vector database...")
@@ -179,76 +134,128 @@ def load_vector_database(output_path):
         raise
 
 
-def get_prompt():
-    """Get the chat prompt template"""
-    prompt_template = """
+vectorstore, documents = load_vector_database("vector_db")
+
+# Initialize BM25 retriever
+bm25_retriever = BM25Retriever.from_texts(texts=documents, k=15)
+
+# Create hybrid retriever with reranking
+hybrid_retriever = HybridRetriever(vectorstore=vectorstore, bm25_retriever=bm25_retriever, k=15)
+
+retriever_tool = create_retriever_tool(hybrid_retriever, name="KMARegulationRetriever",
+    description="A tool to retrieve information from KMA regulations and rules.", )
+
+llm = ChatOllama(model="llama3.2")
+
+
+def generate_query_or_respond(state: MessagesState):
+    # Initialize LLM
+    ai = llm.bind_tools([retriever_tool])
+    response = ai.invoke(state["messages"])
+    return {"messages": [response]}
+
+
+GRADE_PROMPT = (
+    "You are a grader assessing relevance of a retrieved document to a user question that all in vietnamese or another language. \n "
+    "Here is the retrieved document: \n\n {context} \n\n"
+    "Here is the user question: {question} \n"
+    "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
+    "Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.")
+
+
+class GradeDocuments(BaseModel):
+    """Grade documents using a binary score for relevance check."""
+
+    binary_score: str = Field(description="Relevance score: 'yes' if relevant, or 'no' if not relevant")
+
+
+grader_model = ChatOllama(model="llama3.2")
+
+
+def grade_documents(state: MessagesState, ) -> Literal["generate_answer", "rewrite_question"]:
+    """Determine whether the retrieved documents are relevant to the question."""
+    question = state["messages"][0].content
+    context = state["messages"][-1].content
+
+    prompt = GRADE_PROMPT.format(question=question, context=context)
+
+    response = (grader_model.with_structured_output(GradeDocuments).invoke([{"role": "user", "content": prompt}]))
+    score = response.binary_score
+
+    if score == "yes":
+        return "generate_answer"
+    else:
+        return "rewrite_question"
+
+
+REWRITE_PROMPT = ("Look at the input and try to reason about the underlying semantic intent / meaning.\n"
+                  "Here is the initial question:"
+                  "\n ------- \n"
+                  "{question}"
+                  "\n ------- \n"
+                  "Please write only improved question without another words or informations. Formulate an improved question:")
+
+
+def rewrite_question(state: MessagesState):
+    """Rewrite the original user question."""
+    messages = state["messages"]
+    question = messages[0].content
+    prompt = REWRITE_PROMPT.format(question=question)
+    response = llm.invoke([{"role": "user", "content": prompt}])
+    return {"messages": [{"role": "user", "content": response.content}]}
+
+
+GENERATE_PROMPT = ("""
     Bạn là một trợ lý ảo dành cho sinh viên và giảng viên của Học viện Kỹ thuật mật mã (viết tắt là KMA).
     Bạn có hiểu biết về tất cả các quy định và chính sách của trường và có thể giúp đỡ với bất kỳ câu hỏi nào về chúng.
     Bạn sẽ dựa trên thông tin từ tài liệu được cung cấp bên dưới để trả lời câu hỏi của người dùng.
-    Hãy trả lời các câu hỏi dưới vai trò một trợ lý ảo thông minh và chuyên nghiệp. Trả lời chính xác, ngắn gọn.
+    Hãy trả lời các câu hỏi dưới vai trò một trợ lý ảo thông minh và chuyên nghiệp. Trả lời chính xác và đầy đủ thông tin.
     Nếu không thể trả lời, hãy nói rằng bạn không thể trả lời câu hỏi đó.
     Hãy trả lời các câu hỏi bằng tiếng Việt
-
-    Tài liệu: {context}
-    Lịch sử trò chuyện giữa bạn và người dùng: {chat_history}
-    Câu hỏi: {question}
-    Answer:
     """
-    return PromptTemplate(template=prompt_template, input_variables=["context", "question", "chat_history"])
+                   "Question: {question} \n"
+                   "Context: {context}")
 
 
-def initialize_rag():
-    """Initialize the RAG system"""
-    try:
-        # Load the vector database and documents
-        vectorstore, documents = load_vector_database("vector_db")
+def generate_answer(state: MessagesState):
+    """Generate an answer."""
+    question = state["messages"][0].content
+    context = state["messages"][-1].content
+    prompt = GENERATE_PROMPT.format(question=question, context=context)
+    response = llm.invoke([{"role": "user", "content": prompt}])
+    return {"messages": [response]}
 
-        # Initialize BM25 retriever
-        bm25_retriever = BM25Retriever.from_texts(
-            texts=documents,
-            k=6
-        )
 
-        # Create hybrid retriever with reranking
-        hybrid_retriever = HybridRetriever(
-            vectorstore=vectorstore,
-            bm25_retriever=bm25_retriever,
-            k=4
-        )
+workflow = StateGraph(MessagesState)
 
-        # Create memory
-        memory = ConversationBufferMemory(
-            memory_key="chat_history",
-            return_messages=True,
-            input_key="question",
-            output_key="answer",
-        )
+# Define the nodes we will cycle between
+workflow.add_node(generate_query_or_respond)
+workflow.add_node("retrieve", ToolNode([retriever_tool]))
+workflow.add_node(rewrite_question)
+workflow.add_node(generate_answer)
 
-        # Initialize LLM
-        llm = OllamaLLM(model="llama3.2")
+workflow.add_edge(START, "generate_query_or_respond")
 
-        # Create conversation chain
-        conversation = ConversationalRetrievalChain.from_llm(
-            llm=llm,
-            retriever=hybrid_retriever,
-            memory=memory,
-            verbose=True,
-            output_key='answer',
-            combine_docs_chain_kwargs={"prompt": get_prompt()},
-            callback_manager=callback_manager
-        )
+# Decide whether to retrieve
+workflow.add_conditional_edges("generate_query_or_respond",
+    # Assess LLM decision (call `retriever_tool` tool or respond to the user)
+    tools_condition, {# Translate the condition outputs to nodes in our graph
+        "tools": "retrieve", END: END, }, )
 
-        return conversation
-    except Exception as e:
-        print(f"Error initializing RAG system: {e}")
-        raise
+# Edges taken after the `action` node is called.
+workflow.add_conditional_edges("retrieve", # Assess agent decision
+    grade_documents, )
+workflow.add_edge("generate_answer", END)
+workflow.add_edge("rewrite_question", "generate_query_or_respond")
+
+# Compile
+graph = workflow.compile()
 
 
 def main():
     """Main function to run the chat application"""
     print("Initializing KMA Chat Assistant...")
     try:
-        conversation = initialize_rag()
         print("\nKMA Chat Assistant is ready! Type 'quit' to exit.")
         print("Ask me anything about KMA!\n")
 
@@ -268,10 +275,11 @@ def main():
 
                 # Get AI response
                 print("\nAssistant: ", end="")
-                response = conversation.invoke({
-                    "question": user_input
-                })
-                print(response["answer"])
+
+                query = {"messages": [{"role": "user", "content": user_input, }]}
+
+                response = graph.invoke(query)
+                print(response["messages"][-1].content)
 
             except UnicodeDecodeError as e:
                 print(f"\nError with text encoding: {e}")

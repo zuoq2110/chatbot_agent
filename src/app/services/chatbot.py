@@ -1,32 +1,54 @@
+from pathlib import Path
 from typing import Dict, Any, Optional
 import asyncio
 import sys
 import os
 import traceback
 from datetime import datetime
+
+from dotenv import load_dotenv
+
+from agent import KMAChatAgent, create_hybrid_retriever
 from app.models.message import MessageCreate, MessageInDB
 from app.db import Database, model_to_dict
 
 # Import agent modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-from agent.agent import initialize_rag
 
-# Global conversation instance
-_conversation = None
+# Load environment variables
+load_dotenv()
 
-async def get_conversation():
+# Global agent instance
+_agent = None
+
+def initialize_rag() -> KMAChatAgent:
+    # Define paths
+    current_dir = Path(__file__).parent.absolute()
+    project_root = current_dir.parent.parent
+    vector_db_path = os.path.join(project_root, "vector_db")
+    data_path = os.path.join(project_root, "data", "regulation.txt")
+
+    # Create hybrid retriever
+    hybrid_retriever, _ = create_hybrid_retriever(
+        vector_db_path=vector_db_path,
+        data_path=data_path
+    )
+    chat_agent = KMAChatAgent(hybrid_retriever)
+    return chat_agent
+
+async def get_agent():
     """Get or initialize the conversation instance"""
-    global _conversation
-    if _conversation is None:
+    global _agent
+    if _agent is None:
         # Initialize in a separate thread to avoid blocking
         loop = asyncio.get_event_loop()
-        _conversation = await loop.run_in_executor(None, initialize_rag)
-    return _conversation
+        _agent = await loop.run_in_executor(None, initialize_rag)
+    return _agent
 
 async def send_query_to_agent(query: str) -> str:
     """Send a query to the agent and get a response"""
     try:
-        conversation = await get_conversation()
+        conversation = await _agent()
         # Call the agent in a separate thread to avoid blocking the event loop
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(

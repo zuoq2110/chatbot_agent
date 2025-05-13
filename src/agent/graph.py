@@ -1,3 +1,4 @@
+import unicodedata
 from typing import Literal
 
 from langchain.callbacks.manager import CallbackManager
@@ -13,35 +14,73 @@ from pydantic import Field, BaseModel
 
 # Constants for prompts
 GRADE_PROMPT = (
-    "You are a grader assessing relevance of a retrieved document to a user question that all in vietnamese or another language. \n "
-    "Here is the retrieved document: \n\n {context} \n\n"
-    "Here is the user question: {question} \n"
-    "If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant. \n"
-    "Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question."
+    """
+    ** Context **
+    You are a grader assessing relevance of a retrieved document to a user question that all in vietnamese or another language.
+    user's question is about regulations and policies of the Academy of Cryptographic Techniques (KMA).
+    Your user is a student or lecturer of KMA.
+    You will be given a document and a question.
+    If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant.
+    
+    ** Objective **
+    Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
+    
+    ** Document **
+    {context}
+    
+    ** Question **
+    {question}
+    """
 )
 
 REWRITE_PROMPT = (
-    "Look at the input and try to reason about the underlying semantic intent / meaning.\n"
-    "Here is the initial question:"
-    "\n ------- \n"
-    "{question}"
-    "\n ------- \n"
-    "Please write only improved question without another words or informations. Formulate an improved question:"
+    """
+    ** Context **
+    You are an AI assistant that rewrites user questions to improve clarity and relevance.
+    The questions are about regulations and policies of the Academy of Cryptographic Techniques (KMA).
+    You are given a question that may be unclear or not directly related to the regulations.
+    Look at the input and try to reason about the underlying semantic intent / meaning.
+    Please rewrite the question to make it clearer and more relevant.
+    
+    ** Objective **
+    Please rewrite the question to make it clearer and more relevant. Formulate an improved question.
+    
+    ** Constraints **
+    - Make sure to keep the context of the question intact.
+    - And make sure re-write question is same language with original question.
+    - Please write only improved question without another words or informations.
+    
+    ** Question **
+    Here is the initial question:
+    {question}
+    """
 )
 
 GENERATE_PROMPT = (
-    """
+    """** Context **
     Bạn là một trợ lý ảo dành cho sinh viên và giảng viên của Học viện Kỹ thuật mật mã (viết tắt là KMA).
-    Bạn có hiểu biết về tất cả các quy định và chính sách của trường và có thể giúp đỡ với bất kỳ câu hỏi nào về chúng.
-    Bạn sẽ dựa trên thông tin từ tài liệu được cung cấp bên dưới để trả lời câu hỏi của người dùng.
-    Hãy trả lời các câu hỏi dưới vai trò một trợ lý ảo thông minh và chuyên nghiệp. Trả lời chính xác và đầy đủ thông tin.
-    Nếu không thể trả lời, hãy nói rằng bạn không thể trả lời câu hỏi đó.
-    Hãy trả lời các câu hỏi bằng tiếng Việt
+    Bạn có hiểu biết về tất cả các quy định và chính sách của trường và có thể trả lời với bất kỳ câu hỏi nào về chúng.
+    Bạn sẽ dựa trên thông tin từ tài liệu được cung cấp bên dưới để trả lời câu hỏi của người dùng về những quy định và chính sách của KMA.
+    
+    ** Objective **
+    - Hãy trả lời các câu hỏi về quy định và chính sách của KMA.
+    - Nếu không thể trả lời, hãy nói rằng bạn không thể trả lời câu hỏi đó.
+    
+    ** Tone **
+    - Hãy trả lời các câu hỏi dưới vai trò một trợ lý ảo thông minh và chuyên nghiệp. Trả lời chính xác, ngắn gọn và đầy đủ thông tin.
+    - Chỉ trả lời về các thông tin được hỏi mà không đưa ra bất kỳ lời chào, lời khuyên hay lời cảm ơn nào.
+    - Hãy trả lời các câu hỏi bằng tiếng Việt.
+    - Hãy trình bày câu trả lời dưới dạng có format, có cấu trúc (sử dụng markdown nếu cần), dễ nhìn và dễ hiểu.
+    
+    ** Question **
+    - Câu hỏi của người dùng là:
+    {question}
+    
+    ** Document **
+    - Dưới đây là thông tin về quy định và chính sách của KMA liên quan đến câu hỏi:
+    {context}
     """
-    "Question: {question} \n"
-    "Context: {context}"
 )
-
 
 class GradeDocuments(BaseModel):
     """Grade documents using a binary score for relevance check."""
@@ -109,7 +148,21 @@ class KMAChatAgent:
     def generate_query_or_respond(self, state: MessagesState):
         """Generate a query or respond to the user"""
         ai = self.llm.bind_tools([self.retriever_tool])
+
+        normalized_query = unicodedata.normalize('NFC', state["messages"][0].content)
+        state["messages"][0].content = normalized_query
+
         response = ai.invoke(state["messages"])
+
+        print("--"*50)
+        print("original messages")
+        print(state["messages"])
+
+        # Check if the response is a tool call
+        print("--"*50)
+        print(response)
+        print("--"*50)
+
         return {"messages": [response]}
     
     def grade_documents(self, state: MessagesState) -> Literal["generate_answer", "rewrite_question"]:

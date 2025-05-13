@@ -2,16 +2,13 @@ import os
 import unicodedata
 from typing import Literal
 
-from langchain.callbacks.manager import CallbackManager
-from langchain.callbacks.tracers import LangChainTracer
 from langchain_core.messages import HumanMessage, AIMessage
-from langchain_ollama import ChatOllama
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
-from langgraph.prebuilt import ToolNode
-from langgraph.prebuilt import tools_condition
 from langsmith import Client
 from pydantic import Field, BaseModel
+
+from llm_config import LLMConfig
 
 
 class GradeDocuments(BaseModel):
@@ -26,11 +23,11 @@ class KMAChatAgent:
         self.langsmith_client = Client()
         
         # Initialize callback manager with LangSmith tracer
-        self.callback_manager = CallbackManager([LangChainTracer(project_name=project_name)])
+        self.callback_manager = LLMConfig.create_callback_manager(project_name)
         
-        # Create models
-        self.llm = ChatOllama(model=model_name)
-        self.grader_model = ChatOllama(model=model_name)
+        # Create models using the LLMConfig
+        self.llm = LLMConfig.create_llm(model_name, self.callback_manager)
+        self.grader_model = LLMConfig.create_llm(model_name, self.callback_manager)
         
         # Store the retriever directly
         self.retriever = hybrid_retriever

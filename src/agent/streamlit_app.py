@@ -1,20 +1,8 @@
 #!/usr/bin/env python3
-import os
 import streamlit as st
-from pathlib import Path
-from dotenv import load_dotenv
 
-from retriever import create_hybrid_retriever
+# from retriever import create_hybrid_retriever
 from graph import KMAChatAgent
-
-# Load environment variables
-load_dotenv()
-
-# Define paths
-current_dir = Path(__file__).parent.absolute()
-project_root = current_dir.parent.parent
-vector_db_path = os.path.join(project_root, "vector_db")
-data_path = os.path.join(project_root, "data", "regulation.txt")
 
 # Page config
 st.set_page_config(
@@ -75,14 +63,9 @@ if "messages" not in st.session_state:
 # Initialize chat agent in session state if it doesn't exist
 if "chat_agent" not in st.session_state:
     with st.spinner("Đang khởi tạo trợ lý ảo..."):
-        # Create hybrid retriever
-        hybrid_retriever, _ = create_hybrid_retriever(
-            vector_db_path=vector_db_path,
-            data_path=data_path
-        )
         
         # Initialize chat agent
-        st.session_state.chat_agent = KMAChatAgent(hybrid_retriever)
+        st.session_state.chat_agent = KMAChatAgent()
         st.success("Trợ lý ảo đã sẵn sàng!")
 
 # Display chat messages from history
@@ -119,6 +102,7 @@ if st.session_state.messages:
     with col2:
         if st.button("Xóa cuộc trò chuyện", key="clear"):
             st.session_state.messages = []
+            ## rerun
             st.experimental_rerun()
 
 # Footer

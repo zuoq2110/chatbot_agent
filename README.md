@@ -23,12 +23,12 @@ graph TD
     Rewrite --> ProcessQuery
     
     classDef start fill:#green,stroke:#333,stroke-width:2px;
-    classDef end fill:#red,stroke:#333,stroke-width:2px;
+    classDef _end fill:#red,stroke:#333,stroke-width:2px;
     classDef process fill:#lightblue,stroke:#333,stroke-width:1px;
     classDef conditional fill:#yellow,stroke:#333,stroke-width:1px;
     
     class START start;
-    class END end;
+    class END _end;
     class ProcessQuery,Retrieve,Generate,Rewrite process;
 ```
 

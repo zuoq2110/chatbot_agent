@@ -1,5 +1,6 @@
 import os
 import unicodedata
+import logging
 from typing import Literal
 
 from langchain_core.messages import HumanMessage, AIMessage
@@ -10,6 +11,9 @@ from pydantic import Field, BaseModel
 
 from llm_config import LLMConfig
 
+# Set up logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
 
 class GradeDocuments(BaseModel):
     """Grade documents using a binary score for relevance check."""
@@ -36,6 +40,7 @@ class KMAChatAgent:
         self.prompts = self._load_prompts()
         
         # Build the workflow
+        self.workflow = StateGraph(MessagesState)
         self.graph = self._build_workflow()
     
     def _load_prompts(self):
@@ -59,7 +64,7 @@ class KMAChatAgent:
     
     def _build_workflow(self):
         """Build the LangGraph workflow"""
-        workflow = StateGraph(MessagesState)
+        workflow = self.workflow
         
         # Define the nodes
         workflow.add_node(self.process_user_query)
@@ -84,12 +89,24 @@ class KMAChatAgent:
         workflow.add_edge("generate_answer", END)
         workflow.add_edge("rewrite_question", "process_user_query")
         
-        # Compile the graph
-        graph = workflow.compile()
+        # Log the workflow structure
+        logger.info("Workflow structure created with nodes and edges")
         
-        # Generate and print the Mermaid diagram
-        mermaid_diagram = self.print_mermaid_graph()
-        print(mermaid_diagram)
+        # Compile the graph
+        try:
+            graph = workflow.compile()
+            logger.info("Workflow graph compiled successfully")
+        except Exception as e:
+            logger.error(f"Error compiling workflow graph: {str(e)}")
+            raise
+        
+        # Generate and log the Mermaid diagram
+        try:
+            mermaid_diagram = graph.get_graph().draw_mermaid()
+            logger.info("Mermaid diagram:")
+            logger.info(mermaid_diagram)
+        except Exception as e:
+            logger.error(f"Error generating Mermaid diagram: {str(e)}")
         
         return graph
     
@@ -152,27 +169,3 @@ class KMAChatAgent:
         query = {"messages": [HumanMessage(content=message)]}
         response = self.graph.invoke(query)
         return response["messages"][-1].content
-    
-    def print_mermaid_graph(self):
-        """Generate and print a Mermaid diagram visualization of the graph workflow"""
-        mermaid_diagram = """
-```mermaid
-graph TD
-    START([START]) --> ProcessQuery[Process User Query]
-    ProcessQuery --> Retrieve[Retrieve Documents]
-    Retrieve -->|Grade: Relevant| Generate[Generate Answer]
-    Retrieve -->|Grade: Not Relevant| Rewrite[Rewrite Question]
-    Generate --> END([END])
-    Rewrite --> ProcessQuery
-    
-    classDef start fill:#green,stroke:#333,stroke-width:2px;
-    classDef end fill:#red,stroke:#333,stroke-width:2px;
-    classDef process fill:#lightblue,stroke:#333,stroke-width:1px;
-    classDef conditional fill:#yellow,stroke:#333,stroke-width:1px;
-    
-    class START start;
-    class END end;
-    class ProcessQuery,Retrieve,Generate,Rewrite process;
-```
-"""
-        return mermaid_diagram 

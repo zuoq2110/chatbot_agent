@@ -1,3 +1,6 @@
 .env
 /logs/**
 /.env
+/vector_db/**
+/venv/**
+src/app/logs/**

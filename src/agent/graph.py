@@ -1,9 +1,10 @@
+import os
 import unicodedata
 from typing import Literal
 
 from langchain.callbacks.manager import CallbackManager
 from langchain.callbacks.tracers import LangChainTracer
-from langchain_core.tools import create_retriever_tool
+from langchain_core.messages import HumanMessage, AIMessage
 from langchain_ollama import ChatOllama
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
@@ -12,75 +13,6 @@ from langgraph.prebuilt import tools_condition
 from langsmith import Client
 from pydantic import Field, BaseModel
 
-# Constants for prompts
-GRADE_PROMPT = (
-    """
-    ** Context **
-    You are a grader assessing relevance of a retrieved document to a user question that all in vietnamese or another language.
-    user's question is about regulations and policies of the Academy of Cryptographic Techniques (KMA).
-    Your user is a student or lecturer of KMA.
-    You will be given a document and a question.
-    If the document contains keyword(s) or semantic meaning related to the user question, grade it as relevant.
-    
-    ** Objective **
-    Give a binary score 'yes' or 'no' score to indicate whether the document is relevant to the question.
-    
-    ** Document **
-    {context}
-    
-    ** Question **
-    {question}
-    """
-)
-
-REWRITE_PROMPT = (
-    """
-    ** Context **
-    You are an AI assistant that rewrites user questions to improve clarity and relevance.
-    The questions are about regulations and policies of the Academy of Cryptographic Techniques (KMA).
-    You are given a question that may be unclear or not directly related to the regulations.
-    Look at the input and try to reason about the underlying semantic intent / meaning.
-    Please rewrite the question to make it clearer and more relevant.
-    
-    ** Objective **
-    Please rewrite the question to make it clearer and more relevant. Formulate an improved question.
-    
-    ** Constraints **
-    - Make sure to keep the context of the question intact.
-    - And make sure re-write question is same language with original question.
-    - Please write only improved question without another words or informations.
-    
-    ** Question **
-    Here is the initial question:
-    {question}
-    """
-)
-
-GENERATE_PROMPT = (
-    """** Context **
-    Bạn là một trợ lý ảo dành cho sinh viên và giảng viên của Học viện Kỹ thuật mật mã (viết tắt là KMA).
-    Bạn có hiểu biết về tất cả các quy định và chính sách của trường và có thể trả lời với bất kỳ câu hỏi nào về chúng.
-    Bạn sẽ dựa trên thông tin từ tài liệu được cung cấp bên dưới để trả lời câu hỏi của người dùng về những quy định và chính sách của KMA.
-    
-    ** Objective **
-    - Hãy trả lời các câu hỏi về quy định và chính sách của KMA.
-    - Nếu không thể trả lời, hãy nói rằng bạn không thể trả lời câu hỏi đó.
-    
-    ** Tone **
-    - Hãy trả lời các câu hỏi dưới vai trò một trợ lý ảo thông minh và chuyên nghiệp. Trả lời chính xác, ngắn gọn và đầy đủ thông tin.
-    - Chỉ trả lời về các thông tin được hỏi mà không đưa ra bất kỳ lời chào, lời khuyên hay lời cảm ơn nào.
-    - Hãy trả lời các câu hỏi bằng tiếng Việt.
-    - Hãy trình bày câu trả lời dưới dạng có format, có cấu trúc (sử dụng markdown nếu cần), dễ nhìn và dễ hiểu.
-    
-    ** Question **
-    - Câu hỏi của người dùng là:
-    {question}
-    
-    ** Document **
-    - Dưới đây là thông tin về quy định và chính sách của KMA liên quan đến câu hỏi:
-    {context}
-    """
-)
 
 class GradeDocuments(BaseModel):
     """Grade documents using a binary score for relevance check."""
@@ -100,77 +32,97 @@ class KMAChatAgent:
         self.llm = ChatOllama(model=model_name)
         self.grader_model = ChatOllama(model=model_name)
         
-        # Create retriever tool
-        self.retriever_tool = create_retriever_tool(
-            hybrid_retriever, 
-            name="KMARegulationRetriever",
-            description="A tool to retrieve information from KMA regulations and rules."
-        )
+        # Store the retriever directly
+        self.retriever = hybrid_retriever
+        
+        # Load prompts from files
+        self.prompts = self._load_prompts()
         
         # Build the workflow
         self.graph = self._build_workflow()
+    
+    def _load_prompts(self):
+        """Load all prompts from text files"""
+        prompts = {}
+        prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+        
+        # Load grade prompt
+        with open(os.path.join(prompts_dir, "grade.txt"), "r") as f:
+            prompts["grade"] = f.read().strip()
+        
+        # Load rewrite prompt
+        with open(os.path.join(prompts_dir, "rewrite.txt"), "r") as f:
+            prompts["rewrite"] = f.read().strip()
+        
+        # Load generate prompt
+        with open(os.path.join(prompts_dir, "generate.txt"), "r") as f:
+            prompts["generate"] = f.read().strip()
+        
+        return prompts
     
     def _build_workflow(self):
         """Build the LangGraph workflow"""
         workflow = StateGraph(MessagesState)
         
         # Define the nodes
-        workflow.add_node(self.generate_query_or_respond)
-        workflow.add_node("retrieve", ToolNode([self.retriever_tool]))
+        workflow.add_node(self.process_user_query)
+        workflow.add_node(self.retrieve_documents)
         workflow.add_node(self.rewrite_question)
         workflow.add_node(self.generate_answer)
         
         # Set up edges
-        workflow.add_edge(START, "generate_query_or_respond")
+        workflow.add_edge(START, "process_user_query")
+        workflow.add_edge("process_user_query", "retrieve_documents")
         
-        # Decide whether to retrieve
+        # Conditional edges after retrieval
         workflow.add_conditional_edges(
-            "generate_query_or_respond",
-            tools_condition,
-            {
-                "tools": "retrieve", 
-                END: END,
-            },
-        )
-        
-        # Edges taken after the `action` node is called
-        workflow.add_conditional_edges(
-            "retrieve",
+            "retrieve_documents",
             self.grade_documents,
+            {
+                "generate_answer": "generate_answer",
+                "rewrite_question": "rewrite_question"
+            }
         )
         
         workflow.add_edge("generate_answer", END)
-        workflow.add_edge("rewrite_question", "generate_query_or_respond")
+        workflow.add_edge("rewrite_question", "process_user_query")
         
         # Compile the graph
-        return workflow.compile()
+        graph = workflow.compile()
+        
+        # Generate and print the Mermaid diagram
+        mermaid_diagram = self.print_mermaid_graph()
+        print(mermaid_diagram)
+        
+        return graph
     
-    def generate_query_or_respond(self, state: MessagesState):
-        """Generate a query or respond to the user"""
-        ai = self.llm.bind_tools([self.retriever_tool])
-
-        normalized_query = unicodedata.normalize('NFC', state["messages"][0].content)
-        state["messages"][0].content = normalized_query
-
-        response = ai.invoke(state["messages"])
-
-        print("--"*50)
-        print("original messages")
-        print(state["messages"])
-
-        # Check if the response is a tool call
-        print("--"*50)
-        print(response)
-        print("--"*50)
-
-        return {"messages": [response]}
+    def process_user_query(self, state: MessagesState):
+        """Process the user query for retrieval"""
+        # Normalize the query for better processing
+        if state["messages"] and len(state["messages"]) > 0:
+            query = state["messages"][0].content
+            normalized_query = unicodedata.normalize('NFC', query)
+            state["messages"][0].content = normalized_query
+        return {"messages": state["messages"]}
+    
+    def retrieve_documents(self, state: MessagesState):
+        """Directly retrieve documents using the retriever"""
+        query = state["messages"][0].content
+        # Get documents from the retriever
+        docs = self.retriever.get_relevant_documents(query)
+        # Combine document content
+        combined_content = "\n\n".join([doc.page_content for doc in docs])
+        # Add the retrieved content as a system message
+        retrieval_message = AIMessage(content=combined_content)
+        # Update the state with the retrieved documents
+        return {"messages": state["messages"] + [retrieval_message]}
     
     def grade_documents(self, state: MessagesState) -> Literal["generate_answer", "rewrite_question"]:
         """Determine whether the retrieved documents are relevant to the question"""
         question = state["messages"][0].content
         context = state["messages"][-1].content
         
-        prompt = GRADE_PROMPT.format(question=question, context=context)
+        prompt = self.prompts["grade"].format(question=question, context=context)
         
         response = self.grader_model.with_structured_output(GradeDocuments).invoke(
             [{"role": "user", "content": prompt}]
@@ -186,20 +138,44 @@ class KMAChatAgent:
         """Rewrite the original user question"""
         messages = state["messages"]
         question = messages[0].content
-        prompt = REWRITE_PROMPT.format(question=question)
+        prompt = self.prompts["rewrite"].format(question=question)
         response = self.llm.invoke([{"role": "user", "content": prompt}])
-        return {"messages": [{"role": "user", "content": response.content}]}
+        return {"messages": [HumanMessage(content=response.content)]}
     
     def generate_answer(self, state: MessagesState):
         """Generate an answer"""
         question = state["messages"][0].content
         context = state["messages"][-1].content
-        prompt = GENERATE_PROMPT.format(question=question, context=context)
+        prompt = self.prompts["generate"].format(question=question, context=context)
         response = self.llm.invoke([{"role": "user", "content": prompt}])
-        return {"messages": [response]}
+        return {"messages": state["messages"][:-1] + [response]}
     
     def chat(self, message):
         """Process a single chat message and return the response"""
-        query = {"messages": [{"role": "user", "content": message}]}
+        query = {"messages": [HumanMessage(content=message)]}
         response = self.graph.invoke(query)
-        return response["messages"][-1].content 
+        return response["messages"][-1].content
+    
+    def print_mermaid_graph(self):
+        """Generate and print a Mermaid diagram visualization of the graph workflow"""
+        mermaid_diagram = """
+```mermaid
+graph TD
+    START([START]) --> ProcessQuery[Process User Query]
+    ProcessQuery --> Retrieve[Retrieve Documents]
+    Retrieve -->|Grade: Relevant| Generate[Generate Answer]
+    Retrieve -->|Grade: Not Relevant| Rewrite[Rewrite Question]
+    Generate --> END([END])
+    Rewrite --> ProcessQuery
+    
+    classDef start fill:#green,stroke:#333,stroke-width:2px;
+    classDef end fill:#red,stroke:#333,stroke-width:2px;
+    classDef process fill:#lightblue,stroke:#333,stroke-width:1px;
+    classDef conditional fill:#yellow,stroke:#333,stroke-width:1px;
+    
+    class START start;
+    class END end;
+    class ProcessQuery,Retrieve,Generate,Rewrite process;
+```
+"""
+        return mermaid_diagram 

@@ -1,14 +1,17 @@
 import os
 import unicodedata
 import logging
+from pathlib import Path
 from typing import Literal
 
+from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
 from langsmith import Client
 from pydantic import Field, BaseModel
 
+from agent import create_hybrid_retriever
 from llm_config import LLMConfig
 
 # Set up logging
@@ -21,7 +24,7 @@ class GradeDocuments(BaseModel):
 
 
 class KMAChatAgent:
-    def __init__(self, hybrid_retriever, model_name="llama3.2", project_name="KMARegulation"):
+    def __init__(self, model_name="llama3.2", project_name="KMARegulation"):
         """Initialize the KMA Chat Agent with a hybrid retriever and model"""
         # Initialize LangSmith client
         self.langsmith_client = Client()
@@ -34,7 +37,7 @@ class KMAChatAgent:
         self.grader_model = LLMConfig.create_llm(model_name, self.callback_manager)
         
         # Store the retriever directly
-        self.retriever = hybrid_retriever
+        self.retriever = self.get_retriever()
         
         # Load prompts from files
         self.prompts = self._load_prompts()
@@ -61,7 +64,22 @@ class KMAChatAgent:
             prompts["generate"] = f.read().strip()
         
         return prompts
-    
+
+    def get_retriever(self):
+        """Get the hybrid retriever"""
+        # Define paths
+        current_dir = Path(__file__).parent.absolute()
+        project_root = current_dir.parent.parent
+        vector_db_path = os.path.join(project_root, "vector_db")
+        data_path = os.path.join(project_root, "data", "regulation.txt")
+
+        hybrid_retriever, _ = create_hybrid_retriever(
+            vector_db_path=vector_db_path,
+            data_path=data_path
+        )
+
+        return hybrid_retriever
+
     def _build_workflow(self):
         """Build the LangGraph workflow"""
         workflow = self.workflow
@@ -169,3 +187,6 @@ class KMAChatAgent:
         query = {"messages": [HumanMessage(content=message)]}
         response = self.graph.invoke(query)
         return response["messages"][-1].content
+
+# Toggle comment for deploy to Streamlit or LangGraph UI
+# graph = KMAChatAgent()

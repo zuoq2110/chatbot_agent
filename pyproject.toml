@@ -31,7 +31,8 @@ dependencies = [
     "python-multipart (>=0.0.20,<0.0.21)",
     "passlib[bcrypt] (>=1.7.4,<2.0.0)",
     "python-jose[cryptography] (>=3.3.0,<4.0.0)",
-    "pylint (>=3.3.7,<4.0.0)"
+    "pylint (>=3.3.7,<4.0.0)",
+    "langgraph-cli[inmem] (>=0.2.10,<0.3.0)"
 ]
 
 [tool.poetry]
@@ -41,10 +42,45 @@ packages = [
 ]
 
 [build-system]
-requires = ["poetry-core>=2.0.0,<3.0.0"]
+requires = ["poetry-core>=2.0.0,<3.0.0", "setuptools>=73.0.0", "wheel"]
 build-backend = "poetry.core.masonry.api"
 
-[tool.poetry.scripts]
-backend = "app.main:run_backend"
-backend-dev = "app.main:run_backend_dev"
-backend-prod = "app.main:run_backend_prod"
+[tool.setuptools]
+packages = ["langgraph.templates.agent", "agent"]
+[tool.setuptools.package-dir]
+"langgraph.templates.agent" = "src/agent"
+"agent" = "src/agent"
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+
+[tool.ruff]
+lint.select = [
+    "E",    # pycodestyle
+    "F",    # pyflakes
+    "I",    # isort
+    "D",    # pydocstyle
+    "D401", # First line should be in imperative mood
+    "T201",
+    "UP",
+]
+lint.ignore = [
+    "UP006",
+    "UP007",
+    # We actually do want to import from typing_extensions
+    "UP035",
+    # Relax the convention by _not_ requiring documentation for every function parameter.
+    "D417",
+    "E501",
+]
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D", "UP"]
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[dependency-groups]
+dev = [
+    "anyio>=4.7.0",
+    "langgraph-cli[inmem]>=0.2.8",
+]

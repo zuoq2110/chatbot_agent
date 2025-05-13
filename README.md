@@ -14,22 +14,22 @@ An intelligent chatbot for answering questions about regulations at the Academy 
 ## Mermaid Diagram
 
 ```mermaid
-graph TD
-    START([START]) --> ProcessQuery[Process User Query]
-    ProcessQuery --> Retrieve[Retrieve Documents]
-    Retrieve -->|Grade: Relevant| Generate[Generate Answer]
-    Retrieve -->|Grade: Not Relevant| Rewrite[Rewrite Question]
-    Generate --> END([END])
-    Rewrite --> ProcessQuery
-    
-    classDef start fill:#green,stroke:#333,stroke-width:2px;
-    classDef _end fill:#red,stroke:#333,stroke-width:2px;
-    classDef process fill:#lightblue,stroke:#333,stroke-width:1px;
-    classDef conditional fill:#yellow,stroke:#333,stroke-width:1px;
-    
-    class START start;
-    class END _end;
-    class ProcessQuery,Retrieve,Generate,Rewrite process;
+graph TD;
+        __start__([<p>__start__</p>]):::first
+        process_user_query(process_user_query)
+        retrieve_documents(retrieve_documents)
+        rewrite_question(rewrite_question)
+        generate_answer(generate_answer)
+        __end__([<p>__end__</p>]):::last
+        __start__ --> process_user_query;
+        generate_answer --> __end__;
+        process_user_query --> retrieve_documents;
+        rewrite_question --> process_user_query;
+        retrieve_documents -.-> generate_answer;
+        retrieve_documents -.-> rewrite_question;
+        classDef default fill:#f2f0ff,line-height:1.2
+        classDef first fill-opacity:0
+        classDef last fill:#bfb6fc
 ```
 
 ## How to run streamlit app

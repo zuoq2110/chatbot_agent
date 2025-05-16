@@ -16,7 +16,7 @@ load_dotenv()
 
 # Import the tool directly
 from tool import search_kma_regulations, create_rag_tool
-from graph import KMAChatAgent
+from rag_graph import KMAChatAgent
 
 
 async def test_search_regulations():

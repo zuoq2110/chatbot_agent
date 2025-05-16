@@ -1,50 +1,94 @@
-# KMA RAG Chatbot - Agentic RAG and Backend
+# KMA Chat Agent
 
-# Agentic RAG
-
-An intelligent chatbot for answering questions about regulations at the Academy of Cryptographic Techniques (KMA). This project uses LangChain, LangGraph, and Ollama to provide accurate responses to user queries about KMA's regulations.
+A LangGraph-based agent system for Academy of Cryptography Techniques (KMA) students, designed to answer questions about regulations, student information, and academic scores.
 
 ## Features
-- **Hybrid Retrieval**: Combines vector search (FAISS) and keyword search (BM25) for optimal information retrieval
-- **Intelligent Rewriting**: Improves queries that don't initially match relevant documents
-- **Relevance Grading**: Evaluates document relevance to ensure accurate responses
-- **Streamlit UI for test**: Clean Streamlit interface for easy interaction
-- **Multi-language Support**: Fully supports Vietnamese language for both queries and responses
 
-## Mermaid Diagram
+- Simple API for querying the agent
+- Interactive Streamlit UI for demonstrations
+- Tools for KMA regulations search, student information, and score calculations
+- No authentication or chat history (stateless)
 
-```mermaid
-graph TD;
-        __start__([<p>__start__</p>]):::first
-        process_user_query(process_user_query)
-        retrieve_documents(retrieve_documents)
-        rewrite_question(rewrite_question)
-        generate_answer(generate_answer)
-        __end__([<p>__end__</p>]):::last
-        __start__ --> process_user_query;
-        generate_answer --> __end__;
-        process_user_query --> retrieve_documents;
-        rewrite_question --> process_user_query;
-        retrieve_documents -.-> generate_answer;
-        retrieve_documents -.-> rewrite_question;
-        classDef default fill:#f2f0ff,line-height:1.2
-        classDef first fill-opacity:0
-        classDef last fill:#bfb6fc
+## Setup
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+pip install -r requirements.txt
 ```
 
-## How to run streamlit app
+3. Set up environment variables in a `.env` file:
 
-1. Install the required packages:
-   ```bash
-   poetry install
-   ```
-2. Activate the virtual environment:
-   ```bash
-   poetry env activate
-   ```
-   
-3. Run the Streamlit app:
-   ```bash
-     streamlit run src/rag/streamlit_app.py 
-    ```
+```
+# Required for LLM
+OPENAI_API_KEY=your-openai-api-key
 
+# MongoDB connection (if needed)
+MONGODB_URL=your-mongodb-url
+MONGODB_DB_NAME=kma_chat
+```
+
+## Usage
+
+The system provides two separate interfaces:
+
+### FastAPI Server
+
+Run the FastAPI server:
+
+```bash
+python src/main.py --api
+```
+
+This will start the API server at http://localhost:8000
+
+API Endpoints:
+
+- GET `/` - Basic health check and info
+- POST `/query` - Submit a query to the agent
+  - Request body: `{"query": "your question here"}`
+  - Response: `{"response": "agent's answer", "processing_time_ms": 123.45}`
+
+Example curl request:
+
+```bash
+curl -X POST http://localhost:8000/query -H "Content-Type: application/json" -d '{"query": "What are the graduation requirements for KMA?"}'
+```
+
+### Streamlit UI
+
+Run the Streamlit UI:
+
+```bash
+python src/main.py --ui
+```
+
+This will start the Streamlit app, usually at http://localhost:8501
+
+The UI provides:
+
+- A chat-like interface for interacting with the agent
+- Example queries to get started
+- Debug mode toggle to see processing times and details
+
+### Testing
+
+Test the agent directly without starting the server or UI:
+
+```bash
+python src/main.py --test "What are the graduation requirements for KMA?"
+```
+
+## Components
+
+- `src/agent/supervisor_agent.py` - The core LangGraph agent implementation
+- `src/api/agent_api.py` - FastAPI server implementation
+- `src/ui/streamlit_app.py` - Streamlit UI implementation
+- `src/main.py` - Command-line interface for running the components
+
+## Development
+
+Both the API and Streamlit app can be run independently. The code is structured to ensure each component can run without the other.
+
+To modify the agent behavior, edit the `src/agent/supervisor_agent.py` file.

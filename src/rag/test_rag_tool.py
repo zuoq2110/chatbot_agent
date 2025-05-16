@@ -16,7 +16,7 @@ from unittest.mock import patch, MagicMock
 from langchain_core.documents import Document
 
 from tool import get_chat_agent, search_kma_regulations, create_rag_tool
-from graph import KMAChatAgent
+from rag_graph import KMAChatAgent
 
 
 class TestRAGTool(unittest.TestCase):

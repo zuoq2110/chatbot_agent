@@ -35,7 +35,8 @@ dependencies = [
     "langgraph-cli[inmem] (>=0.2.10,<0.3.0)",
     "asyncpg (>=0.30.0,<0.31.0)",
     "mcp (>=1.9.0,<2.0.0)",
-    "langgraph-supervisor (>=0.0.21,<0.0.22)"
+    "langgraph-supervisor (>=0.0.21,<0.0.22)",
+    "langchain-google-genai (>=2.1.4,<3.0.0)"
 ]
 
 [tool.poetry]

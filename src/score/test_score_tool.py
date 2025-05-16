@@ -22,7 +22,7 @@ if parent_dir not in sys.path:
 # Import score tools directly
 from score.score_tool import get_student_scores
 from score.student_tool import get_student_info, global_db
-from score.calculator import calculate_average_scores
+from score.calculator_tool import calculate_average_scores
 from score.database import Database
 
 # Import RAG tool - will need to adjust import based on your project structure

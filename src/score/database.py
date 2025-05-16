@@ -3,7 +3,7 @@ from typing import List, Optional, Dict, Any
 import asyncpg
 from dotenv import load_dotenv
 
-from models import Score, Student, Subject, ScoreWithDetails, ScoreFilter
+from .models import Score, Student, Subject, ScoreWithDetails, ScoreFilter
 
 load_dotenv()
 

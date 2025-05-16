@@ -2,7 +2,7 @@
 import streamlit as st
 
 # from retriever import create_hybrid_retriever
-from graph import KMAChatAgent
+from rag_graph import KMAChatAgent
 
 # Page config
 st.set_page_config(

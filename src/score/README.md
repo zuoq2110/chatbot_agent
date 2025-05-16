@@ -81,12 +81,12 @@ result = await student_tool.get_student_info(student_code="CT123")
 ### Score Calculator
 
 ```python
-from src.score.calculator import create_score_calculator
+from src.score.calculator_tool import create_score_calculator
 
 # Create tool
 calculator = create_score_calculator()
 
 # Calculate averages
-scores_json = '{"scores": [...]}' # JSON string with scores data
+scores_json = '{"scores": [...]}'  # JSON string with scores data
 result = calculator.calculate_average_scores(scores_json=scores_json)
 ```

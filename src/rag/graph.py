@@ -2,17 +2,16 @@ import os
 import unicodedata
 import logging
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Dict, Any
 
-from dotenv import load_dotenv
 from langchain_core.messages import HumanMessage, AIMessage
 from langgraph.graph import MessagesState
 from langgraph.graph import StateGraph, START, END
 from langsmith import Client
 from pydantic import Field, BaseModel
 
-from agent import create_hybrid_retriever
 from llm_config import LLMConfig
+from rag.retriever import create_hybrid_retriever
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -21,6 +20,63 @@ logger = logging.getLogger(__name__)
 class GradeDocuments(BaseModel):
     """Grade documents using a binary score for relevance check."""
     binary_score: str = Field(description="Relevance score: 'yes' if relevant, or 'no' if not relevant")
+
+
+# Helper function for score_tool.py to use
+async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, Any]:
+    """Process a KMA regulation query and return the answer with sources.
+    
+    Args:
+        query: The question to answer
+        retriever: Optional retriever to use (will create one if not provided)
+        llm: Optional LLM to use (will create one if not provided)
+        
+    Returns:
+        Dictionary with answer and sources
+    """
+    # Create components if not provided
+    if retriever is None:
+        retriever = get_retriever()
+    
+    if llm is None:
+        llm = LLMConfig.create_llm()
+    
+    # Load prompts
+    prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    with open(os.path.join(prompts_dir, "generate.txt"), "r") as f:
+        generate_prompt = f.read().strip()
+    
+    # Retrieve documents
+    docs = retriever.get_relevant_documents(query)
+    
+    # Combine document content
+    context = "\n\n".join([doc.page_content for doc in docs])
+    
+    # Generate answer
+    prompt = generate_prompt.format(question=query, context=context)
+    response = llm.invoke([{"role": "user", "content": prompt}])
+    
+    # Return the answer and sources
+    return {
+        "answer": response.content,
+        "sources": [doc.page_content for doc in docs[:3]]  # Return top 3 sources
+    }
+
+
+def get_retriever():
+    """Get the hybrid retriever for KMA regulations"""
+    # Define paths
+    current_dir = Path(__file__).parent.absolute()
+    project_root = current_dir.parent.parent
+    vector_db_path = os.path.join(project_root, "vector_db")
+    data_path = os.path.join(project_root, "data", "regulation.txt")
+
+    hybrid_retriever, _ = create_hybrid_retriever(
+        vector_db_path=vector_db_path,
+        data_path=data_path
+    )
+
+    return hybrid_retriever
 
 
 class KMAChatAgent:
@@ -67,18 +123,7 @@ class KMAChatAgent:
 
     def get_retriever(self):
         """Get the hybrid retriever"""
-        # Define paths
-        current_dir = Path(__file__).parent.absolute()
-        project_root = current_dir.parent.parent
-        vector_db_path = os.path.join(project_root, "vector_db")
-        data_path = os.path.join(project_root, "data", "regulation.txt")
-
-        hybrid_retriever, _ = create_hybrid_retriever(
-            vector_db_path=vector_db_path,
-            data_path=data_path
-        )
-
-        return hybrid_retriever
+        return get_retriever()
 
     def _build_workflow(self):
         """Build the LangGraph workflow"""

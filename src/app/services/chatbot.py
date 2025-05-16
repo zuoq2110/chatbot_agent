@@ -8,17 +8,17 @@ from datetime import datetime
 
 from dotenv import load_dotenv
 
-from agent import KMAChatAgent, create_hybrid_retriever
+from rag import KMAChatAgent, create_hybrid_retriever
 from app.models.message import MessageCreate, MessageInDB
 from app.db import Database, model_to_dict
 
-# Import agent modules
+# Import rag modules
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
 # Load environment variables
 load_dotenv()
 
-# Global agent instance
+# Global rag instance
 _agent = None
 
 def initialize_rag() -> KMAChatAgent:
@@ -46,10 +46,10 @@ async def get_agent():
     return _agent
 
 async def send_query_to_agent(query: str) -> str:
-    """Send a query to the agent and get a response"""
+    """Send a query to the rag and get a response"""
     try:
         conversation = await _agent()
-        # Call the agent in a separate thread to avoid blocking the event loop
+        # Call the rag in a separate thread to avoid blocking the event loop
         loop = asyncio.get_event_loop()
         response = await loop.run_in_executor(
             None, 
@@ -57,7 +57,7 @@ async def send_query_to_agent(query: str) -> str:
         )
         return response.get('answer', 'I apologize, but I could not process your query.')
     except Exception as e:
-        print(f"Error in chatbot agent: {e}")
+        print(f"Error in chatbot rag: {e}")
         traceback.print_exc()
         return "I apologize, but I encountered an error while processing your query."
 
@@ -77,7 +77,7 @@ async def process_chat_request(conversation_id: str, user_id: str, query: str,
         user_message_dict = model_to_dict(MessageInDB(**user_message.model_dump()))
         user_message_id = await Database.insert_one("messages", user_message_dict)
         
-        # Get response from agent
+        # Get response from rag
         response_text = await send_query_to_agent(query)
         
         # Save bot response

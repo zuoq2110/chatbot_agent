@@ -1,9 +1,12 @@
 """
-KMA Regulations Assistant - A chatbot for answering questions about 
-regulations at the Academy of Cryptographic Techniques (KMA).
+KMA Agent - Multi-agent system for KMA student queries.
+
+This package implements a supervisor agent using LangGraph and tool-based agents
+for handling student queries about regulations, student information, and scores.
 """
 
-from .retriever import create_hybrid_retriever
-from .graph import KMAChatAgent
+from .supervisor_agent import create_supervisor_agent
+from .state import MyAgentState
 
-__all__ = ["create_hybrid_retriever", "KMAChatAgent"]
+__version__ = "0.1.0"
+__all__ = ["create_supervisor_agent", "MyAgentState"]

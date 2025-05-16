@@ -1,5 +1,5 @@
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException, Depends, Body, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic_settings import BaseSettings
@@ -8,6 +8,11 @@ import os
 import logging
 from dotenv import load_dotenv
 from app.utils.log_config import setup_logging
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, Field
+from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, ToolMessage
+from src.agent import create_supervisor_agent
+from src.agent.state import MyAgentState
 
 # Load environment variables
 load_dotenv()
@@ -46,6 +51,12 @@ async def lifespan(app: FastAPI):
         "log_level": settings.log_level
     })
     
+    # Initialize agent
+    supervisor_agent = create_supervisor_agent(model_name="gpt-3.5-turbo")
+    
+    # Store active conversations
+    conversations: Dict[str, MyAgentState] = {}
+    
     yield
     
     # Log application shutdown
@@ -57,7 +68,7 @@ async def lifespan(app: FastAPI):
 # Initialize the FastAPI app
 app = FastAPI(
     title="KMA Chat Agent API",
-    description="API for the KMA Chat Agent",
+    description="API for KMA's Student Assistant Agent",
     version="0.1.0",
     lifespan=lifespan,
     docs_url="/api/docs",
@@ -86,9 +97,128 @@ app.include_router(conversations.router, prefix="/api/conversations", tags=["con
 app.include_router(messages.router, prefix="/api/messages", tags=["messages"])
 app.include_router(chat.router, prefix="/api/chat", tags=["chat"])
 
-@app.get("/")
-async def root():
-    return {"message": "Welcome to KMA Chat Agent API"}
+# Initialize agent
+supervisor_agent = create_supervisor_agent(model_name="gpt-3.5-turbo")
+
+# Store active conversations
+conversations: Dict[str, MyAgentState] = {}
+
+class MessageRequest(BaseModel):
+    """Request model for sending a message"""
+    conversation_id: str = Field(..., description="Unique identifier for the conversation")
+    message: str = Field(..., description="Message from the user")
+
+class MessageResponse(BaseModel):
+    """Response model for messages"""
+    conversation_id: str = Field(..., description="Unique identifier for the conversation")
+    messages: List[Dict[str, Any]] = Field(..., description="List of messages in the conversation")
+    awaiting_human_input: bool = Field(False, description="Whether the agent is waiting for human input")
+    human_input_prompt: Optional[str] = Field(None, description="Prompt for human input if awaiting_human_input is True")
+    
+
+@app.post("/api/message", response_model=MessageResponse)
+async def send_message(request: MessageRequest):
+    """Send a message to the agent"""
+    conversation_id = request.conversation_id
+    message = request.message
+    
+    # Get or create conversation state
+    if conversation_id not in conversations:
+        conversations[conversation_id] = MyAgentState()
+    
+    state = conversations[conversation_id]
+    
+    # Check if we were waiting for human input
+    if state.awaiting_human_input:
+        # Process human input through the handle_human_input node
+        human_message = HumanMessage(content=message)
+        state.add_message(human_message)
+        state.set_human_input_received()
+    else:
+        # Add user message
+        state.add_message(HumanMessage(content=message))
+    
+    # Invoke agent
+    result = supervisor_agent.invoke(state)
+    
+    # Update conversation state
+    conversations[conversation_id] = result
+    
+    # Convert messages to serializable format
+    serialized_messages = []
+    for msg in result.messages:
+        if isinstance(msg, HumanMessage):
+            serialized_messages.append({
+                "role": "human",
+                "content": msg.content
+            })
+        elif isinstance(msg, AIMessage):
+            serialized_messages.append({
+                "role": "ai",
+                "content": msg.content
+            })
+        elif isinstance(msg, ToolMessage):
+            serialized_messages.append({
+                "role": "tool",
+                "name": msg.name,
+                "content": msg.content
+            })
+    
+    return MessageResponse(
+        conversation_id=conversation_id,
+        messages=serialized_messages,
+        awaiting_human_input=result.awaiting_human_input,
+        human_input_prompt=result.human_input_prompt
+    )
+
+@app.get("/api/conversations/{conversation_id}", response_model=MessageResponse)
+async def get_conversation(conversation_id: str):
+    """Get a conversation by ID"""
+    if conversation_id not in conversations:
+        raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    state = conversations[conversation_id]
+    
+    # Convert messages to serializable format
+    serialized_messages = []
+    for msg in state.messages:
+        if isinstance(msg, HumanMessage):
+            serialized_messages.append({
+                "role": "human",
+                "content": msg.content
+            })
+        elif isinstance(msg, AIMessage):
+            serialized_messages.append({
+                "role": "ai",
+                "content": msg.content
+            })
+        elif isinstance(msg, ToolMessage):
+            serialized_messages.append({
+                "role": "tool",
+                "name": msg.name,
+                "content": msg.content
+            })
+    
+    return MessageResponse(
+        conversation_id=conversation_id,
+        messages=serialized_messages,
+        awaiting_human_input=state.awaiting_human_input,
+        human_input_prompt=state.human_input_prompt
+    )
+
+@app.delete("/api/conversations/{conversation_id}")
+async def delete_conversation(conversation_id: str):
+    """Delete a conversation by ID"""
+    if conversation_id in conversations:
+        del conversations[conversation_id]
+    
+    return {"message": "Conversation deleted successfully"}
+
+# Add a simple health check endpoint
+@app.get("/health")
+async def health_check():
+    """Health check endpoint"""
+    return {"status": "ok"}
 
 def run_backend():
     """Run the backend in production mode"""

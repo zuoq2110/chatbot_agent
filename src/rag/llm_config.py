@@ -44,4 +44,22 @@ class LLMConfig:
         if project_name is None:
             project_name = cls.DEFAULT_PROJECT_NAME
         
-        return CallbackManager([LangChainTracer(project_name=project_name)]) 
+        return CallbackManager([LangChainTracer(project_name=project_name)])
+
+
+# Utility function to get an LLM instance
+def get_llm(model_name: str = None, project_name: str = None) -> ChatOllama:
+    """Get a configured LLM instance.
+    
+    Args:
+        model_name: Optional model name to use
+        project_name: Optional project name for LangSmith
+        
+    Returns:
+        Configured ChatOllama instance
+    """
+    callback_manager = None
+    if project_name:
+        callback_manager = LLMConfig.create_callback_manager(project_name)
+        
+    return LLMConfig.create_llm(model_name, callback_manager) 

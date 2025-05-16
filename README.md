@@ -45,6 +45,6 @@ graph TD;
    
 3. Run the Streamlit app:
    ```bash
-     streamlit run src/agent/streamlit_app.py 
+     streamlit run src/rag/streamlit_app.py 
     ```
 

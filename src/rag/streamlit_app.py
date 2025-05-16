@@ -60,11 +60,11 @@ st.markdown("<p class='sub-header'>Hỏi đáp về quy định của Học vi�
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# Initialize chat agent in session state if it doesn't exist
+# Initialize chat rag in session state if it doesn't exist
 if "chat_agent" not in st.session_state:
     with st.spinner("Đang khởi tạo trợ lý ảo..."):
         
-        # Initialize chat agent
+        # Initialize chat rag
         st.session_state.chat_agent = KMAChatAgent()
         st.success("Trợ lý ảo đã sẵn sàng!")
 

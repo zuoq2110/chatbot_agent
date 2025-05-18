@@ -36,6 +36,19 @@ class MongoDB:
         cls.client = AsyncIOMotorClient(settings.MONGODB_URL)
         cls.db = cls.client[settings.MONGODB_DB_NAME]
         logger.info("Connected to MongoDB")
+
+        collections = await cls.db.list_collection_names()
+        logger.info(f"Collections: {collections}")
+        if 'user' in collections:
+            logger.info(f"Collection user' now exists.")
+        else:
+            logger.info(f"Error: Collection user was not created as expected.")
+
+        collection = cls.db.users
+        if collection is None:
+            logger.info("Error: Collection object is None!")
+
+        logger.info(f"MONGO SETTED UP")
         
     @classmethod
     async def close_mongodb_connection(cls):
@@ -48,6 +61,10 @@ class MongoDB:
     @property
     def conversations(self):
         return self.db.conversations
+
+    @property
+    def user(self):
+        return self.db.user
         
     @property
     def messages(self):

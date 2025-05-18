@@ -80,12 +80,20 @@ async def get_conversations_of_user(
 ):
     """Get all conversations for a user"""
     user_id_obj = validate_object_id(user_id)
+
+    conversations = []
+
+    if user_id_obj is None:
+        return BaseResponse(
+            statusCode=status.HTTP_200_OK,
+            message="Conversations retrieved successfully",
+            data=conversations
+        )
     
     cursor = mongodb.db.conversations.find(
         {"user_id": user_id_obj}
     ).sort("updated_at", -1).skip(skip).limit(limit)
-    
-    conversations = []
+
     async for conv in cursor:
         # Count messages for this conversation
         response_data = ConversationResponse(

@@ -8,7 +8,7 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .db.mongodb import MongoDB
+from .db.mongodb import MongoDB, mongodb
 from .models.responses import BaseResponse
 from .api.chat import router as chat_router
 from .api.user import router as user_router
@@ -68,11 +68,11 @@ async def general_exception_handler(request: Request, exc: Exception):
 
 @app.on_event("startup")
 async def startup_db_client():
-    await MongoDB.connect_to_mongodb()
+    await mongodb.connect_to_mongodb()
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    await MongoDB.close_mongodb_connection()
+    await mongodb.close_mongodb_connection()
 
 @app.get("/", response_model=BaseResponse)
 async def root():

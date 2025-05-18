@@ -115,6 +115,7 @@ async def get_conversations_of_user(
 async def create_conversation(
     conversation: ConversationCreate,
 ):
+    logger.info(f"Creating conversation: {conversation.title}")
     """Create a new conversation"""
     user_id_obj = validate_object_id(conversation.user_id)
     
@@ -125,16 +126,22 @@ async def create_conversation(
         "created_at": now,
         "updated_at": now
     }
-    
+
+    collection = mongodb.db.conversations
+    if collection is None:
+        logger.info("Error: Collection object is None!")
+    else:
+        logger.info(f"Collection object: {collection}")
+
     result = await mongodb.db.conversations.insert_one(new_conversation)
-    print("conv id: ", result)
+    logger.info("conv id: ", result)
 
     conversation_id = result.inserted_id
     
     created_conversation = await mongodb.db.conversations.find_one({"_id": conversation_id})
 
-    print("Created conv")
-    print(created_conversation)
+    logger.info("Created conv")
+    logger.info(created_conversation)
 
     response_data = ConversationResponse(
         _id=str(created_conversation["_id"]),

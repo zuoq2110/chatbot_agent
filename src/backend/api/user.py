@@ -18,7 +18,7 @@ async def create_user(user: UserCreate):
     """Create a new user or return existing user by student_code"""
     
     # Check if user already exists with this student_code
-    existing_user = await mongodb.db.users.find_one({"student_code": user.student_code})
+    existing_user = await mongodb.db.user.find_one({"student_code": user.student_code})
     
     if existing_user:
         # User already exists, return it
@@ -30,7 +30,7 @@ async def create_user(user: UserCreate):
             created_at=existing_user["created_at"],
             updated_at=existing_user["updated_at"]
         )
-        
+
         return BaseResponse(
             statusCode=status.HTTP_200_OK,
             message="User already exists",

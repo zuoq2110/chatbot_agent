@@ -10,7 +10,8 @@ from fastapi.responses import JSONResponse
 
 from .db.mongodb import MongoDB
 from .models.responses import BaseResponse
-from .api.chat import router
+from .api.chat import router as chat_router
+from .api.user import router as user_router
 
 load_dotenv()
 
@@ -38,7 +39,8 @@ app.add_middleware(
 )
 
 # Include routers
-app.include_router(router, prefix="/api/chat", tags=["chat"])
+app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
+app.include_router(user_router, prefix="/api", tags=["user"])
 
 # Custom exception handlers
 @app.exception_handler(HTTPException)

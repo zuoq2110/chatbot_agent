@@ -36,13 +36,18 @@ dependencies = [
     "asyncpg (>=0.30.0,<0.31.0)",
     "mcp (>=1.9.0,<2.0.0)",
     "langgraph-supervisor (>=0.0.21,<0.0.22)",
-    "langchain-google-genai (>=2.1.4,<3.0.0)"
+    "langchain-google-genai (>=2.1.4,<3.0.0)",
+    "typer (>=0.15.4,<0.16.0)"
 ]
 
 [tool.poetry]
 packages = [
     {include = "agent", from = "src"},
-    {include = "app", from = "src"}
+    {include = "backend", from = "src"},
+    {include = "rag", from = "src"},
+    {include = "llm", from = "src"},
+    {include = "score", from = "src"},
+    {include = "ui", from = "src"},
 ]
 
 [build-system]

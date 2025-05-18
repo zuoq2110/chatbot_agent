@@ -54,7 +54,7 @@ async def root():
     return {"message": "KMA Agent API is running. Use /query endpoint to interact with the agent."}
 
 
-@app.post("/query", response_model=QueryResponse)
+@app.post("/query", response_model=BaseResponse)
 async def query_agent(request: QueryRequest):
     try:
         start_time = time.time()
@@ -63,12 +63,15 @@ async def query_agent(request: QueryRequest):
         # Run the agent with the query
         response_text = await agent.chat(request.query)
 
+        logger.info(f"Response from query: {response_text}")
+
         # Calculate processing time
         processing_time = (time.time() - start_time) * 1000  # convert to milliseconds
         logger.info(f"Query processed in {processing_time:.2f}ms")
 
+        content = response_text[-1].content
         # Check if the response was the fallback
-        if response_text == "I couldn't generate a response. Please try a different query.":
+        if content == "I couldn't generate a response. Please try a different query.":
             logger.warning(f"Agent returned fallback response for query: {request.query}")
 
             ## raise http 400 with data base response
@@ -77,7 +80,7 @@ async def query_agent(request: QueryRequest):
 
         # Return the response with base response
         return BaseResponse(status_code=200, message="Query processed successfully",
-                            data={"response": response_text, "processing_time_ms": processing_time})
+                            data={"response": content, "processing_time_ms": processing_time})
 
     except Exception as e:
         logger.error(f"Error processing query: {str(e)}")
@@ -94,7 +97,7 @@ def run_api():
         port = 3434
     else:
         port = int(port)
-    uvicorn.run("api.agent_api:app", host="0.0.0.0", port=port, reload=True)
+    uvicorn.run("api.agent_api:app", host="0.0.0.0", port=3435, reload=True)
 
 
 if __name__ == "__main__":

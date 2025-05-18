@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, HTTPException, Query, status, Header
 from langchain_core.messages import HumanMessage, AIMessage
 
 # Add the parent directory to sys.path to import our agent
@@ -246,6 +246,7 @@ async def get_messages_of_conversation(
 async def query_ai(
     conversation_id: str,
     message: MessageCreate,
+    student_code: str = Header(None)
 ):
     """Add a new message to a conversation and get AI response using memory-aware chat"""
     conv_id = validate_object_id(conversation_id)
@@ -260,10 +261,16 @@ async def query_ai(
     
     now = datetime.utcnow()
 
+    if student_code:
+        logger.info(f"Student code: {student_code}")
+        content = f"My student code is {student_code}" + message.content
+    else:
+        content = message.content
+
     # Create the user message
     new_message = {
         "conversation_id": conv_id,
-        "content": message.content,
+        "content": content,
         "is_user": message.is_user,
         "created_at": now
     }
@@ -290,8 +297,8 @@ async def query_ai(
             conversation_history.append(AIMessage(content=msg["content"]))
 
     # Use the chat_with_memory method to get a response with context
-    logger.info(f"Processing query with memory: {message.content}")
-    updated_history = await agent.chat_with_memory(conversation_history[:-1], message.content)
+    logger.info(f"Processing query with memory: {content}")
+    updated_history = await agent.chat_with_memory(conversation_history[:-1], content)
     
     # The last message in the updated history is the AI's response
     ai_response = updated_history[-1].content
@@ -334,6 +341,7 @@ async def query_ai(
 @router.post("/quick-messages", response_model=BaseResponse[QuickMessageResponse])
 async def quick_chat(
     message: MessageQuickChat,
+    student_code: str = Header(None)
 ):
     """Get a quick response without saving conversation history"""
     
@@ -342,7 +350,15 @@ async def quick_chat(
     
     # Use the chat_with_memory method consistently with other endpoint
     logger.info(f"Processing quick query: {message.content}")
-    response = await agent.chat_with_memory([], message.content)
+    logger.info(f"Student code: {student_code}")
+
+    if student_code:
+        logger.info(f"Student code: {student_code}")
+        content = f"My student code is {student_code}" + message.content
+    else:
+        content = message.content
+
+    response = await agent.chat_with_memory([], content)
     
     # The last message in the response is the AI's answer
     ai_response = response[-1].content

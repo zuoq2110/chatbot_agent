@@ -79,7 +79,7 @@ async def conversation_agent(request: ConversationRequest):
 
         # Convert DB messages to langchain message format
         conversation_history = []
-        async for msg in request.history:
+        for msg in request.history:
             if msg.is_user:
                 conversation_history.append(HumanMessage(content=msg.content))
             else:

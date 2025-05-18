@@ -44,7 +44,7 @@ class QueryResponse(BaseModel):
 
 
 class BaseResponse(BaseModel):
-    status_code: int
+    statusCode: int
     message: str
     data: Optional[Dict[str, Any]] = None
 

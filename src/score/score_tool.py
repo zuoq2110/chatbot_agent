@@ -44,6 +44,7 @@ async def get_student_scores(student_code: str, semester: Optional[str] = None,
     Returns:
         A JSON string containing the scores and any additional information
     """
+
     try:
         # Validate semester format if provided
         if semester:

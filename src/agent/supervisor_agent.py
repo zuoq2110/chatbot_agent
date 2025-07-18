@@ -10,7 +10,7 @@ from langgraph.graph import StateGraph, END
 from langgraph.prebuilt import ToolNode
 
 from agent.state import MyAgentState
-from llm.config import get_gemini_llm
+from llm.config import get_gemini_llm, get_llm
 from rag import create_rag_tool
 from score import get_student_scores, get_student_info, calculate_average_scores
 

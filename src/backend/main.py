@@ -8,14 +8,14 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-# from .db.mongodb import MongoDB, mongodb
-from db.mongodb import MongoDB, mongodb
-# from .models.responses import BaseResponse
-# from .api.chat import router as chat_router
-# from .api.user import router as user_router
-from models.responses import BaseResponse
-from api.chat import router as chat_router
-from api.user import router as user_router
+from .db.mongodb import MongoDB, mongodb
+# from db.mongodb import MongoDB, mongodb
+from .models.responses import BaseResponse
+from .api.chat import router as chat_router
+from .api.user import router as user_router
+# from models.responses import BaseResponse
+# from api.chat import router as chat_router
+# from api.user import router as user_router
 
 load_dotenv()
 

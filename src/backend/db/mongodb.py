@@ -24,7 +24,7 @@ class MongoDBSettings(BaseSettings):
     PORT: str = ""
     DEV_MODE: str = ""
     LOG_LEVEL: str = ""
-    
+    HF_TOKEN: str = ""
     class Config:
         env_file = ".env"
 
@@ -71,7 +71,8 @@ class MongoDB:
 
         logger.info(f"MONGO SETTED UP")
 
-        created_conversation = await mongodb.db.conversations.find_one({"_id": "abcd"})
+        # created_conversation = await mongodb.db.conversations.find_one({"_id": "abcd"})
+        created_conversation =  mongodb.db.conversations.find_one({"_id": "abcd"})
 
         logger.info("Test")
         logger.info(created_conversation)

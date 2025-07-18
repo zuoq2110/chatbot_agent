@@ -5,6 +5,7 @@ src/app/logs/
 .vscode/
 .idea/
 
+.env
 # Vagrant
 .vagrant/
 

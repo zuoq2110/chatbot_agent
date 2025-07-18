@@ -37,7 +37,12 @@ dependencies = [
     "mcp (>=1.9.0,<2.0.0)",
     "langgraph-supervisor (>=0.0.21,<0.0.22)",
     "langchain-google-genai (>=2.1.4,<3.0.0)",
-    "typer (>=0.15.4,<0.16.0)"
+    "typer (>=0.15.4,<0.16.0)",
+    "pymongo (>=4.13.2,<5.0.0)",
+    "openpyxl (>=3.1.5,<4.0.0)",
+    "sentence-transformers (>=5.0.0,<6.0.0)",
+    "pandas (>=2.3.0,<3.0.0)",
+    "tqdm (>=4.67.1,<5.0.0)"
 ]
 
 [tool.poetry]
@@ -47,7 +52,7 @@ packages = [
     {include = "rag", from = "src"},
     {include = "llm", from = "src"},
     {include = "score", from = "src"},
-    {include = "ui", from = "src"},
+    {include = "streamlit_ui", from = "src"},
 ]
 
 [build-system]

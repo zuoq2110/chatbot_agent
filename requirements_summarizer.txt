@@ -1,0 +1,15 @@
+# Core dependencies
+streamlit>=1.25.0
+langchain>=0.0.267
+pydantic>=2.3.0
+
+# For file handling
+PyPDF2>=3.0.0
+python-docx>=0.8.11
+
+# For text processing
+nltk>=3.8.1
+scikit-learn>=1.3.0
+
+# For environment
+python-dotenv>=1.0.0

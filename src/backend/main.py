@@ -86,6 +86,19 @@ async def root():
         data=None
     )
 
+@app.get("/health", response_model=BaseResponse)
+async def health_check():
+    """Health check endpoint for monitoring backend status"""
+    return BaseResponse(
+        statusCode=status.HTTP_200_OK,
+        message="Backend is healthy",
+        data={
+            "status": "online",
+            "timestamp": "2025-08-03",
+            "version": "1.0.0"
+        }
+    )
+
 def run_backend(port: int = 8000, host: str = "0.0.0.0", reload: bool = True):
     """
     Run the FastAPI backend with the specified configuration.

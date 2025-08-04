@@ -25,8 +25,10 @@ class MongoDBSettings(BaseSettings):
     DEV_MODE: str = ""
     LOG_LEVEL: str = ""
     HF_TOKEN: str = ""
+    
     class Config:
         env_file = ".env"
+        extra = "ignore"  # Cho phép các trường bổ sung trong file .env
 
 def run_in_threadpool(func):
     @wraps(func)
@@ -47,6 +49,7 @@ class MongoDB:
         settings = MongoDBSettings()
         logger.info(f"Connecting to MongoDB at {settings.MONGODB_URL}")
         self.client = MongoClient(settings.MONGODB_URL)
+        print("saddasasdasd",self.client)
         self.db = self.client[settings.MONGODB_DB_NAME]
         logger.info("Connected to MongoDB")
 

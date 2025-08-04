@@ -11,6 +11,12 @@ from langchain_ollama import ChatOllama
 from langchain_community.callbacks.tracers import LangChainTracer  # Thêm dòng này
 from langchain_google_genai import ChatGoogleGenerativeAI
 
+# Load environment variables
+load_dotenv()
+
+# HF Model Path from environment or default
+HF_MODEL_PATH = os.environ.get("HF_MODEL", "NousResearch/Hermes-2-Pro-Llama-3-8B")
+
 # Phần còn lại của file giữ nguyên
 class LLMConfig:
     """Configuration for language models used in the KMA Chat Agent."""
@@ -18,6 +24,9 @@ class LLMConfig:
     DEFAULT_RAG_MODEL_NAME = "mistral"
     DEFAULT_PROJECT_NAME = "KMA_CHAT"
     DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
+    
+    # Đường dẫn mặc định đến mô hình Hugging Face
+    HF_MODEL_PATH = "NousResearch/Hermes-2-Pro-Llama-3-8B"
     @classmethod
     def create_rag_llm(cls,
                   model_name: str = None,
@@ -81,9 +90,15 @@ def get_gemini_llm(model_name: str = None, callback_manager: Optional[CallbackMa
     api_key = os.environ.get("GOOGLE_API_KEY")
     if not api_key:
         raise ValueError("GOOGLE_API_KEY not found in environment variables")
-        
+    
+    gemini_model = os.environ.get("GEMINI_MODEL")    
     if model_name is None:
-        model_name = LLMConfig.DEFAULT_GEMINI_MODEL
+        if gemini_model:
+            model_name = gemini_model
+        else:
+            model_name = LLMConfig.DEFAULT_GEMINI_MODEL
+    
+    print(f"Initializing Gemini LLM with model: {model_name} and API key: {api_key[:5]}...")
 
     llm = ChatGoogleGenerativeAI(
         model=model_name,

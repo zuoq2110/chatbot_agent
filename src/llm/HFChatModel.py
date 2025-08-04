@@ -13,7 +13,8 @@ class HuggingFaceChatModel(BaseChatModel):
     temperature: float = Field(default=0.7)
     max_tokens: int = Field(default=512)
     
-    def __init__(self, model: str = "NousResearch/Hermes-2-Pro-Llama-3-8B", **kwargs):
+    def __init__(self, model_path: str = None, **kwargs):
+        model = model_path or "NousResearch/Hermes-2-Pro-Llama-3-8B"
         super().__init__(model=model, **kwargs)
         self.model = model
         self.client = InferenceClient(

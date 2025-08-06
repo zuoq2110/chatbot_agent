@@ -1235,7 +1235,7 @@ def register_form():
            
             # Submit button
             submitted = st.form_submit_button(t("register_button"))
-            
+            agree_terms = st.checkbox(t("agree_terms"))
             # Handle form submission within the form context
             if submitted:
                 if not username or not password:

@@ -11,25 +11,33 @@ services:
     ports:
       - "5432:5432"
 
-  backend:
+  app-base:
     build:
       context: .
-      dockerfile: src/backend/Dockerfile
+      dockerfile: Dockerfile
+    image: chatbot_agent_base
+    restart: "no"
+    command: sleep infinity
+
+  backend:
+    image: chatbot_agent_base
     restart: always
     env_file: .env
     depends_on:
       - postgres
+    working_dir: /app
+    command: uvicorn src.backend.main:app --host 0.0.0.0 --port 3434
     ports:
       - "3434:3434"
 
   ui:
-    build:
-      context: .
-      dockerfile: src/streamlit_ui/Dockerfile
+    image: chatbot_agent_base
     restart: always
     env_file: .env
     depends_on:
       - backend
+    working_dir: /app
+    command: streamlit run src/streamlit_ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
     ports:
       - "8501:8501"
 

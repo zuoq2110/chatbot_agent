@@ -65,8 +65,11 @@ def create_vector_database(output_path, data_path="./data/regulation.txt"):
         chunks = text_splitter.split_text(regulations)
 
         # Create embeddings using Linq-Embed-Mistral
-        embeddings = OllamaEmbeddings(model="nomic-embed-text")
-
+        # embeddings = OllamaEmbeddings(model="nomic-embed-text")
+        embeddings = OllamaEmbeddings(
+    model="nomic-embed-text",
+    base_url="http://host.docker.internal:11434"
+)
         # Create vector store
         vectorstore = FAISS.from_texts(chunks, embeddings)
 
@@ -88,7 +91,11 @@ def create_vector_database(output_path, data_path="./data/regulation.txt"):
 def load_vector_database(output_path, data_path="./data/regulation.txt"):
     """Load the vector database"""
     try:
-        embeddings = OllamaEmbeddings(model="nomic-embed-text")
+        # embeddings = OllamaEmbeddings(model="nomic-embed-text")
+        embeddings = OllamaEmbeddings(
+    model="nomic-embed-text",
+    base_url="http://host.docker.internal:11434"
+)
         if not os.path.exists(output_path):
             chunks = create_vector_database(output_path, data_path)
         else:

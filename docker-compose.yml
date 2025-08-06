@@ -20,9 +20,11 @@ services:
     command: sleep infinity
 
   backend:
-    image: chatbot_agent_base
+    image: chatbot_agent_backend
     restart: always
     env_file: .env
+    environment:
+      - PYTHONPATH=/app
     depends_on:
       - postgres
     working_dir: /app
@@ -31,13 +33,15 @@ services:
       - "3434:3434"
 
   ui:
-    image: chatbot_agent_base
+    image: chatbot_agent_ui
     restart: always
     env_file: .env
     depends_on:
       - backend
-    working_dir: /app
-    command: streamlit run src/streamlit_ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
+    working_dir: /app/src
+    environment:
+      - PYTHONPATH=/app
+    command: streamlit run streamlit_ui/streamlit_app.py --server.port 8501 --server.address 0.0.0.0
     ports:
       - "8501:8501"
 

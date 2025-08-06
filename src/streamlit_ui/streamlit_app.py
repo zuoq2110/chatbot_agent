@@ -228,7 +228,6 @@ TRANSLATIONS = {
         "strong": "Strong",
         "creating_account": "🔄 Creating new account...",
         "required_fields": "⚠️ Please enter username and password.",
-        "agree_terms": "I agree to the terms and conditions",
         "terms_required": "⚠️ Please agree to the terms and conditions.",
         "passwords_dont_match": "❌ Confirmation password doesn't match.",
         "min_password_length": "❌ Password must be at least 6 characters.",
@@ -809,7 +808,7 @@ def show_login_page():
         st.markdown(f"""
         <div style="background: linear-gradient(90deg, #dc2626 0%, #b91c1c 100%); padding: 1rem; border-radius: 0px; margin-top: 0; margin-bottom: 2rem; display: flex; justify-content: center; align-items: center; flex-direction: column;">
             <div style="width: 60px; height: 60px; background: white; border-radius: 50%; display: flex; justify-content: center; align-items: center; margin-bottom: 0.5rem; overflow: hidden;">
-                <img src="data:image/png;base64,{get_base64_from_image('img/kma.png')}" alt="KMA Logo" width="55" height="55" style="object-fit: contain;">
+                <img src="data:image/png;base64,{get_base64_from_image('./img/kma.png')}" alt="KMA Logo" width="55" height="55" style="object-fit: contain;">
             </div>
             <h1 style="color: white; text-align: center; margin: 0;">Học viện Kỹ thuật Mật mã</h1>
             <p style="color: #fecaca; text-align: center; margin: 0.5rem 0 0 0;">KMA Assistant - Trợ lý ảo thông minh</p>
@@ -1240,8 +1239,6 @@ def register_form():
             if submitted:
                 if not username or not password:
                     st.error(t("required_fields"))
-                elif not agree_terms:
-                    st.error(t("terms_required"))
                 elif password != confirm:
                     st.error(t("passwords_dont_match"))
                 elif len(password) < 6:

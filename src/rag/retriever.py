@@ -68,7 +68,7 @@ def create_vector_database(output_path, data_path="./data/regulation.txt"):
         # embeddings = OllamaEmbeddings(model="nomic-embed-text")
         embeddings = OllamaEmbeddings(
     model="nomic-embed-text",
-    base_url="http://host.docker.internal:11434"
+    base_url="http://172.17.0.1:11434"
 )
         # Create vector store
         vectorstore = FAISS.from_texts(chunks, embeddings)
@@ -94,7 +94,7 @@ def load_vector_database(output_path, data_path="./data/regulation.txt"):
         # embeddings = OllamaEmbeddings(model="nomic-embed-text")
         embeddings = OllamaEmbeddings(
     model="nomic-embed-text",
-    base_url="http://host.docker.internal:11434"
+    base_url="http://172.17.0.1:11434"
 )
         if not os.path.exists(output_path):
             chunks = create_vector_database(output_path, data_path)

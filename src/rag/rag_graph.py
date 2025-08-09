@@ -312,10 +312,9 @@ def get_retriever():
     current_dir = Path(__file__).parent.absolute()
     project_root = current_dir.parent.parent
     vector_db_path = os.path.join(project_root, "vector_db")
-    data_path = os.path.join(project_root, "data", "regulation.txt")
+    data_dir = os.path.join(project_root, "data")
 
-    hybrid_retriever, _ = create_hybrid_retriever(vector_db_path=vector_db_path, data_path=data_path)
-
+    hybrid_retriever, _ = create_hybrid_retriever(vector_db_path=vector_db_path, data_dir=data_dir)
     return hybrid_retriever
 
 

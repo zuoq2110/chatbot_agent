@@ -1,64 +1,65 @@
 import json
-
+import re
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 
 class ScoreCalculatorInput(BaseModel):
-    scores_json: str = Field(description="JSON string containing scores data to calculate averages from")
+    scores_json: str = Field(description="JSON string OR raw text containing scores data")
+
+
+def parse_scores_to_json(raw_text: str) -> dict:
+    """Parse raw text format 'Tên môn (x tín chỉ): điểm' thành dict JSON"""
+    scores_list = []
+    pattern = r"(.+?)\s*\((\d+)\s*tín chỉ\)\s*:\s*([\d\.]+)"
+    for match in re.findall(pattern, raw_text):
+        subject_name = match[0].strip()
+        subject_credits = int(match[1])
+        score_over_rall = float(match[2])
+        scores_list.append({
+            "subject_name": subject_name,
+            "subject_credits": subject_credits,
+            "score_over_rall": score_over_rall
+        })
+    return {"scores": scores_list}
 
 
 @tool("calculate_average_scores", args_schema=ScoreCalculatorInput,
-      description=("Calculate average scores from provided scores data. "
-                   "The scores data must be provided in JSON format. "
-                   "The JSON string should contain an array of scores with fields: subject_name, subject_credits and score_over_rall."
-                   "Please input data only in this JSON format and has no other words:"
-                   "scores: array of: subject_name: ,subject_credits: ,score_over_rall:"))
+      description=("Calculate average scores (GPA) from provided scores data. "
+                   "Input can be a JSON string with field 'scores' or raw text in format 'Tên môn (x tín chỉ): điểm'"))
 def calculate_average_scores(scores_json: str) -> str:
     """
     Calculate average scores from provided scores data.
-
     Args:
-        scores_json: JSON string containing scores data
-
+        scores_json: JSON string OR raw text containing scores data
     Returns:
-        A JSON string containing the calculated average scores
+        JSON string containing GPA and total credits
     """
     try:
-        # Parse the scores data
-        data = json.loads(scores_json)
+        # Nếu là JSON
+        try:
+            data = json.loads(scores_json)
+        except json.JSONDecodeError:
+            # Nếu không phải JSON → parse từ text
+            data = parse_scores_to_json(scores_json)
 
         if "scores" not in data or not data["scores"]:
-            return json.dumps({"averages": {}, "message": "No scores data provided or scores array is empty"})
+            return json.dumps({"averages": {}, "message": "No scores data provided"})
 
         scores = data["scores"]
 
-        # Calculate averages
-        total_score = 0
-        for score in scores:
-            if "score_over_rall" in score and isinstance(score["score_over_rall"], (int, float)):
-                total_score += score["score_over_rall"]
-            else:
-                continue
-        total_credits = 0
-        for score in scores:
-            if "subject_credits" in score and isinstance(score["subject_credits"], (int, float)):
-                total_credits += score["subject_credits"]
-            else:
-                continue
+        total_weighted_score = sum(s["score_over_rall"] * s["subject_credits"] for s in scores)
+        total_credits = sum(s["subject_credits"] for s in scores)
 
         if total_credits == 0:
             return json.dumps({"averages": {}, "message": "Total credits is zero, cannot calculate average"})
-        average_score = total_score / total_credits
-        average_score = round(average_score, 2)  # Round to 2 decimal places
-        print("__Calculate average score__")
-        print(average_score)
-        print(total_credits)
 
+        average_score = round(total_weighted_score / total_credits, 2)
 
-        averages = {"average_score": average_score, "total_credits": total_credits}
-
-        return json.dumps({"averages": averages, "message": "Average scores calculated successfully"})
+        return json.dumps({
+            "averages": {"average_score": average_score, "total_credits": total_credits},
+            "message": "Average scores calculated successfully"
+        }, ensure_ascii=False)
 
     except Exception as e:
         return json.dumps({"averages": {}, "message": f"Error calculating averages: {str(e)}"})

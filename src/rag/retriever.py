@@ -1,7 +1,7 @@
 import io
 import os
 import sys
-from typing import List
+from typing import List, Optional
 
 from langchain.retrievers import BM25Retriever
 from langchain.schema import Document, BaseRetriever
@@ -9,6 +9,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import FAISS
 from langchain_ollama import OllamaEmbeddings
 from pydantic import Field, BaseModel
+from llm.config import get_gemini_llm
 
 # Set UTF-8 encoding for stdout and stdin
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')

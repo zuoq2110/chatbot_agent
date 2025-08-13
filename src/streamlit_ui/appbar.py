@@ -13,7 +13,7 @@ def create_appbar():
     """Create an attractive app bar for KMA (Học viện Kỹ thuật Mật mã)"""
     
     # Get base64 image
-    img_base64 = get_base64_image("img/kma.png")
+    img_base64 = get_base64_image("./img/kma.png")
     
     # Custom CSS for the app bar
     st.markdown("""

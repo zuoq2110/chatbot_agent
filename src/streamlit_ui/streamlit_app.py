@@ -128,7 +128,7 @@ def get_base64_from_image(image_path):
 TRANSLATIONS = {
     "vi": {
         # General
-        "app_title": "Học viện Kỹ thuật Mật mã",
+        "app_title": "Học Viện Kỹ Thuật Mật Mã",
         "app_subtitle": "KMA Agent - Trợ lý ảo thông minh",
         "language_selector": "🌐 Ngôn ngữ:",
         "login": "Đăng nhập",
@@ -154,7 +154,6 @@ TRANSLATIONS = {
         "error_initializing": "❌ Lỗi khởi tạo agent:",
         "features_unavailable": "💡 Một số tính năng có thể không khả dụng.",
         "loading_history": "🔄 Đang tải lịch sử trò chuyện...",
-        "ask_about": "Đặt câu hỏi về quy định KMA, điểm số, hoặc thông tin học tập của bạn...",
         
         # Login/Register
         "username": "👤 Tên đăng nhập",
@@ -200,7 +199,6 @@ TRANSLATIONS = {
         "error_initializing": "❌ Error initializing agent:",
         "features_unavailable": "💡 Some features may not be available.",
         "loading_history": "🔄 Loading conversation history...",
-        "ask_about": "Ask questions about KMA regulations, scores, or your academic information...",
         
         # Login/Register
         "username": "👤 Username",
@@ -256,10 +254,26 @@ except ImportError:
     def render_feature_ui():
         pass
 
+# Import file upload handler
+try:
+    from file_upload_handler import display_file_upload_sidebar, display_file_upload_in_main_interface, get_chat_mode_selection
+    FILE_UPLOAD_AVAILABLE = True
+except ImportError:
+    FILE_UPLOAD_AVAILABLE = False
+    def display_file_upload_sidebar():
+        st.error("File upload functionality not available")
+    def display_file_upload_in_main_interface():
+        st.error("File upload functionality not available")
+    def get_chat_mode_selection():
+        """Simplified chat mode selection - only file mode"""
+        if 'file_chat_agent' in st.session_state:
+            return "� File đã upload"
+        return None
+
 # Add the parent directory to sys.path to import our agent
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Import the agent
+# Import the agent for KMA mode (when no file is uploaded)
 from agent.supervisor_agent import ReActGraph
 
 # Try to import MongoDB
@@ -1831,11 +1845,11 @@ def main():
 
     # Chat interface section
     st.subheader(f"💬 {t('chat_with')}")
+    st.success(t("agent_ready"))
     
-    # Add button to return to feature selection
-    if st.button(t("back_to_features"), key="back_to_features"):
-        st.session_state.selected_feature = None
-        st.rerun()
+    
+    
+   
     
     # Show current conversation info
     if st.session_state.get('current_conversation_id') and MONGODB_AVAILABLE:
@@ -1850,7 +1864,6 @@ def main():
             st.warning("⚠️ Cuộc trò chuyện hiện tại không tồn tại")
    
     
-    st.markdown(t("ask_about"))
 
     # Display chat messages
     for message in st.session_state.messages:
@@ -1921,20 +1934,16 @@ def main():
     </div>
     """, unsafe_allow_html=True)
 
-    # Initialize chat agent if not exists
-    if "chat_agent" not in st.session_state:
-        with st.spinner(t("initializing_agent")):
-            try:
-                st.session_state.chat_agent = ReActGraph()
-                st.session_state.chat_agent.create_graph()
-                st.session_state.chat_agent.print_mermaid()
-                st.success(t("agent_ready"))
-            except Exception as e:
-                st.error(f"{t('error_initializing')} {str(e)}")
-                st.info(t("features_unavailable"))
+    
 
-    # Get user input
-    user_query = st.chat_input(t("type_question"))
+    # Handle suggested queries from file upload
+    suggested_query = st.session_state.get('suggested_query', None)
+    if suggested_query:
+        st.session_state['suggested_query'] = None  # Clear after use
+        user_query = suggested_query
+    else:
+        # Get user input
+        user_query = st.chat_input(t("type_question"))
 
     # Process user input
     if user_query:
@@ -1969,10 +1978,14 @@ def main():
         with st.chat_message("assistant"):
             with st.spinner(t("thinking")):
                 try:
-                    if "chat_agent" in st.session_state:
-                        # Call chat_with_memory
+                    # Check if file chat agent is available
+                    if hasattr(st.session_state, 'file_chat_agent') and st.session_state.file_chat_agent:
+                        # Use file chat agent for uploaded file
+                        bot_reply = st.session_state.file_chat_agent.chat(user_query)
+                    elif "kma_chat_agent" in st.session_state and st.session_state.kma_chat_agent:
+                        # Use KMA chat agent (original behavior from simplified file)
                         response = asyncio.run(
-                            st.session_state.chat_agent.chat_with_memory(
+                            st.session_state.kma_chat_agent.chat_with_memory(
                                 st.session_state.conversation_history,
                                 user_query
                             )
@@ -2010,7 +2023,39 @@ def main():
 
     # Sidebar with conversation history and controls
     with st.sidebar:
+            # Add button to return to feature selection
+        if st.button(t("back_to_features"), key="back_to_features"):
+            st.session_state.selected_feature = None
+            st.rerun()
+        # File Upload Section
+        if FILE_UPLOAD_AVAILABLE:
+            
+            display_file_upload_sidebar()
+            
+            # Check if file is uploaded
+            if 'file_chat_agent' in st.session_state:
+                st.session_state.chat_mode = "📄 File đã upload"
+            else:
+                st.session_state.chat_mode = None
+        else:
+            st.session_state.chat_mode = None
+            
+        # Initialize KMA chat agent if not exists (for default chat when no file uploaded)
+        if "kma_chat_agent" not in st.session_state:
+            with st.spinner(t("initializing_agent")):
+                try:
+                    st.session_state.kma_chat_agent = ReActGraph()
+                    st.session_state.kma_chat_agent.create_graph()
+                    st.session_state.kma_chat_agent.print_mermaid()
+                    
+                except Exception as e:
+                    st.error(f"{t('error_initializing')} {str(e)}")
+                    st.info(t("features_unavailable"))
+                    st.session_state.kma_chat_agent = None
+            st.session_state.chat_mode = None
+        
         # Conversation History Section
+        st.markdown("---")
         st.markdown(f"### 💬 {t('conversation_list')}")
         
         # Initialize conversation state
@@ -2078,12 +2123,14 @@ def main():
                                     conv_history.append(AIMessage(content=msg["content"]))
                             st.session_state.conversation_history = conv_history
                             
+                            
                             st.success(f"{t('conversation_loaded')} {conv['title']}")
                             st.rerun()
         else:
             st.info(t("no_conversations"))
         
        
+
  
 
 if __name__ == "__main__":

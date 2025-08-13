@@ -46,7 +46,8 @@ dependencies = [
     "requests (>=2.32.0,<3.0.0)",
     "pypdf2 (>=3.0.0)",
     "python-docx (>=0.8.11)",
-    "nltk (>=3.8.1)"
+    "nltk (>=3.8.1)",
+    "plotly (>=6.3.0,<7.0.0)"
 ]
 
 [tool.poetry]

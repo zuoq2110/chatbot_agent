@@ -4,21 +4,22 @@ from datetime import datetime
 
 
 class UserCreate(BaseModel):
-    student_code: str
+    username: str
+    password: str  # Raw password (sẽ được hash)
+    student_code: Optional[str] = None
     student_name: Optional[str] = None
     student_class: Optional[str] = None
-    password_hash: Optional[str] = None  # Hash của mật khẩu
-    salt: Optional[str] = None           # Salt để hash mật khẩu
 
 
 class UserLogin(BaseModel):
-    student_code: str
+    username: str
     password: str
 
 
 class UserResponse(BaseModel):
     _id: str
-    student_code: str
+    username: str
+    student_code: Optional[str] = None
     student_name: Optional[str] = None
     student_class: Optional[str] = None
     created_at: datetime

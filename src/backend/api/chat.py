@@ -21,7 +21,7 @@ agent = ReActGraph()
 agent.create_graph()
 agent.print_mermaid()
 
-from backend.db.mongodb import mongodb
+from ..db.mongodb import MongoDB, mongodb
 from backend.models.chat import (
     ConversationCreate,
     ConversationResponse,

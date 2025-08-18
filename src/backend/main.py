@@ -8,11 +8,10 @@ from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
-from .db.mongodb import MongoDB, mongodb
+from .db.mongodb import MongoDB, mongodb, get_db
 # from db.mongodb import MongoDB, mongodb
 from .models.responses import BaseResponse
-from .api.chat import router as chat_router
-from .api.user import router as user_router
+from .api import router as api_router
 # from models.responses import BaseResponse
 # from api.chat import router as chat_router
 # from api.user import router as user_router
@@ -33,18 +32,22 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Configure CORS
+# Configure CORS - PHẢI ĐẶT TRƯỚC KHI INCLUDE ROUTERS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=[
+        "http://localhost:3000",  # React dev server
+        "http://127.0.0.1:3000",
+        "http://localhost:3001",
+        "*"  # Allow all for development
+    ],
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
 # Include routers
-app.include_router(chat_router, prefix="/api/chat", tags=["chat"])
-app.include_router(user_router, prefix="/api", tags=["user"])
+app.include_router(api_router, prefix="/api", tags=["api"])
 
 # Custom exception handlers
 @app.exception_handler(HTTPException)
@@ -69,14 +72,23 @@ async def general_exception_handler(request: Request, exc: Exception):
             data=None
         ).model_dump(),
     )
-
 @app.on_event("startup")
 async def startup_db_client():
-    await mongodb.connect_to_mongodb()
+    try:
+        # Sử dụng hàm helper get_db để khởi tạo kết nối
+        db = await get_db()
+        collections = await db.list_collection_names()
+        logger.info(f"Connected to MongoDB. Collections: {collections}")
+    except Exception as e:
+        logger.exception(f"MongoDB connection failed: {str(e)}")
+        raise Exception("Failed to connect to MongoDB. Application cannot start.")
+
+
 
 @app.on_event("shutdown")
 async def shutdown_db_client():
-    await mongodb.close_mongodb_connection()
+    from backend.db.mongodb import MongoDB
+    await MongoDB.close_mongodb_connection()
 
 @app.get("/", response_model=BaseResponse)
 async def root():
@@ -89,6 +101,28 @@ async def root():
 @app.get("/health", response_model=BaseResponse)
 async def health_check():
     """Health check endpoint for monitoring backend status"""
+    try:
+        # Sử dụng hàm helper get_db để kiểm tra kết nối
+        db = await get_db()
+        collections = await db.list_collection_names()
+        
+        db_status = {
+            "connected": True,
+            "collections": collections
+        }
+        
+        return BaseResponse(
+            statusCode=status.HTTP_200_OK,
+            message="Service is healthy",
+            data=db_status
+        )
+    except Exception as e:
+        logger.error(f"Health check failed: {str(e)}", exc_info=True)
+        return BaseResponse(
+            statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=f"Service has issues: {str(e)}",
+            data=None
+        )
     return BaseResponse(
         statusCode=status.HTTP_200_OK,
         message="Backend is healthy",
@@ -98,6 +132,11 @@ async def health_check():
             "version": "1.0.0"
         }
     )
+
+@app.get("/test-cors")
+async def test_cors():
+    """Test CORS configuration"""
+    return {"message": "CORS is working!", "status": "success"}
 
 def run_backend(port: int = 8000, host: str = "0.0.0.0", reload: bool = True):
     """
@@ -113,6 +152,52 @@ def run_backend(port: int = 8000, host: str = "0.0.0.0", reload: bool = True):
 
 # Command line interface using Typer
 cli = typer.Typer()
+
+@app.get("/db-check", response_model=BaseResponse)
+async def db_check():
+    try:
+        if mongodb.db is None:
+            return BaseResponse(
+                statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                message="MongoDB connection not established",
+                data=None
+            )
+
+        # Lấy danh sách collections
+        collections = await mongodb.db.list_collection_names()
+
+        # Kiểm tra collection users
+        if "users" not in collections:
+            return BaseResponse(
+                statusCode=status.HTTP_404_NOT_FOUND,
+                message="Collection 'users' not found",
+                data={"collections": collections}
+            )
+
+        # Đếm số lượng user
+        user_count = await mongodb.db["users"].count_documents({})
+
+        return BaseResponse(
+            statusCode=status.HTTP_200_OK,
+            message="MongoDB connection OK",
+            data={
+                "collections": collections,
+                "user_count": user_count
+            }
+        )
+    except Exception as e:
+        return BaseResponse(
+            statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=f"MongoDB check failed: {str(e)}",
+            data=None
+        )
+
+    except Exception as e:
+        return BaseResponse(
+            statusCode=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            message=f"MongoDB check failed: {str(e)}",
+            data=None
+        )
 
 @cli.command()
 def start(port: int = 8000, host: str = "0.0.0.0", reload: bool = True):

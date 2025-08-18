@@ -5,7 +5,7 @@ from datetime import datetime
 from typing import List
 
 from bson import ObjectId
-from fastapi import APIRouter, HTTPException, Query, status, Header
+from fastapi import APIRouter, HTTPException, Query, status, Header, Depends
 from langchain_core.messages import HumanMessage, AIMessage
 
 # Add the parent directory to sys.path to import our agent
@@ -21,7 +21,7 @@ agent = ReActGraph()
 agent.create_graph()
 agent.print_mermaid()
 
-from backend.db.mongodb import mongodb
+from ..db.mongodb import MongoDB, mongodb
 from backend.models.chat import (
     ConversationCreate,
     ConversationResponse,
@@ -29,8 +29,9 @@ from backend.models.chat import (
     MessageCreate,
     MessageResponse, QuickMessageResponse, MessageQuickChat
 )
-
+from backend.models.user import UserResponse
 from backend.models.responses import BaseResponse
+from backend.auth.dependencies import require_auth
 
 router = APIRouter()
 
@@ -48,7 +49,8 @@ def validate_object_id(id: str):
 @router.get("/conversations/all", response_model=BaseResponse[List[ConversationResponse]])
 async def get_all_conversations(
         skip: int = Query(0, ge=0),
-        limit: int = Query(20, ge=1, le=100)
+        limit: int = Query(20, ge=1, le=100),
+        current_user = Depends(require_auth)
 ):
     cursor = mongodb.db.conversations.find(
         {}
@@ -74,11 +76,17 @@ async def get_all_conversations(
 
 @router.get("/conversations", response_model=BaseResponse[List[ConversationResponse]])
 async def get_conversations_of_user(
-    user_id: str,
     skip: int = Query(0, ge=0),
-    limit: int = Query(20, ge=1, le=100)
+    limit: int = Query(20, ge=1, le=100),
+    current_user = Depends(require_auth)
 ):
     """Get all conversations for a user"""
+    # Kiểm tra nếu current_user là dict hoặc UserResponse
+    if isinstance(current_user, dict):
+        user_id = current_user.get("_id") or current_user.get("user_id")
+    else:
+        user_id = current_user._id
+        
     user_id_obj = validate_object_id(user_id)
 
     conversations = []
@@ -114,6 +122,7 @@ async def get_conversations_of_user(
 @router.post("/conversations", response_model=BaseResponse[ConversationResponse])
 async def create_conversation(
     conversation: ConversationCreate,
+    current_user = Depends(require_auth)
 ):
     logger.info(f"Creating conversation: {conversation.title}")
     """Create a new conversation"""
@@ -161,6 +170,7 @@ async def create_conversation(
 async def update_conversation(
     conversation_id: str,
     conversation: ConversationUpdate,
+    current_user = Depends(require_auth)
 ):
     """Update a conversation's title"""
     conv_id = validate_object_id(conversation_id)
@@ -190,7 +200,10 @@ async def update_conversation(
     )
 
 @router.delete("/conversations/{conversation_id}", response_model=BaseResponse)
-async def delete_conversation(conversation_id: str):
+async def delete_conversation(
+    conversation_id: str,
+    current_user = Depends(require_auth)
+):
     """Delete a conversation and all its messages"""
     conv_id = validate_object_id(conversation_id)
 

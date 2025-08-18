@@ -1,144 +1,103 @@
 import logging
-from functools import wraps
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
-
-from pymongo import MongoClient
+from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic_settings import BaseSettings
+import asyncio
 
 logger = logging.getLogger(__name__)
 
 class MongoDBSettings(BaseSettings):
     MONGODB_URL: str = "mongodb://localhost:27017"
     MONGODB_DB_NAME: str = "ai_chat"
-    LANGCHAIN_API_KEY: str = ""
-    LANGCHAIN_TRACING_V2: str = ""
-    LANGCHAIN_PROJECT: str = ""
-    RAG_MODEL: str = ""
-    GEMINI_MODEL: str = ""
-    GOOGLE_API_KEY: str = ""
-    POSTGRES_URI: str = ""
-    JWT_SECRET_KEY: str = ""
-    JWT_ALGORITHM: str = ""
-    ACCESS_TOKEN_EXPIRE_MINUTES: str = ""
-    PORT: str = ""
-    DEV_MODE: str = ""
-    LOG_LEVEL: str = ""
-    HF_TOKEN: str = ""
     
     class Config:
         env_file = ".env"
-        extra = "ignore"  # Cho phép các trường bổ sung trong file .env
-
-def run_in_threadpool(func):
-    @wraps(func)
-    async def wrapper(*args, **kwargs):
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(
-            ThreadPoolExecutor(), 
-            lambda: func(*args, **kwargs)
-        )
-    return wrapper
+        extra = "ignore"
 
 class MongoDB:
-    client: MongoClient = None
+    client: AsyncIOMotorClient = None
     db = None
+    _initialized = False
     
+    def __init__(self):
+        self.settings = MongoDBSettings()
+        # Không kết nối ngay tại đây, chờ đến khi gọi connect_to_mongodb
+
     @classmethod
-    async def connect_to_mongodb(self):
+    async def connect_to_mongodb(cls):
         settings = MongoDBSettings()
         logger.info(f"Connecting to MongoDB at {settings.MONGODB_URL}")
-        self.client = MongoClient(settings.MONGODB_URL)
-        print("saddasasdasd",self.client)
-        self.db = self.client[settings.MONGODB_DB_NAME]
+        
+        cls.client = AsyncIOMotorClient(settings.MONGODB_URL)
+        cls.db = cls.client[settings.MONGODB_DB_NAME]
+        cls._initialized = True
+        
+        # Cập nhật mongodb instance global
+        global mongodb
+        mongodb.client = cls.client
+        mongodb.db = cls.db
+        
         logger.info("Connected to MongoDB")
-
-        # Run in thread to avoid blocking
-        @run_in_threadpool
-        def check_collections():
-            collections = self.db.list_collection_names()
-            return collections
         
-        collections = await check_collections()
-        logger.info(f"Collections: {collections}")
-        if 'user' in collections:
-            logger.info(f"Collection 'user' now exists.")
-        else:
-            logger.info(f"Error: Collection user was not created as expected.")
-
-        collection = self.db.user
-        if collection is None:
-            logger.info("Error: Collection object is None!")
-        else:
-            logger.info(f"Collection object: {collection}")
-
-        logger.info(f"MONGO SETTED UP")
-
-        # created_conversation = await mongodb.db.conversations.find_one({"_id": "abcd"})
-        created_conversation =  mongodb.db.conversations.find_one({"_id": "abcd"})
-
-        logger.info("Test")
-        logger.info(created_conversation)
+        # Kiểm tra danh sách collections
+        collections = await cls.db.list_collection_names()
+        logger.info(f"Collections in DB: {collections}")
         
+        if 'users' in collections:
+            logger.info("Collection 'users' exists.")
+        else:
+            logger.warning("Collection 'users' not found. It will be created on first insert.")
+    
     @classmethod
     async def close_mongodb_connection(cls):
         if cls.client:
             logger.info("Closing MongoDB connection")
             cls.client.close()
+            cls.client = None
+            cls.db = None
+            cls._initialized = False
+            
+            # Cập nhật mongodb instance global
+            global mongodb
+            mongodb.client = None
+            mongodb.db = None
+            
             logger.info("MongoDB connection closed")
 
-    # Helper method to execute database operations in a thread pool
+    # Đảm bảo kết nối MongoDB đã được thiết lập
     @classmethod
-    async def execute(cls, collection_name, operation, *args, **kwargs):
-        collection = cls.db[collection_name]
-        method = getattr(collection, operation)
-        
-        @run_in_threadpool
-        def run_operation():
-            return method(*args, **kwargs)
-        
-        return await run_operation()
+    async def ensure_connection(cls):
+        if not cls._initialized or cls.db is None:
+            await cls.connect_to_mongodb()
+        return cls.db
 
-    # Convenience methods to perform common operations
-    @classmethod
-    async def find_one(cls, collection_name, query, *args, **kwargs):
-        return await cls.execute(collection_name, "find_one", query, *args, **kwargs)
-    
-    @classmethod
-    async def find(cls, collection_name, query, *args, **kwargs):
-        @run_in_threadpool
-        def run_find():
-            return list(cls.db[collection_name].find(query, *args, **kwargs))
-        
-        return await run_find()
-    
-    @classmethod
-    async def insert_one(cls, collection_name, document, *args, **kwargs):
-        return await cls.execute(collection_name, "insert_one", document, *args, **kwargs)
-    
-    @classmethod
-    async def insert_many(cls, collection_name, documents, *args, **kwargs):
-        return await cls.execute(collection_name, "insert_many", documents, *args, **kwargs)
-    
-    @classmethod
-    async def update_one(cls, collection_name, filter, update, *args, **kwargs):
-        return await cls.execute(collection_name, "update_one", filter, update, *args, **kwargs)
-    
-    @classmethod
-    async def delete_one(cls, collection_name, filter, *args, **kwargs):
-        return await cls.execute(collection_name, "delete_one", filter, *args, **kwargs)
-
-    # Convenience properties to access collections
+    # Convenience properties
     @property
     def conversations(self):
-        return self.db.conversations
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.conversations
+        return self.db.conversations if self.db else None
 
     @property
-    def user(self):
-        return self.db.user
+    def users(self):
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.users
+        return self.db.users if self.db else None
         
     @property
     def messages(self):
-        return self.db.messages
-        
-mongodb = MongoDB() 
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.messages
+        return self.db.messages if self.db else None
+
+# Tạo instance global
+mongodb = MongoDB()
+
+# Hàm helper để lấy DB một cách an toàn
+async def get_db():
+    """
+    Hàm helper để lấy database connection.
+    Sẽ tự động kết nối nếu chưa kết nối.
+    """
+    if MongoDB.db is None:
+        await MongoDB.connect_to_mongodb()
+    return MongoDB.db

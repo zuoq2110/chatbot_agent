@@ -11,6 +11,7 @@ class Database:
     def __init__(self):
         self.connection_pool = None
         self._dsn = os.getenv("POSTGRES_URI")
+        # self._dsn = os.getenv("POSTGRES_URI_DOCKER")
         if not self._dsn:
             raise ValueError("POSTGRES_URI environment variable is not set")
 

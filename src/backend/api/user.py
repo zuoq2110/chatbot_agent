@@ -144,7 +144,7 @@ async def get_user(username: str):
     )
 
 
-@router.post("/users/login", response_model=BaseResponse[dict])
+@router.post("/login", response_model=BaseResponse[dict])
 async def login_user(user_login: UserLogin):
     """Login user with username and password"""
     

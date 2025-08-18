@@ -1,6 +1,7 @@
 import logging
 from motor.motor_asyncio import AsyncIOMotorClient
 from pydantic_settings import BaseSettings
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,12 @@ class MongoDBSettings(BaseSettings):
 class MongoDB:
     client: AsyncIOMotorClient = None
     db = None
+    _initialized = False
     
+    def __init__(self):
+        self.settings = MongoDBSettings()
+        # Không kết nối ngay tại đây, chờ đến khi gọi connect_to_mongodb
+
     @classmethod
     async def connect_to_mongodb(cls):
         settings = MongoDBSettings()
@@ -23,6 +29,12 @@ class MongoDB:
         
         cls.client = AsyncIOMotorClient(settings.MONGODB_URL)
         cls.db = cls.client[settings.MONGODB_DB_NAME]
+        cls._initialized = True
+        
+        # Cập nhật mongodb instance global
+        global mongodb
+        mongodb.client = cls.client
+        mongodb.db = cls.db
         
         logger.info("Connected to MongoDB")
         
@@ -40,19 +52,52 @@ class MongoDB:
         if cls.client:
             logger.info("Closing MongoDB connection")
             cls.client.close()
+            cls.client = None
+            cls.db = None
+            cls._initialized = False
+            
+            # Cập nhật mongodb instance global
+            global mongodb
+            mongodb.client = None
+            mongodb.db = None
+            
             logger.info("MongoDB connection closed")
+
+    # Đảm bảo kết nối MongoDB đã được thiết lập
+    @classmethod
+    async def ensure_connection(cls):
+        if not cls._initialized or cls.db is None:
+            await cls.connect_to_mongodb()
+        return cls.db
 
     # Convenience properties
     @property
     def conversations(self):
-        return self.db.conversations
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.conversations
+        return self.db.conversations if self.db else None
 
     @property
     def users(self):
-        return self.db.users
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.users
+        return self.db.users if self.db else None
         
     @property
     def messages(self):
-        return self.db.messages
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.messages
+        return self.db.messages if self.db else None
 
+# Tạo instance global
 mongodb = MongoDB()
+
+# Hàm helper để lấy DB một cách an toàn
+async def get_db():
+    """
+    Hàm helper để lấy database connection.
+    Sẽ tự động kết nối nếu chưa kết nối.
+    """
+    if MongoDB.db is None:
+        await MongoDB.connect_to_mongodb()
+    return MongoDB.db

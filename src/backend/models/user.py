@@ -25,3 +25,14 @@ class UserResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
     # Không trả về password_hash và salt trong response 
+
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str
+
+
+class TokenData(BaseModel):
+    user_id: str
+    token_type: Optional[str] = "access"  # "access" hoặc "refresh"

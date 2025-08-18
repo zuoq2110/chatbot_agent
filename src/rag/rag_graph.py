@@ -306,6 +306,51 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
     }
 
 
+# Helper function for processing uploaded file queries
+async def process_file_query(query: str, retriever, llm=None) -> Dict[str, Any]:
+    """Process a query against uploaded file content using in-memory retriever.
+    
+    Args:
+        query: The question to answer
+        retriever: In-memory retriever created from uploaded file
+        llm: Optional LLM to use (will create one if not provided)
+        
+    Returns:
+        Dictionary with answer and sources
+    """
+    if llm is None:
+        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL)
+    
+    # Load prompts
+    prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    with open(os.path.join(prompts_dir, "generate.txt"), "r") as f:
+        generate_prompt = f.read().strip()
+    
+    # Retrieve documents from uploaded file
+    docs = retriever.get_relevant_documents(query)
+    
+    # Combine document content
+    context = "\n\n".join([doc.page_content for doc in docs])
+    
+    # Generate answer with context about uploaded file
+    file_prompt = f"""Dựa trên nội dung file đã upload, hãy trả lời câu hỏi sau:
+
+Câu hỏi: {query}
+
+Nội dung liên quan từ file:
+{context}
+
+Trả lời:"""
+    
+    response = llm.invoke([{"role": "user", "content": file_prompt}])
+    
+    return {
+        "answer": response.content, 
+        "sources": [doc.page_content for doc in docs[:3]],
+        "source_type": "uploaded_file"
+    }
+
+
 def get_retriever():
     """Get the hybrid retriever for KMA regulations"""
     # Define paths
@@ -319,7 +364,7 @@ def get_retriever():
 
 
 class KMAChatAgent:
-    def __init__(self, model_name: str = None, project_name="KMARegulation"):
+    def __init__(self, model_name: str = None, project_name="KMARegulation", custom_retriever=None):
         """Initialize the KMA Chat Agent with a hybrid retriever and model"""
         # Initialize LangSmith client
         self.langsmith_client = Client()
@@ -343,9 +388,8 @@ class KMAChatAgent:
             logger.error(f"Failed to initialize Gemini LLM: {e}. Please ensure GOOGLE_API_KEY is set and valid.")
             raise # Re-raise error to stop initialization if LLM fails
 
-
-        # Store the retriever directly
-        self.retriever = self.get_retriever()
+        # Store the retriever - use custom retriever if provided, otherwise default KMA retriever
+        self.retriever = custom_retriever if custom_retriever is not None else self.get_retriever()
 
         # Load prompts from files
         self.prompts = self._load_prompts()
@@ -401,7 +445,7 @@ class KMAChatAgent:
         # Log the workflow structure
         logger.info("Workflow structure created with nodes and edges")
 
-        # Compile the graph
+        # Compile the graph với cấu hình recursion limit
         try:
             graph = workflow.compile()
             logger.info("Workflow graph compiled successfully")
@@ -468,6 +512,17 @@ class KMAChatAgent:
             logger.warning("No retrieved context found for grading. Assuming irrelevant.")
             return "rewrite_question"
 
+        # Kiểm tra số lần rewrite để tránh vòng lặp vô hạn
+        rewrite_count = 0
+        for msg in state["messages"]:
+            if hasattr(msg, 'additional_kwargs') and msg.additional_kwargs.get('rewrite_count'):
+                rewrite_count = msg.additional_kwargs.get('rewrite_count', 0)
+                
+        # Nếu đã rewrite quá 2 lần, buộc generate answer
+        if rewrite_count >= 2:
+            logger.info("Maximum rewrite attempts reached. Forcing answer generation.")
+            return "generate_answer"
+
         prompt = self.prompts["grade"].format(question=question, context=context_message)
         logger.info(f"Grading documents with prompt: {prompt[:100]}...") # Log một phần prompt
 
@@ -477,8 +532,8 @@ class KMAChatAgent:
                 [{"role": "user", "content": prompt}])
             score = response.binary_score
         except Exception as e:
-            logger.error(f"Error grading documents with structured output: {e}. Defaulting to 'no'.")
-            score = "no" # Fallback nếu structured output thất bại
+            logger.error(f"Error grading documents with structured output: {e}. Defaulting to 'yes'.")
+            score = "yes" # Fallback để tránh vòng lặp vô hạn
 
         logger.info(f"Document grading score: {score}")
         if score == "yes":
@@ -490,13 +545,28 @@ class KMAChatAgent:
         """Rewrite the original user question"""
         messages = state["messages"]
         question = messages[0].content
-        logger.info(f"Rewriting question: {question}")
+        
+        # Đếm số lần rewrite
+        rewrite_count = 0
+        for msg in messages:
+            if hasattr(msg, 'additional_kwargs') and msg.additional_kwargs.get('rewrite_count'):
+                rewrite_count = max(rewrite_count, msg.additional_kwargs.get('rewrite_count', 0))
+        
+        rewrite_count += 1
+        logger.info(f"Rewriting question (attempt {rewrite_count}): {question}")
+        
         prompt = self.prompts["rewrite"].format(question=question)
         response = self.llm.invoke([{"role": "user", "content": prompt}])
         rewritten_question = response.content
         logger.info(f"Rewritten question: {rewritten_question}")
-        # Cập nhật tin nhắn người dùng đầu tiên với câu hỏi đã viết lại
-        return {"messages": [HumanMessage(content=rewritten_question)]}
+        
+        # Tạo HumanMessage mới với rewrite count
+        new_message = HumanMessage(
+            content=rewritten_question,
+            additional_kwargs={'rewrite_count': rewrite_count}
+        )
+        
+        return {"messages": [new_message]}
 
     def generate_answer(self, state: MessagesState):
         """Generate an answer"""
@@ -519,10 +589,11 @@ class KMAChatAgent:
         query = {"messages": [HumanMessage(content=message)]}
         logger.info(f"Starting chat for query: {message}")
         try:
-            # `invoke` sẽ chạy qua toàn bộ đồ thị
-            response = self.graph.invoke(query)
+            # Invoke với cấu hình recursion limit cao hơn
+            config = {"recursion_limit": 50}
+            response = self.graph.invoke(query, config=config)
             final_answer = response["messages"][-1].content
-            logger.info(f" {final_answer[:100]}...")
+            logger.info(f"Chat completed. Answer: {final_answer[:100]}...")
             return final_answer
         except Exception as e:
             logger.error(f"Error during chat processing: {str(e)}")

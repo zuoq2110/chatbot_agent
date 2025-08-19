@@ -81,7 +81,7 @@ def create_vector_database(output_path, data_dir="./data"):
 
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text",
-            base_url="http://ollama:11434"
+            base_url="http://42.112.213.93:11434"
         )
         # embeddings = OllamaEmbeddings(
         #     model="nomic-embed-text"
@@ -105,7 +105,7 @@ def load_vector_database(output_path, data_dir="./data"):
     try:
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text",
-            base_url="http://ollama:11434"
+            base_url="http://42.112.213.93:11434"
         )
         # embeddings = OllamaEmbeddings(
         #     model="nomic-embed-text"

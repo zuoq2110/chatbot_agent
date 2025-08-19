@@ -195,10 +195,13 @@ def create_in_memory_retriever(file_content: str, chunk_size: int = 400, chunk_o
         chunks = text_splitter.split_text(file_content)
         
         # Create embeddings
+        # embeddings = OllamaEmbeddings(
+        #     model="nomic-embed-text"
+        # )
         embeddings = OllamaEmbeddings(
-            model="nomic-embed-text"
+            model="nomic-embed-text",
+            base_url="http://ollama:11434"
         )
-        
         # Create in-memory FAISS vector store
         vectorstore = FAISS.from_texts(chunks, embeddings)
         

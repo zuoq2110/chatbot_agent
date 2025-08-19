@@ -20,6 +20,8 @@ services:
     ports:
       - "3434:3434"
     env_file: .env
+    environment:
+      - PYTHONPATH=/app/src
     volumes:
       - ./src:/app/src
       - ./data:/app/data

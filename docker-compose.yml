@@ -46,6 +46,13 @@ services:
     depends_on:
       - backend
     restart: always
+  ollama:
+    image: ollama/ollama
+    restart: always
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
   nginx:
     image: nginx:latest
     restart: always
@@ -59,3 +66,4 @@ services:
 
 volumes:
   postgres_data:
+  ollama_data:

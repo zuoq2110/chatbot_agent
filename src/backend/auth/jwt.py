@@ -99,8 +99,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
         detail="Không thể xác thực thông tin đăng nhập",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    print("credentials_exception:", credentials_exception)
-    logger.info("duong")
     try:
         # Giải mã token
         payload = jwt.decode(token, JWT_SECRET_KEY, algorithms=[JWT_ALGORITHM])
@@ -119,7 +117,6 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
             )
         
         token_data = TokenData(user_id=user_id, token_type=token_type)
-        print("token_data:", token_data)
     except (JWTError, ValidationError):
         raise credentials_exception
     
@@ -152,6 +149,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
         "student_code": user.get("student_code"),
         "student_name": user.get("student_name"),
         "student_class": user.get("student_class"),
+        "role": user.get("role", "user"),  # Thêm trường role, mặc định là "user"
+        "email": user.get("email"),
         "created_at": user["created_at"],
         "updated_at": user.get("updated_at", now)
     }

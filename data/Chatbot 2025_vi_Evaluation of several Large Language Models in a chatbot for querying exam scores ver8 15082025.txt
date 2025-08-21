@@ -1,0 +1,198 @@
+Evaluating Large Language Models for a Chatbot that Queries Exam Scores in a Local Environment
+
+
+Le Duc Thuan*
+Information Technology
+Academy of Cryptography Techniques
+Ha Noi, Viet Nam
+thuanld@actvn.edu.vn
+Nguyen Tung Duong
+Information Technology
+Academy of Cryptography Techniques
+Ha Noi, Viet Nam
+ntduongkma@gmail.comBui Duc Trong
+Information Technology
+Academy of Cryptography Techniques
+Ha Noi, Viet Nam
+ductrongbui1213@gmail.com
+Bui Thu Lam
+Information Technology
+Academy of Cryptography Techniques
+Ha Noi, Viet Nam
+lambt.actvn@gmail.com
+
+
+
+Abstract—Trong nghiên này, chúng tôi xây dựng chatbot tương tác người – máy sử dụng kiến trúc RAG để đánh giá các mô hình LLM phổ biến. Khác với các nghiên cứu trước chủ yếu tập trung vào chất lượng sinh ngôn ngữ, nghiên cứu của chúng tôi chú trọng đánh giá định lượng độ chính xác ngữ nghĩa (sử dụng độ đo Cosine Similarity) và thời gian phản hồi khi truy vấn vào cơ sở dữ liệu thực tế – cụ thể là dữ liệu thông tin sinh viên và điểm thi tại một trường đại học.
+Keywords—LLM, chatbot, RAG, Transformer
+Introduction
+Từ năm 2013, trí tuệ nhân tạo, đặc biệt là các mô hình học sâu, đã có những bước tiến vượt bậc trong việc giải quyết các bài toán về phân loại và nhận dạng. Những mô hình CNN, RNN và các biến thể của chúng ngày càng được ưa chuộng hơn so với các thuật toán học máy truyền thống, chủ yếu nhờ vào khả năng xử lý khối lượng dữ liệu lớn và hiệu suất cao hơn trong nhiều tác vụ.
+Tuy nhiên, mỗi mô hình đều có những hạn chế riêng. Chẳng hạn mô hình CNN hay các mô hình cải tiến tự CNN mạnh về xử lý hình ảnh nhưng không có cơ chế để biểu diễn thứ tự từ trong mỗi câu hay mỗi chuỗi. Trong khi RNN, LSTM là mô hình học sâu lại có khả năng ghi nhớ được thứ tự các từ trước đó (ngắn hạn hoặc dài hạn) phù hợp với bài toán ngôn ngữ tự nhiên tuy nhiên mô hình này lại không tận dụng được hết điểm mạnh tính toán của GPU. Một số hạn chế của mô hình học sâu như: không tính toán song song được, khó khăn trong việc xử lý các câu quá dài, hạn chế trong việc lưu trữ ngữ cảnh của đoạn.
+Năm 2017 để khắc phục hạn chế của mô hình học sâu,  A.Vaswani cùng các cộng sự đã giới thiệu kiến trúc transformer – một bước ngoặt trong lĩnh vực học sâu [1]. Kiến trúc này có ưu điểm như có thể huấn luyện song song nên tận dụng tối đa tính toán của GPU, học được thông qua ngữ cảnh của cả hội thoại và mối quan hệ của các câu trong đoạn, khả năng mở rộng cao.
+Từ năm 2018 tới nay đã có nhiều mô hình ngôn ngữ lớn (LLM - Large Language Models) được giới thiệu. Nhiều công ty công nghệ lớn tham gia vào phát triển mô hình LLM như Google, OpenAI, Microsoft, v.v. Table I liệt kê một số mô hình LLM tiêu biểu. Số lượng các mô hình LLM mới hay bản nâng cấp được các công ty giới thiệu tăng nhanh theo từng năm.Năm 2019 chỉ có 3 mô hình được giới thiệu, đến năm 2023 đã có tới 30 mô hình và trong sáu tháng đầu năm 2025 đã có 25 mô hình được giới thiệu [2].
+Các mô hình LLM đã được ứng dụng rộng rãi trong nhiều lĩnh vực như giáo dục, y tế, lập trình, tài chính, chăm sóc khách hàng. Theo khảo sát [3], tỉ lệ áp dụng và hình thức áp dụng cho từng lĩnh vực như sau:
+Giáo dục: Tỉ lệ áp dụng 68%. Sử dụng trong trợ giảng AI, chatbot hỗ trợ sinh viên, phân tích điểm, chấm bài tự động, v.v.
+Lập trình: Tỉ lệ áp dụng lên tới 85%. Hỗ trợ viết code, hỏi đáp liên quan tới lập trình, v.v.
+Y tế: Tỉ lệ thấp, chỉ chiếm 42%. Sử dụng trong hỏi đáp y khoa, chuẩn đoán bệnh v.v.
+Chăm sóc khách hàng: chiếm tỉ lệ 74%. Sử dụng các chatbot để hỏi đáp các sản phẩm liên quan của cửa hàng, doanh nghiệp.
+Theo đánh giá của Vlink [4] xu hướng sử dụng mô hình LLM trong từng lĩnh vực cho tới năm 2030 sẽ tăng nhanh. Chi tiết được mô tả trong Fig. 1. Theo Hostinger [5] đã dự báo tăng trưởng mô hình LLM toàn cầu tới năm 2033 đạt tới 82.1 tỷ đô la, trong khi đó năm 2023 chỉ đạt 4.5 tỷ đô và 2024 đạt 6 tỷ đô
+Hiện nay, các Chatbot truyển thống (có sẵn bộ câu hỏi và hiển thị câu trả lời) đang được thay thế bởi các hệ thống Chatbot thông minh hơn, ứng dụng trí tuệ nhân tạo (AI). Những hệ thống này đã và đang được triển khai trên nhiều lĩnh vực như kinh doanh, y tế [6].
+	Trong môi trường giáo dục, đặc biệt là các trường đại học, Chatbot AI đang được áp dụng để hỗ trợ sinh viên và nâng cao trải nghiệm học tập, một số hệ thống tiêu biểu có thể để đến như:
+“Pounce”[7] một chatbot do Georgia State University triển khai đã giúp giảm 22% tỷ lệ sinh viên bỏ học mùa hè, tích hợp tốt với hệ thống SMS và có tính cá nhân hóa cao. Hệ thống này mới chỉ hoạt động trong phạm vi tuyển sinh và đăng ký.
+Universioty of Murcia phát triển chatbot “Lola” [8] đạt độ chính xác ấn tượng đến 91%. Hệ thống hỗ trợ đa ngôn ngữ tuy nhiên còn gặp khó khăn trong xử lý các câu hỏi phức tạp, có điều kiện.
+Tại Việt Nam, Đại học Sư Phạm Kỹ thuật TP.HCM triển khai HCMUTE chatbot [9] hỗ trợ tra cứu học vụ. Với giao diện thân thiện, tích hợp cơ sở dữ liệu sinh viên hệ thống đã hỗ trợ rất hiệu quả trong việc giải đáp các thắc mắc liên quan đến điểm số, lịch học, thời khóa biểu và các thông tin học vụ khác.
+Ngoài ra còn có các trường Đại học Bách Khoa Hà Nội, FPT, Đại học Công nghệ Thông tin – ĐHQG TP.HCM đã nghiên cứu và cũng đã triển khai nội bộ những chatbot AI nhắm hỗ trợ sinh viên.
+Từ đó, trong nghiên cứu này chúng tôi tiến hành đánh giá một số mô hình LLM dựa trên bộ dữ liệu riêng của chúng tôi và xây dựng Chatbot để hỗ trợ hỏi-đáp liên quan tới điểm của sinh viên. Các đóng góp chính của chúng tôi trong nghiên cứu này như sau:
+Xây dựng hệ thống chatbot dựa trên trên công nghệ RAG và kết hợp với các mô hình LLM.
+Đánh giá các mô hình LLM trên bộ dữ liệu điểm và thông tin của sinh viên tại Học viện Kỹ thuật Mật mã.
+The remaining sections of the paper are organized as follows: Part II – Related Works; Part III – Background; Part IV – Mô hình hệ thống; Part V – Experimentation; Part VI – Conclusion.
+RELATED WORKS
+Y. Zhang et al. [10] đề xuất DialoGPT, một mô hình sinh hội thoại được tinh chỉnh từ GPT-2, huấn luyện trên 147 triệu trao đổi tương tự hội thoại được trích xuất từ các chuỗi bình luận Reddit trong khoảng thời gian từ năm 2005 đến năm 2017. DialoGPT sử dụng kiến trúc Transformer với ba lớp decoder, nhằm tăng khả năng duy trì ngữ cảnh và sinh phản hồi mạch lạc hơn. Trong các thử nghiệm, mô hình cho thấy hiệu suất vượt trội so với các phương pháp cơ bản như Seq2Seq và Transformer vanilla, với điểm BLEU-1 đạt 21.5%. DialoGPT thể hiện khả năng sinh phản hồi hợp lý, tự nhiên, và giữ được mạch hội thoại dài. Mô hình vẫn chưa có cơ chế kiểm soát nội dung độc hại hoặc đảm bảo an toàn khi triển khai thực tế.
+S. Roller et al. [11] phát triển BlenderBot, một mô hình hội thoại đa nhiệm quy mô lớn, được huấn luyện trên 1.5 tỷ câu hội thoại từ Reddit. BlenderBot tích hợp kiến trúc Transformer và sử dụng phương pháp huấn luyện đa tác vụ (multi-task learning), cho phép xử lý đồng thời các nhiệm vụ như hội thoại xã giao, hỏi đáp thực tế, và trò chuyện cảm xúc. Trên bộ dữ liệu ConvAI2, mô hình đạt BLEU = 21.3 và F1 = 19.5, cho thấy khả năng tổng quát hóa tốt trong nhiều tình huống khác nhau. Việc triển khai mô hình này ngoài thực tế có thể gặp khó khăn do yêu cầu hạ tầng tính toán lớn..
+D. Adiwardana et al. [12] giới thiệu Meena, một mô hình hội thoại quy mô 2.6 tỷ tham số, phát triển bởi Google. Meena được huấn luyện theo kiến trúc seq2seq có attention, với mục tiêu cải thiện độ tự nhiên và tính đặc hiệu trong phản hồi. Nhóm tác giả sử dụng chỉ số SSA (Sensibleness and Specificity Average) để đánh giá mô hình – một thước đo mới phản ánh mức độ hợp lý và cụ thể trong hội thoại. Meena đạt điểm SSA là 79%, rất gần với mức 86% của phản hồi do con người tạo ra. Điểm hạn chế là chi phí huấn luyện rất cao và mô hình vẫn thiếu các biện pháp bảo vệ nội dung nhạy cảm.
+J. Bao et al. [13] đề xuất PLATO, một mô hình hội thoại hai giai đoạn gồm (1) sinh hành động hội thoại và (2) sinh phản hồi ngôn ngữ. Cách tiếp cận này giúp mô hình học được mục đích giao tiếp trước khi sinh văn bản, cải thiện đáng kể tính hợp lý và định hướng phản hồi. PLATO được huấn luyện trên tập dữ liệu đa miền bao gồm DailyDialog và PersonaChat, và đạt điểm BLEU = 21.5 trên benchmark DSTC9. Nhược điểm là kiến trúc hai tầng khiến việc huấn luyện trở nên phức tạp và khó tối ưu hóa.
+M. Zhong et al. [14] phát triển DialogLM, một mô hình kết hợp khả năng sinh phản hồi ngắn hạn và duy trì ngữ cảnh dài hạn. Mô hình này được xây dựng trên nền tảng Transformer, có cấu trúc cho phép tách riêng hai thành phần xử lý ngữ cảnh: một bộ phản hồi tạm thời để xử lý thông tin mới, và một cơ chế ghi nhớ dài hạn để duy trì lịch sử hội thoại. DialogLM được huấn luyện trên các tập dữ liệu như MultiWOZ và DailyDialog, đạt BLEU là 18.3 và ROUGE-L là 20.7. Mô hình có thiết kế sáng tạo, nhưng vẫn chưa vượt trội rõ rệt so với các LLM hiện đại như GPT-4.
+OpenAI [15] giới thiệu ChatGPT, một mô hình hội thoại mạnh mẽ được tinh chỉnh từ GPT-3.5 và GPT-4 bằng kỹ thuật Reinforcement Learning from Human Feedback (RLHF). Mục tiêu của RLHF là giúp mô hình hiểu và phản hồi theo các tiêu chuẩn mà con người đánh giá cao về tính hữu ích, lịch sự và an toàn. ChatGPT đạt điểm tổng hợp 91/100 trên bộ đánh giá MT-Bench, vượt qua nhiều mô hình cùng thời. Điểm yếu là mô hình không mã nguồn mở và yêu cầu tài nguyên triển khai rất lớn.
+Anthropic [16] phát triển Claude, một mô hình LLM ưu tiên tính an toàn, đạo đức và kiểm soát nội dung. Claude được thiết kế để có thể từ chối các yêu cầu không phù hợp, nhạy cảm, hoặc mang tính gây hại. Mô hình thể hiện khả năng lý luận vượt trội với F1 = 86.7% trong các bài kiểm tra suy luận logic. Điểm hạn chế là Claude vẫn chưa đáp ứng tốt trong các tác vụ chuyên sâu đòi hỏi kiến thức kỹ thuật hoặc khả năng truy xuất phức tạp.
+G. Zhao et al. [17] công bố LLaMA (Large Language Model Meta AI), một dòng mô hình mã nguồn mở có quy mô từ 7B đến 65B tham số, do Meta phát triển. LLaMA được thiết kế với mục tiêu tối ưu hóa hiệu suất xử lý ngôn ngữ mà vẫn tiết kiệm tài nguyên huấn luyện so với GPT-3.5 hoặc GPT-4. Điểm đáng lưu ý là LLaMA chưa tích hợp cơ chế tinh chỉnh phản hồi bằng học tăng cường từ người dùng (RLHF), khiến chất lượng phản hồi có thể chưa đồng đều.
+L. Huang et al. [18] đưa ra FastChat, một framework mã nguồn mở hỗ trợ triển khai chatbot dựa trên các mô hình như Vicuna và Alpaca. FastChat cung cấp giao diện người dùng và API dễ tích hợp, phù hợp với cả mục tiêu nghiên cứu và thương mại. Tuy nhiên, chất lượng phản hồi vẫn phụ thuộc lớn vào mô hình nền tích hợp và cần được hiệu chỉnh phù hợp cho từng mục tiêu ứng dụng.
+W. Chen et al. [19] nghiên cứu việc ứng dụng LLM trong giáo dục, đặc biệt là chấm bài luận và phản hồi học tập. GPT-4 được sử dụng để tự động chấm điểm bài viết, phân tích nội dung, đưa ra nhận xét và phản hồi cho học sinh. Kết quả cho thấy mô hình đạt độ chính xác 92% trong việc chấm điểm so với giáo viên và đạt F1 = 90.5% khi phân tích nội dung bài làm. Mô hình cần được giám sát chặt chẽ để tránh đưa ra phản hồi sai lệch trong các tình huống đặc thù.
+S. Bubeck et al. [20] đánh giá hiệu năng của GPT-4 trên các bài kiểm tra chuẩn hóa và các tác vụ kỹ thuật như lập trình. GPT-4 đạt 169/170 trong phần Verbal và 5.5/6.0 trong phần Writing của kỳ thi GRE, và đạt hiệu suất nằm trong top 10% trên nền tảng Codeforces AI – một nền tảng thi lập trình trực tuyến nhưng việc sử dụng GPT-4 cho các kỳ thi có thể gây lo ngại về đạo đức và công bằng học thuật.
+Y. Bang et al. [21] trình bày ứng dụng GPT-4 trong phát hiện đạo văn, đặc biệt là đạo văn ngữ nghĩa – khi người viết thay đổi cấu trúc câu hoặc từ ngữ để tránh phát hiện. Mô hình đạt precision 94% và recall 91.2% trong các bài kiểm tra, cho thấy khả năng phân tích ngữ cảnh và nhận diện hành vi sao chép hiệu quả. Dẫu vậy, hệ thống vẫn cần con người giám sát để xử lý các trường hợp nhạy cảm hoặc có tranh cãi.
+C. Xu et al. [22] giới thiệu WizardLM, một mô hình được huấn luyện thông qua chỉ dẫn từ người dùng (instruction-tuning). WizardLM đạt điểm 89.1/100 trên MT-Bench và cho thấy hiệu quả cao trong việc tạo phản hồi logic, rõ ràng, bám sát yêu cầu người dùng. Khả năng thích ứng với các tình huống mới của WizardLM vẫn còn hạn chế nếu không được huấn luyện thêm.
+H. Touvron et al. [23] phát triển Mistral-7B, một mô hình ngôn ngữ quy mô nhỏ nhưng hiệu quả, sử dụng kỹ thuật attention sliding window để xử lý chuỗi văn bản dài. Mistral đạt 85.6/100 trên MT-Bench và có thể vượt GPT-3.5 trong một số tác vụ hội thoại nhất định. Hiện nay, Mistral vẫn gặp khó khăn trong các bài toán yêu cầu kiến thức chuyên sâu hoặc suy luận đa bước.
+L. Tunstall et al. [24] đề xuất Zephyr-13B, một mô hình được huấn luyện bằng phương pháp Direct Preference Optimization (DPO), tập trung tối ưu hóa phản hồi dựa trên sở thích người dùng thay vì chỉ sử dụng đánh giá khách quan. Zephyr đạt điểm 91.4/100 trên MT-Bench, gần ngang GPT-3.5 Turbo, đồng thời được đánh giá cao về độ trôi chảy và tính tự nhiên trong phản hồi hội thoại. Tuy nhiên, việc tối ưu hóa dựa vào sở thích chủ quan có thể dẫn đến phản hồi lệch hướng trong một số tình huống.
+BACKGROUND
+Trong phần này, chúng tôi giới thiệu về các kiến thức nền tảng của hệ thống Chatbot sử dụng ngôn ngữ lớn. Các kiến thức được đề cập bao gồm: Mô hình ngôn ngữ lớn (LLM), RAG, FAISS, Langgraph.
+ Mô hình Ngôn ngữ Lớn
+Trái tim của hầu hết các mô hình ngôn ngữ lớn (LLM) hiện đại, đặc biệt là những mô hình được sử dụng trong chatbot, là kiến trúc Transformer [25].  Kiến trúc Transformer được mô tả chi tiết như trong Fig. 2.
+Trong giai đoạn mã hóa, câu hỏi từ người dung sẽ đi qua lớp nhúng để chuyển đổi các từ thành các vector hay còn gọi là nhúng token. Do mô hình không có khả năng tự nhận biết vị trí của từng từ trong chuỗi nên các vector nhúng này được cộng với vector nhúng vị trí để mô hình Transformer có thể xác định vị trí từng token. Sau đó, khối mã hóa sẽ xử lý chuỗi vector qua N lớp. Trong mỗi lớp, cơ chế self-attention cho phép mỗi từ có thể thu thập thông tin từ tất cả các từ khác trong câu hỏi. Kết quả của khối mã hóa là một chuỗi vector biểu diễn ngữ cảnh, mỗi vector đại diện cho một token trong câu hỏi đầu vào.
+Tiếp theo, khối giải mã nhận thông tin đầu vào đã được xử lý từ khối mã hóa vã cũng thực hiện nhúng vị trí tương tự khối mã hóa. Trong quá trình sinh câu trả lời, khối giải mã sử dụng cơ chế masked self-attention để đảm bảo các từ được dự đoán tiếp theo chỉ dựa vào ngữ cảnh và các từ phía trước. Điều này giúp mô hình có khả năng sinh câu trả lời một cách rõ ràng và mạch lạc. Tiếp theo, khối giải mã sử dụng cơ chế cross-attention để nhìn lại chuỗi vector biểu diễn ngữ cảnh được tạo ra từ khối mã hóa giúp mô hình tạo ra câu trả lời bám sát vào câu hỏi gốc. Cuối cùng, đầu ra được đưa qua lớp tuyến tính (linear) và hàm softmax để biến đổi thành một phân phối xác suất cho phép mô hình chọn lựa từ tiếp theo có xác suất cao nhất. Quá trình này lặp lại cho đến khi mô hình tạo ra một token kết thúc câu.
+Retrieval-Augmented Generation (RAG)
+Mặc dù LLM rất mạnh mẽ, chúng có một số hạn chế như:
+"Ảo giác" (Hallucination): LLM có thể tạo ra thông tin không chính xác.
+Kiến thức lỗi thời: Kiến thức của LLM bị giới hạn bởi dữ liệu đào tạo của chúng, thường không được cập nhật theo thời gian thực.
+Thiếu khả năng truy cập dữ liệu chuyên biệt/riêng tư: LLM không thể truy cập các tài liệu nội bộ của công ty hoặc dữ liệu cá nhân.
+Retrieval-Augmented Generation (RAG) [25] ra đời để giải quyết những vấn đề này. RAG là một kỹ thuật cho phép LLM truy xuất thông tin từ các nguồn dữ liệu bên ngoài và sử dụng thông tin đó để "tăng cường" quá trình tạo sinh phản hồi.
+Cấu trúc và quy trình hoạt động của RAG theo các giai đoạn sau:
+Giai đoạn Truy xuất (Retrieval Phase):
+Chuẩn bị dữ liệu và Kỹ thuật Chunking: Để các tài liệu lớn có thể được xử lý hiệu quả và phù hợp với giới hạn đầu vào của LLM, chúng cần được chia thành các đoạn nhỏ hơn. Quá trình này được gọi là Chunking. 
+Tạo Vector Embeddings: Sau khi các tài liệu được chia thành các chunks, mỗi chunk sẽ được chuyển đổi thành một vector nhúng. Quá trình này được thực hiện bởi một mô hình embedding. Các mô hình này được đào tạo để ánh xạ văn bản sang không gian vector sao cho khoảng cách giữa các vector phản ánh mức độ tương đồng ngữ nghĩa của văn bản gốc.
+Lập chỉ mục và lưu trữ: Các vector nhúng này, cùng với đoạn văn bản gốc, được lưu trữ trong một cơ sở dữ liệu vector (vector database). 
+Truy vấn: Khi người dùng đưa ra một câu hỏi, câu hỏi đó cũng được chuyển đổi thành một vector nhúng.
+Tìm kiếm tương đồng: Vector truy vấn này được sử dụng để tìm kiếm các vector nhúng "tương tự" nhất trong cơ sở dữ liệu vector. Các đoạn văn bản tương ứng với các vector gần nhất được truy xuất.
+Giai đoạn Tạo sinh (Generation Phase)
+Các đoạn thông tin liên quan đã truy xuất được được kết hợp với câu hỏi ban đầu của người dùng.
+Tổ hợp này tạo thành một "prompt" mở rộng, cung cấp ngữ cảnh phong phú hơn cho LLM.
+LLM sau đó sử dụng prompt tăng cường này để tạo ra câu trả lời cuối cùng, đảm bảo tính chính xác, cập nhật và phù hợp với ngữ cảnh.
+FAISS
+FAISS [26] là một thư viện mã nguồn mở được phát triển bởi Facebook AI, chuyên dùng để tìm kiếm hiệu quả và phân cụm các vector có kích thước tương tự nhau.
+Vai trò của FAISS trong RAG: Khi các đoạn văn bản được chuyển đổi thành vector nhúng, số lượng vector có thể lên đến hàng triệu hoặc hàng tỷ. Việc tìm kiếm các vector tương tự nhất trong một tập hợp lớn như vậy đòi hỏi một công cụ cực kỳ hiệu quả. FAISS cung cấp các thuật toán và cấu trúc dữ liệu được tối ưu hóa để thực hiện các phép toán "tìm kiếm tương đồng gần đúng nhất" (Approximate Nearest Neighbor - ANN) với tốc độ cao. 
+Cách hoạt động của FAISS:
+Lập chỉ mục (Indexing): FAISS cung cấp nhiều loại chỉ mục khác nhau. Các chỉ mục này tổ chức các vector trong không gian đa chiều theo cách cho phép tìm kiếm nhanh chóng. Thay vì so sánh từng vector một (quá chậm với dữ liệu lớn), các thuật toán ANN trong FAISS sử dụng các kỹ thuật như phân cụm (clustering) hoặc lượng tử hóa (quantization) để thu hẹp không gian tìm kiếm.
+Tìm kiếm tương đồng (Similarity Search): Khi một vector truy vấn được cung cấp, FAISS sử dụng chỉ mục đã tạo để nhanh chóng xác định các vector tương đồng nhất về ngữ nghĩa dựa trên các phép đo khoảng cách như cosine similarity hoặc Euclidean distance.
+LangGraph
+LangGraph [27] là một thư viện được xây dựng trên LangChain, cho phép bạn xây dựng các ứng dụng LLM có trạng thái (stateful) dưới dạng đồ thị (graphs). Các khái niệm chính trong LangGraph:
+State (Trạng thái): Trạng thái là một đối tượng dữ liệu được truyền từ node này sang node khác trong đồ thị. Đây là "bộ nhớ" của hệ thống, lưu trữ tất cả thông tin cần thiết để các node tiếp theo hoạt động.
+Node (Nút): Một node đại diện cho một đơn vị xử lý độc lập trong luồng công việc của chatbot. Mỗi node nhận trạng thái hiện tại làm đầu vào, thực hiện một số logic, và trả về một cập nhật cho trạng thái. 
+Edge (Cạnh): Các cạnh định nghĩa luồng điều khiển giữa các node. Chúng xác định node nào sẽ được thực thi tiếp theo sau khi một node hiện tại hoàn thành.
+MÔ HÌNH HÊ THỐNG
+Mô hình hệ thống được thể hiện như trong Fig. 3.
+Trong mô hình được chia thành 2 phase. Phase 1 tương tác với người dùng, được gọi là Front-end. Phase 2 xử lý kỹ thuật trong hệ thống gọi là Back-end. Quy trình thực hiện hệ thống như sau:
+	(1) Input: Người dùng nhập câu hỏi cần truy vấn vào phần chat của thệ thống.
+	(2) Embedding model: Các câu hỏi được chuẩn hóa sang dạng vector và đưa vào hệ thống RAG
+	(3) Retrieve: Hệ thống sẽ so khớp câu hỏi với câu trả lời tương ứng. Câu trả lời được truy vấn trong cơ sở dữ liệu cục bộ (chính là hệ thống thông tin sinh viên và điểm của sinh viên theo các môn)
+	(4) Grade: đánh giá mức độ liên quan giữa câu hỏi và câu trả lời.
+	(5) Generater Answer: Sử dụng các mô hình LLM để sinh ra câu trả lời dựa trên thông tin đã truy xuất trong Retrieve.
+	(6) Return Results: Hiển thị câu trả lời trong phần chatbot với người dùng
+	(7) Answer Evaluator: Đánh giá câu trả lời của hệ thống dựa trên các độ đo.
+Experimentation
+Bộ dữ liệu và môi trường thực nghiệm
+Cơ sở dữ liệu cục bộ chúng tôi lưu trữ trong hệ quản trị cơ sở dữ liệu PostgresSQL với ba bảng students, subjects và scores. Dữ liệu liên quan tới sinh viên và điểm được chúng tôi thu thập tại website Khảo thí và đảm bảo chất lượng của trường Học viện Kỹ thuật Mật Mã [28]. Mối quan hệ giữa các bảng được thể hiện như trong Fig. 4.
+Bảng students lưu trữ thông tin cơ bản của sinh viên như student_name, student_class. Bảng subjects lưu trữ thông tin liên quan tới môn học là subject_name và subject_credits. Bảng scores lưu trữ điểm của sinh viên theo từng môn học cụ thể. Bảng scores được tham chiếu n-1 tới students và subjects.
+Để đánh giá mô hình LLM thông qua câu trả lời và thời gian truy vấn, trong các bảng có số lượng bản ghi như sau:
+Bảng students: 4,814 bản ghi, tương ứng 4814 sinh viên.
+Bảng subjects: 181 bản ghi, tương ứng 181 môn học khác nhau trong chương trình đào tạo.
+Bảng scores: 155,130 bản ghi, mỗi bản ghi tương ứng với điểm môn học của từng sinh viên.
+	Chúng tôi thực nghiệm trên hai máy chủ, gọi là server1 và server2, có cấu hình như sau:
+Máy server1:
+GPU: NVDIA H100
+VRAM: 80 GB HBM3
+vCPU: 20 vCPU
+RAM: 240 GB RAM
+Máy server2:
+GPU: NVIDIA RTX 4080
+VRAM: 16 GB GDDR6X
+CPU: Intel Core i9 (13th Gen)
+RAM: 64 GB DDR5
+Các ngôn ngữ lớn trong thực nghiệm được chúng tôi tải về máy để chạy offline (chỉ riêng mô hình Gemini sử dụng API để truy vấn và nhận về câu trả lời). Cụ thể:
+Gemini (2025): Google không công bố số lượng tham số
+Mô hình Llama 3.3 (2024): có 70 tỷ tham số
+Mô hình Qwen 2.5 (2024): sử dụng 32 tỷ tham số (nhiều mô hình từ 0.5 tới 72 tỷ tham số)
+Mô hình Mistral-small (2024): sử dụng 24 tỷ tham số (có từ 22 – 24 tỷ tham số)
+Mô hình Command-r (2024): có 35 tỷ tham số
+Các độ đo sử dụng trong đánh giá kết quả
+Để đánh giá mô hình, chúng tôi sử dụng hai độ đo chính là BERTScore và Cosine Similarity.
+BERTScore là một độ đo đánh giá mức độ tương đồng ngữ nghĩa giữa hai câu bằng cách ánh xạ từng token trong câu thành vector embedding. Sau đó, điểm được tính dựa trên độ tương đồ cosine giữa các token của hai câu. BERTScore trả về ba chỉ số Precison, Recall, F1-score. Dưới đây là cách tính cụ thể:
+Gọi , ,…,  là các token trong câu sinh ra, , ,…, là các token trong câu tham chiếu, và sim(,) là độ tương đồng cosine giữa hai token sau khi ánh xạ embedding.
+Precision: đo mức độ tương đồng về ngữ nghĩa giữa các token trong câu sinh ra với các token trong câu tham chiếu.
+                     (1)
+Recall: đo mức độ các token trong câu tham chiếu được bao phủ ngữ nghĩa bởi các token trong câu sinh ra.
+                            (2)
+F1-score: trung bình điều hòa giữa Precision và Recall, phản ánh mức độ tương đồng ngữ nghĩa giữa hai câu.
+                            (3)
+CosineSimilarity: độ đo sự tương đồng giữa hai vector khác 0 trong một không gian vector. CosineSimilarity đo cosin của góc giữa hai vector, với giá trị 1 biểu thị rằng hai vector có cùng hướng (rất tương đồng), giá trị 0 biểu thị chúng độc lập (vuông góc), và giá trị -1 biểu thị chúng có hướng hoàn toàn đối diện (rất không tương đồng). Đối với 2 vector A và B, độ đo Cosine được tính theo công thức (4):
+                                  (4)
+		Trong đó:
+A⋅B là tích vô hướng của hai vector A và B.
+∣∣A∣∣ là độ lớn (chuẩn Euclidean) của vector A.
+∣∣B∣∣ là độ lớn (chuẩn Euclidean) của vector B.
+Kết quả thực nghiệm và đánh giá
+Để có cái nhìn toàn diện, chúng tôi tiến hành đánh giá hiệu năng của LLMs trên hai máy chủ có cấu hình được mô tả trong mục V. B. Với bộ truy vấn là 20 câu hỏi liên quan tới cơ sở dữ liệu cục bộ. Kết quả được tổng hợp trong Table II. 
+Kết quả thực nghiệm cho thấy hiệu năng vượt trội của mô hình Gemini-2.0-Flash so với các mô hình mã nguồn mở chạy cục bộ.
+Trên server 1 (Cấu hình cao với NVDIA H100):
+Gemini-2.0-Flash không chỉ dẫn đầu về mọi chỉ số chính xác mà còn có thời gian phản hồi nhanh nhất.
+Các mô hình mã nguồn mở như Qwen 2.5, Llama 3.3, Mistral-small, Command-r có thời gian phản hồi chậm hơn và độ chính xác thấp hơn. Điều này cho thấy việc sử dụng một dịch vụ API được tối ưu hóa có hiệu quả hơn cả về chất lượng lẫn tốc độ so với việc chạy cục bộ các LLM.
+Trên server 2 (Cấu hình bình thường với NVIDIA RTX 4080):
+Gemini-2.0-Flash vẫn duy trì được vị trí dẫn đầu về độ chính xác và thời gian phản hồi.
+Ngược lại các mô hình chạy cục bộ như Llama 3.3, Qwen 2.5, Mistral-small đều có thời gian phản hồi rất chậm, cho thấy rằng chi phí tài nguyên để vận hành các LLM cục bộ là một rào cản lớn.
+		Việc sử dụng mô hình Gemini-2.0-Flash thông qua API là lựa chọn cho kết quả tốt nhất. Mặt khác, mô hình Gemini dùng API nên giải quyết được bài toán về tài nguyên phần cứng và tốc độ phản hồi. Tuy nhiên, hạn chế của mô hình Gemini là phụ thuộc vào việc Google cung có cho phép hay chặn API. Các mô hình khác có thể có thể cho kết quả thấp hơn nhưng người dùng có thể tải về và triển khai trên máy cục bộ.
+	Nếu chỉ xem xét các mô hình được tải về máy chủ (ngoại trừ Gemini) được gọi là mô hình cục bộ, chúng tôi nhận thấy mô hình Llama cho kết quả 80.73% với độ đo CosineSimilarity là cao nhất, cao hơn mô hình Qwen là 3.52%. Mô hình thấp nhất là mô hình Mistral small chỉ đạt 63.15%. Tuy nhiên, mô hình Llama có thời gian phản hồi cao gấp 2 lần so mới các mô hình khác. Điều này thể hiện số lượng tham số nhiều thì độ chính xác cao và thời gian phản hồi lớn. 
+	Với các mô hình cục bộ, mô hình Llama cũng cho kết quả tốt hơn với độ đo Precision, Recall, F1-score đều vượt trội so với các mô hình khác. Điều này có thể giải thích do số lượng tham số của mô hình Llama nhiều hơn so với các mô hình khác. Tuy nhiên, do số lượng tham số nhiều hơn nên trong cả server 1 và server 2 thì mô hình Llama có thời gian truy vấn và phản hổi là cao nhất.
+	Mặt khác, trong điều kiện hạn chế, khi sử dụng máy chủ có tốc độ không cao cần phải xem xét để hài hòa giữa tốc độ thực thi truy vấn và độ chính xác của câu trả lời. Trong Table II cho thấy, máy chủ có tốc độ cao thì thời gian truy vấn và phản hồi của người dùng sẽ nhanh, đối với các mô hình trên máy chủ, thời gian của server 2 gấp 9 tới 16 lần so với server 1 (phụ thuộc vào số lượng tham số sử dụng trong mỗi mô hình).
+	Chúng tôi triển khai giao diện bằng tiếng Việt, trong quá trình truy vấn chúng tôi đã thử nghiệm truy vấn Chatbot bằng cả tiếng anh và tiếng việt. Cả hai ngôn ngữ đều cho kết quả trả lời đúng, chỉ khác biệt về các lời dẫn trong mô hình LLM. Chi tiết truy vấn bằng tiếng Việt được thể hiện như trong Fig. 5.  Hệ thống được chúng tôi triển khai tại địa chỉ http://42.112.213.93:8501/.
+CONCLUSION
+	Trong nghiên cứu này, chúng tôi đã chỉ ra rằng thời gian phản hổi của chatbot phụ thuộc rất nhiều vào cấu hình của máy chủ. Với máy chủ sử dụng GPU H100 cho thời gian phản hồi nhanh hơn gần 4 lần máy chủ sử dụng GPU RTX4080 khi sử dụng mô hình Gemini. Với mô hình Llama thời gian phản hồi nhanh hơn tới 16 lần.
+	Trong các mô hình được tải về máy chủ, chúng tôi nhận thấy mô hình có số lượng tham số lớn sẽ cho kết quả có độ chính xác cao hơn. Tuy nhiên thời gian phản hồi thường chậm hơn. Do đó, cần cân đối giữa độ chính xác của mô hình và thời gian phản hồi kết quả.
+	Thực nghiệm và các kết quả của chúng tôi được đưa công khai lên Github [29].
+References
+A. Vaswani, N. Shazeer, N. Parmar, J. Uszkoreit, L. Jones, A. N. Gomez, Ł. Kaiser, and I. Polosukhin, "Attention is all you need," in Advances in Neural Information Processing Systems, vol. 30, 2017, pp. 5998–6008.
+M. Raza, Z. Jahangir, M. B. Riaz, M. J. Saeed, and M. A. Sattar, “Industrial applications of large language models,” *Scientific Reports*, vol. 15, Art. no. 13755, 2025. [Online]. Available: https://doi.org/10.1038/s41598-025-98483-1.
+McKinsey & Company. The economic potential of generative AI: The next productivity frontier. McKinsey Global Institute, June 2023. [Online]. Available: https://www.mckinsey.com/capabilities/quantumblack/our-insights/the-economic-potential-of-generative-ai-the-next-productivity-frontier
+Vlink, The Future of LLM Programming: Trends and Predictions, Jul. 2024. [Online]. Available: https://vlinkinfo.com/blog/future-of-llm-programming-trends-and-predictions
+Hostinger, LLM Statistics 2025: Adoption, Trends, and Market Insights, Jul. 2025. [Online]. Available: https://www.hostinger.com/tutorials/llm-statistics.
+Earkick Inc., "Earkick Chat – Free AI Mental Health Chatbot", Earkick, 2025. [Online]. Available: https://chat.earkick.com. 
+Mainstay, “How Georgia State University supports every student with personalized text messaging,” Mainstay.com, 2021. [Online]. Available: https://mainstay.com/case-study/how-georgia-state-university-supports-every-student-with-personalized-text-messaging/
+1MillionBot, “Lola chatbot resolves over 38,000 student questions with 91% accuracy at the University of Murcia,” 1MillionBot.com, 2018. [Online]. Available: https://1millionbot.com/en/chatbot-1millionbot-universidad-de-murcia-resolver-dudas-estudiantes/
+Trường Đại học Sư phạm Kỹ thuật TP.HCM, “HCMUTE Chatbot – Trợ lý ảo hỗ trợ sinh viên,” 2023. [Online]. Available: https://chatbot.hcmute.edu.vn/
+ Y. Zhang, S. Sun, M. Galley, Y.-C. Chen, C. Brockett, X. Gao, J. Gao, J. Liu, and B. Dolan, "DIALOGPT: Large-scale generative pre-training for conversational response generation," in Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics: System Demonstrations, Online, 2020, pp. 270–278.
+S. Roller, E. Dinan, N. Goyal, D. Ju, M. Williamson, Y. Liu, J. Xu, M. Ott, K. Shuster, E. M. Smith, Y.‑L. Boureau, and J. Weston, “Recipes for Building an Open‑Domain Chatbot,” in Proc. 16th Conf. Eur. Chapter Assoc. Comput. Linguistics (EACL), Online, Apr. 2021, pp. 300–325.
+ D. Adiwardana, M. Luong, D. So, et al., “Towards a human-like open-domain chatbot,” arXiv preprint arXiv:2001.09977, 2020.
+S. Bao, H. He, F. Wang, H. Wu, and H. Wang, “PLATO: Pre‑trained Dialogue Generation Model with Discrete Latent Variable,” in Proceedings of the 58th Annual Meeting of the Association for Computational Linguistics, Online, Jul. 2020, pp. 85–96.
+M. Zhong, Y. Liu, Y. Xu, C. Zhu, and M. Zeng, “DialogLM: Pre‑trained model for long dialogue understanding and summarization,” in Proc. AAAI Conf. Artif. Intell., vol. 36, Speech & NLP Track, Feb. 2022. doi:10.1609/aaai.v36i10.21432.
+OpenAI, “ChatGPT: Optimizing language models for dialogue,” 2022. [Online]. Available: https://openai.com/blog/chatgpt.
+Anthropic, “Introducing Claude,” 2023. [Online]. Available: https://www.anthropic.com/index/introducing-claude.
+G. Zhao, T. Dettmers, and Y. Zettlemoyer, “LLaMA: Open and efficient foundation language models,” Meta AI, 2023. [Online]. Available: https://ai.meta.com/llama.
+L. Huang, J. Lin, and Y. Chen, “FastChat: Open platform for training, serving, and evaluating large language models,” 2023. [Online]. Available: https://github.com/lm-sys/FastChat.
+W. Chen, X. Zhang, and Y. Li, “Applying GPT-4 in education: Automated grading and feedback generation,” in Proc. ICALT, 2023, pp. 45–52.
+S. Bubeck, V. Chandrasekaran, R. Eldan, et al., “Sparks of artificial general intelligence: Early experiments with GPT-4,” arXiv preprint arXiv:2303.12712, 2023, https://www.microsoft.com/en-us/research/publication/sparks-of-artificial-general-intelligence-early-experiments-with-gpt-4/.
+D. Wang, K. Li, D. Dong, H. Jiang, J. Guo, Z. Zhao, and H. Wang, “A multitask, multilingual, multimodal evaluation of ChatGPT on reasoning, hallucination, and interactivity,” in Proc. 7th Int. Joint Conf. Natural Lang. Process. (IJCNLP), 2023, pp. 545–559.
+C. Xu, Q. Sun, K. Zheng, X. Geng, P. Zhao, J. Feng, C. Tao, Q. Lin, and D. Jiang, “WizardLM: Empowering Large Language Models to Follow Complex Instructions,” in Proc. Int. Conf. Learn. Represent. (ICLR), 2024.
+H. Touvron, L. Martin, and K. Izacard, “Mistral 7B,” Mistral AI, 2023. [Online]. Available: https://mistral.ai/news/announcing-mistral-7b
+L. Tunstall, L. Debut, L. Chan, T. Wolf, and S. Launay, “Zephyr: Direct distillation of LM alignment,” arXiv preprint arXiv:2310.16944, 2023.
+P. Lewis, E. Perez, A. Piktus, F. Petroni, V. Karpukhin, N. Goyal, H. Küttler, M. Lewis, W. Oguz, B. Yavuz, S. Riedel, and D. Kiela, “Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks,” in Advances in Neural Information Processing Systems, vol. 33, NeurIPS, 2020, pp. 9459–9474.
+J. Johnson, M. Douze, and H. Jégou, “Billion-scale similarity search with GPUs,” IEEE Transactions on Big Data, vol. 7, no. 3, pp. 535–547, Sept. 2021, doi: 10.1109/TBDATA.2019.2921572.
+“What is LangGraph”, https://www.ibm.com/think/topics/langgraph.
+Assessment and Training Quality AssuranceL -    Academy of Cryptography Techniques,  https://ktdbcl.actvn.edu.vn/, last accessed: 30/06/2025.
+Github: https://github.com/zuoq2110/chatbot_agent.git.
+

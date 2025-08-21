@@ -4,6 +4,7 @@ from langchain_core.messages import BaseMessage, AIMessage, HumanMessage, System
 from huggingface_hub import InferenceClient
 from pydantic import Field
 import os
+from .model_manager import model_manager
 
 class HuggingFaceChatModel(BaseChatModel):
     """LangChain wrapper for Hugging Face InferenceClient."""
@@ -14,17 +15,28 @@ class HuggingFaceChatModel(BaseChatModel):
     max_tokens: int = Field(default=512)
     
     def __init__(self, model_path: str = None, **kwargs):
-        model = model_path or "NousResearch/Hermes-2-Pro-Llama-3-8B"
-        super().__init__(model=model, **kwargs)
-        self.model = model
+        # Lấy cấu hình từ model_manager nếu không có model_path được chỉ định
+        if model_path is None:
+            model_path = model_manager.get_model_path()
+            kwargs.setdefault("temperature", model_manager.get_temperature())
+            kwargs.setdefault("max_tokens", model_manager.get_max_tokens())
+        
+        super().__init__(model=model_path, **kwargs)
+        self.model = model_path
         self.client = InferenceClient(
             provider="novita",
             api_key=os.environ.get("HF_TOKEN"),
-            model=model
+            model=model_path
         )
     
     def _generate(self, messages: List[BaseMessage], stop: Optional[List[str]] = None, **kwargs) -> AIMessage:
         hf_messages = []
+        
+        # Thêm system prompt vào đầu nếu chưa có
+        if not any(isinstance(msg, SystemMessage) for msg in messages):
+            system_prompt = model_manager.get_system_prompt()
+            hf_messages.append({"role": "system", "content": system_prompt})
+        
         for msg in messages:
             role = "assistant" if isinstance(msg, AIMessage) else "user" if isinstance(msg, HumanMessage) else "system"
             hf_messages.append({"role": role, "content": msg.content})

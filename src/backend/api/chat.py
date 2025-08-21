@@ -22,6 +22,8 @@ agent.create_graph()
 agent.print_mermaid()
 
 from ..db.mongodb import MongoDB, mongodb
+
+
 from backend.models.chat import (
     ConversationCreate,
     ConversationResponse,
@@ -32,6 +34,7 @@ from backend.models.chat import (
 from backend.models.user import UserResponse
 from backend.models.responses import BaseResponse
 from backend.auth.dependencies import require_auth
+from backend.api.rate_limit import check_rate_limit
 
 router = APIRouter()
 
@@ -44,6 +47,28 @@ def validate_object_id(id: str):
     if not ObjectId.is_valid(id):
         raise HTTPException(status_code=400, detail=f"Invalid ID format: {id}")
     return ObjectId(id)
+
+
+# Helper function to estimate token count for rate limiting
+def estimate_token_count(prompt_text: str, response_text: str) -> int:
+    """
+    Ước tính số token được sử dụng trong một cuộc hội thoại
+    
+    Args:
+        prompt_text: Nội dung tin nhắn của người dùng
+        response_text: Nội dung phản hồi của AI
+        
+    Returns:
+        Ước tính tổng số token
+    """
+    # Một cách ước tính đơn giản: ~4 ký tự = 1 token (thực tế phụ thuộc vào tokenizer)
+    prompt_tokens = len(prompt_text) // 4
+    response_tokens = len(response_text) // 4
+    
+    # Thêm một overhead cho các token đặc biệt và context
+    overhead = 100
+    
+    return prompt_tokens + response_tokens + overhead
 
 
 @router.get("/conversations/all", response_model=BaseResponse[List[ConversationResponse]])
@@ -274,7 +299,8 @@ async def get_messages_of_conversation(
 async def query_ai(
     conversation_id: str,
     message: MessageCreate,
-    student_code: str = Header(None)
+    student_code: str = Header(None),
+    current_user = Depends(require_auth)
 ):
     """Add a new message to a conversation and get AI response using memory-aware chat"""
     conv_id = validate_object_id(conversation_id)
@@ -286,6 +312,18 @@ async def query_ai(
 
     if not conversation:
         raise HTTPException(status_code=404, detail="Conversation not found")
+    
+    # Lấy user_id của người dùng hiện tại để kiểm tra rate limit
+    user_id = str(current_user.get("_id"))
+    if not user_id:
+        logger.error("User ID not found in current_user object")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
+    
+    # Kiểm tra rate limit trước khi xử lý tin nhắn - không tính request ở đây
+    # vì mỗi cặp câu hỏi và câu trả lời chỉ tính là 1 request
+    allowed, error_message = await check_rate_limit(user_id, 0, count_as_request=False)  
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=error_message)
     
     now = datetime.utcnow()
 
@@ -358,6 +396,18 @@ async def query_ai(
         is_user=created_message["is_user"],
         created_at=created_message["created_at"],
     )
+    
+    # Tính toán số token đã sử dụng và cập nhật rate limit
+    estimated_tokens = estimate_token_count(content, ai_response)
+    logger.info(f"Estimated token usage: {estimated_tokens}")
+    logger.info(f"Updating rate limit for user ID: {user_id}")
+    
+    # Tính là một request khi hoàn thành cả cặp câu hỏi-trả lời
+    token_result, token_error = await check_rate_limit(user_id, estimated_tokens, count_as_request=True)
+    if not token_result:
+        logger.warning(f"Token limit reached but continuing as request already processed: {token_error}")
+    
+    logger.info(f"Rate limit updated successfully")
 
     return BaseResponse(
         statusCode=status.HTTP_201_CREATED,
@@ -369,9 +419,22 @@ async def query_ai(
 @router.post("/quick-messages", response_model=BaseResponse[QuickMessageResponse])
 async def quick_chat(
     message: MessageQuickChat,
-    student_code: str = Header(None)
+    student_code: str = Header(None),
+    current_user = Depends(require_auth)
 ):
     """Get a quick response without saving conversation history"""
+    
+    # Lấy user_id của người dùng hiện tại để kiểm tra rate limit
+    user_id = str(current_user.get("_id"))
+    if not user_id:
+        logger.error("User ID not found in current_user object")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
+    
+    # Kiểm tra rate limit trước khi xử lý tin nhắn - không tính request ở đây
+    # vì mỗi cặp câu hỏi và câu trả lời chỉ tính là 1 request
+    allowed, error_message = await check_rate_limit(user_id, 0, count_as_request=False)
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=error_message)
     
     # Create a single message for this quick chat
     conversation_history = [HumanMessage(content=message.content)]
@@ -398,6 +461,18 @@ async def quick_chat(
         content=ai_response,
         created_at=now,
     )
+    
+    # Tính toán số token đã sử dụng và cập nhật rate limit
+    estimated_tokens = estimate_token_count(content, ai_response)
+    logger.info(f"Estimated token usage: {estimated_tokens}")
+    logger.info(f"Updating rate limit for user ID: {user_id}")
+    
+    # Tính là một request khi hoàn thành cả cặp câu hỏi-trả lời
+    token_result, token_error = await check_rate_limit(user_id, estimated_tokens, count_as_request=True)
+    if not token_result:
+        logger.warning(f"Token limit reached but continuing as request already processed: {token_error}")
+    
+    logger.info(f"Rate limit updated successfully")
     
     return BaseResponse(
         statusCode=status.HTTP_200_OK,

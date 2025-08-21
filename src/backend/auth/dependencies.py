@@ -15,11 +15,12 @@ def require_auth(current_user = Depends(get_current_user)):
     Raises:
         HTTPException: Nếu người dùng không được xác thực
     """
+    print("Checking authentication...")
     if not current_user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Vui lòng đăng nhập để sử dụng tính năng này",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    
+    print(f"Authenticated user")
     return current_user

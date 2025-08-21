@@ -1,5 +1,4 @@
 
-
 import os
 from typing import Optional, List, Any
 from dotenv import load_dotenv
@@ -8,14 +7,13 @@ from langchain_core.language_models import BaseChatModel
 from langchain_core.messages import BaseMessage, AIMessage
 from langchain.callbacks.manager import CallbackManager
 from langchain_ollama import ChatOllama
-from langchain_community.callbacks.tracers import LangChainTracer  # Thêm dòng này
+from langchain_community.callbacks.tracers import LangChainTracer
 from langchain_google_genai import ChatGoogleGenerativeAI
+
+from .llm_factory import LLMFactory
 
 # Load environment variables
 load_dotenv()
-
-# HF Model Path from environment or default
-HF_MODEL_PATH = os.environ.get("HF_MODEL", "NousResearch/Hermes-2-Pro-Llama-3-8B")
 
 # Phần còn lại của file giữ nguyên
 class LLMConfig:
@@ -25,25 +23,21 @@ class LLMConfig:
     DEFAULT_PROJECT_NAME = "KMA_CHAT"
     DEFAULT_GEMINI_MODEL = "gemini-2.0-flash"
     
-    # Đường dẫn mặc định đến mô hình Hugging Face
-    HF_MODEL_PATH = "NousResearch/Hermes-2-Pro-Llama-3-8B"
     @classmethod
     def create_rag_llm(cls,
                   model_name: str = None,
-                  callback_manager: Optional[CallbackManager] = None) -> ChatOllama:
-        """Create a ChatOllama model instance with specified configuration.
+                  callback_manager: Optional[CallbackManager] = None) -> BaseChatModel:
+        """Create a model instance with specified configuration.
         
         Args:
             model_name: Name of the model to use
             callback_manager: Optional callback manager for tracing
             
         Returns:
-            Configured ChatOllama instance
+            Configured model instance
         """
-        from dotenv import load_dotenv
-
-        # Load environment variables from .env file
-        load_dotenv()
+        # Sử dụng LLMFactory để tạo model
+        return LLMFactory.create_llm(callback_manager)
 
         # Get API key from environment
         rag_model = os.environ.get("RAG_MODEL")

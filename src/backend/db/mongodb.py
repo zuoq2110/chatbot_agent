@@ -46,6 +46,13 @@ class MongoDB:
             logger.info("Collection 'users' exists.")
         else:
             logger.warning("Collection 'users' not found. It will be created on first insert.")
+            
+        # Tạo index cho rate_limits collection
+        try:
+            await cls.db.rate_limits.create_index("user_id", unique=True)
+            logger.info("Created index for rate_limits collection on user_id field")
+        except Exception as e:
+            logger.warning(f"Error creating index for rate_limits: {e}")
     
     @classmethod
     async def close_mongodb_connection(cls):
@@ -82,12 +89,20 @@ class MongoDB:
         if self.db is None and MongoDB.db is not None:
             return MongoDB.db.users
         return self.db.users if self.db else None
-        
+
     @property
     def messages(self):
         if self.db is None and MongoDB.db is not None:
             return MongoDB.db.messages
         return self.db.messages if self.db else None
+    
+    @property
+    def rate_limits(self):
+        if self.db is None and MongoDB.db is not None:
+            return MongoDB.db.rate_limits
+        return self.db.rate_limits if self.db else None
+
+# Khởi tạo một singleton instance
 
 # Tạo instance global
 mongodb = MongoDB()

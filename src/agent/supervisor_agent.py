@@ -47,7 +47,7 @@ conversational_prompt = """
     and given the latest user question which might reference context in the chat history,
     formulate a standalone question which can be understood without the chat history.
     Do NOT answer the question, just reformulate it if needed and otherwise return it as is.
-    Regardless of the language input, please translate and write it in English.
+    Keep the original language of the user's input (do NOT translate).
     
     ** History **
     This is chat history:

@@ -31,7 +31,7 @@ tools = [score_tool, student_info_tool, calculator_tool, rag_tool]
 
 # Load prompts
 prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
-with open(os.path.join(prompts_dir, "system_prompt.txt"), "r") as f:
+with open(os.path.join(prompts_dir, "system_prompt.txt"), "r", encoding="utf-8") as f:
     react_prompt = f.read().strip()
 
 

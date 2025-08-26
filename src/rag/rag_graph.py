@@ -404,15 +404,15 @@ class KMAChatAgent:
         prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
 
         # Load grade prompts
-        with open(os.path.join(prompts_dir, "grade.txt"), "r") as f:
+        with open(os.path.join(prompts_dir, "grade.txt"), "r", encoding="utf-8") as f:
             prompts["grade"] = f.read().strip()
 
         # Load rewrite prompts
-        with open(os.path.join(prompts_dir, "rewrite.txt"), "r") as f:
+        with open(os.path.join(prompts_dir, "rewrite.txt"), "r", encoding="utf-8") as f:
             prompts["rewrite"] = f.read().strip()
 
         # Load generate prompts
-        with open(os.path.join(prompts_dir, "generate.txt"), "r") as f:
+        with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding="utf-8") as f:
             prompts["generate"] = f.read().strip()
 
         return prompts

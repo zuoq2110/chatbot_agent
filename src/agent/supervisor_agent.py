@@ -31,7 +31,7 @@ tools = [score_tool, student_info_tool, calculator_tool, rag_tool]
 
 # Load prompts
 prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
-with open(os.path.join(prompts_dir, "react_prompt.txt"), "r") as f:
+with open(os.path.join(prompts_dir, "system_prompt.txt"), "r", encoding="utf-8") as f:
     react_prompt = f.read().strip()
 
 
@@ -47,7 +47,7 @@ conversational_prompt = """
     and given the latest user question which might reference context in the chat history,
     formulate a standalone question which can be understood without the chat history.
     Do NOT answer the question, just reformulate it if needed and otherwise return it as is.
-    Regardless of the language input, please translate and write it in English.
+    Keep the original language of the user's input (do NOT translate).
     
     ** History **
     This is chat history:

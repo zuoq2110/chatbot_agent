@@ -58,11 +58,32 @@ class HybridRetriever(BaseRetriever, BaseModel):
 
 
 def read_all_text_files(data_dir):
-    """Đọc toàn bộ nội dung các file .txt trong thư mục"""
+    """Đọc toàn bộ nội dung các file .txt trong thư mục và tất cả thư mục con"""
     combined_text = ""
+    
+    # Đọc file trong thư mục chính
     for file_path in glob.glob(os.path.join(data_dir, "*.txt")):
         with open(file_path, "r", encoding="utf-8") as f:
             combined_text += f.read() + "\n\n"
+    
+    # Đọc file từ tất cả các thư mục con
+    for root, dirs, files in os.walk(data_dir):
+        # Bỏ qua thư mục gốc vì đã xử lý ở trên
+        if root == data_dir:
+            continue
+            
+        for file in files:
+            if file.endswith('.txt'):
+                file_path = os.path.join(root, file)
+                try:
+                    with open(file_path, "r", encoding="utf-8") as f:
+                        content = f.read()
+                        # Thêm thông tin về nguồn của nội dung
+                        folder_name = os.path.basename(root)
+                        combined_text += f"[Từ thư mục: {folder_name}]\n{content}\n\n"
+                except Exception as e:
+                    print(f"Error reading file {file_path}: {e}")
+                    
     return combined_text
 
 
@@ -81,7 +102,7 @@ def create_vector_database(output_path, data_dir="./data"):
 
         # embeddings = OllamaEmbeddings(
         #     model="nomic-embed-text",
-        #     base_url="http://172.17.0.1:11434"
+        #     base_url="http://ollama:11434"
         # )
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text"
@@ -105,7 +126,7 @@ def load_vector_database(output_path, data_dir="./data"):
     try:
         # embeddings = OllamaEmbeddings(
         #     model="nomic-embed-text",
-        #     base_url="http://172.17.0.1:11434"
+        #     base_url="http://ollama:11434"
         # )
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text"
@@ -198,7 +219,10 @@ def create_in_memory_retriever(file_content: str, chunk_size: int = 400, chunk_o
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text"
         )
-        
+        # embeddings = OllamaEmbeddings(
+        #     model="nomic-embed-text",
+        #     base_url="http://ollama:11434"
+        # )
         # Create in-memory FAISS vector store
         vectorstore = FAISS.from_texts(chunks, embeddings)
         

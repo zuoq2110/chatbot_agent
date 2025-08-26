@@ -1,3 +1,33 @@
+
+
+QUY ĐỊNH CHẾ ĐỘ LÀM VIỆC
+CỦA GIẢNG VIÊN HỌC VIỆN KỸ THUẬT MẬT MÃ
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+HÀ NỘI - 2021
+ 
+BAN CƠ YẾU CHÍNH PHỦ
+HỌC VIỆN KỸ THUẬT MẬT MÃ
+
+Số:             /QĐ-HVM	CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập – Tự do – Hạnh phúc
+
+Hà Nội, ngày         tháng 9 năm 2021
+
+QUYẾT ĐỊNH
 Về việc ban hành Quy định chế độ làm việc của giảng viên
 Học viện Kỹ thuật mật mã 
 GIÁM ĐỐC HỌC VIỆN KỸ THUẬT MẬT MÃ
@@ -114,26 +144,51 @@ VÀ NGHIÊN CỨU KHOA HỌC
 1. Hệ số quy đổi thời gian làm việc (giờ hành chính) ra giờ chuẩn của từng chức danh giảng viên được xác định là 3 giờ hành chính tương đương 01 giờ chuẩn.
 2. Định mức thời gian làm việc của từng chức danh giảng viên trong một năm học quy định như sau:
 Đơn vị tính: Giờ
-Nhiệm vụ	Trợ giảng
- và GV tập sự	Giảng viên
-(Hạng III)	Giảng viên
-chính (Hạng II)	Giảng viên
-cao cấp (Hạng I)
-Giảng dạy	405	810	810	810
-Nghiên cứu khoa học	0	600	750	900
-Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác	1355	350	200	50
-Tổng	1.760	1.760	1.760	1.760
-3. Định mức giờ chuẩn của từng chức danh giảng viên trong một năm học quy định như sau:
+[Định mức thời gian làm việc trong năm học]
+Đơn vị tính: Giờ
+- Trợ giảng và GV tập sự:
+  + Giảng dạy: 405
+  + Nghiên cứu khoa học: 0
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 1355
+  + Tổng: 1760
+- Giảng viên (Hạng III):
+  + Giảng dạy: 810
+  + Nghiên cứu khoa học: 600
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 350
+  + Tổng: 1760
+- Giảng viên chính (Hạng II):
+  + Giảng dạy: 810
+  + Nghiên cứu khoa học: 750
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 200
+  + Tổng: 1760
+- Giảng viên cao cấp (Hạng I):
+  + Giảng dạy: 810
+  + Nghiên cứu khoa học: 900
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 50
+  + Tổng: 1760
+
+[Định mức giờ chuẩn trong năm học]
 Đơn vị tính: Giờ chuẩn
-Nhiệm vụ	Trợ giảng
- và GV tập sự	Giảng viên
-(Hạng III)	Giảng viên
-chính (Hạng II)	Giảng viên
-cao cấp (Hạng I)
-Giảng dạy	135	270	270	270
-Nghiên cứu khoa học	0	200	250	300
-Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác	451	116	66	16
-Tổng	586	586	586	586
+- Trợ giảng và GV tập sự:
+  + Giảng dạy: 135
+  + Nghiên cứu khoa học: 0
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 451
+  + Tổng: 586
+- Giảng viên (Hạng III):
+  + Giảng dạy: 270
+  + Nghiên cứu khoa học: 200
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 116
+  + Tổng: 586
+- Giảng viên chính (Hạng II):
+  + Giảng dạy: 270
+  + Nghiên cứu khoa học: 250
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 66
+  + Tổng: 586
+- Giảng viên cao cấp (Hạng I):
+  + Giảng dạy: 270
+  + Nghiên cứu khoa học: 300
+  + Học tập, bồi dưỡng nâng cao trình độ; hoạt động chuyên môn và các nhiệm vụ khác: 16
+  + Tổng: 586
 4. Giờ chuẩn giảng dạy trực tiếp trên lớp (hoặc giảng dạy trực tuyến) của giảng viên phải chiếm tối thiểu 50% định mức quy định. 
 Điều 7. Quy định về nghiên cứu khoa học 
 1. Việc giao và triển khai thực hiện nhiệm vụ nghiên cứu khoa học cho giảng viên phù hợp với điều kiện, tiềm lực khoa học, chiến lược phát triển của Học viện và phù hợp với năng lực chuyên môn của giảng viên.

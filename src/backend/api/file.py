@@ -32,6 +32,11 @@ router = APIRouter()
 # Store uploaded files and their retrievers in memory temporarily
 uploaded_files = {}
 
+# Store folder structure
+folder_structure = {
+    "default": []  # Default folder to store files if no folder is specified
+}
+
 class QueryRequest(BaseModel):
     """Request model for querying a file"""
     file_id: str = Field(..., description="ID of the uploaded file to query")
@@ -42,21 +47,42 @@ class MultiQueryRequest(BaseModel):
     file_id: str = Field(..., description="ID of the uploaded file to query")
     queries: List[str] = Field(..., description="List of queries to run against the file")
 
+class FolderRequest(BaseModel):
+    """Request model for creating a folder"""
+    folder_name: str = Field(..., description="Name of the folder to create")
+
+class FolderRenameRequest(BaseModel):
+    """Request model for renaming a folder"""
+    old_name: str = Field(..., description="Current name of the folder")
+    new_name: str = Field(..., description="New name for the folder")
+
 @router.post("/upload-file", response_model=Dict[str, Any])
-async def upload_file(file: UploadFile = File(...)):
+async def upload_file(
+    file: UploadFile = File(...),
+    folder: str = Query("default", description="Folder to store the file in")
+):
     """
     Upload a file and create a retriever for it
     
     This endpoint allows uploading documents for question answering.
     Supported file types include PDF, DOCX, TXT, and more.
     
+    Args:
+        file: The file to upload
+        folder: Folder name to store the file in (defaults to "default")
+    
     Returns:
         A dictionary with file information including a unique file_id
         that can be used for querying the file later.
     """
     try:
+        # Check if folder exists
+        if folder not in folder_structure:
+            logger.warning(f"Folder not found: {folder}, creating it")
+            folder_structure[folder] = []
+        
         # Log file upload attempt
-        logger.info(f"Uploading file: {file.filename}, Content-Type: {file.content_type}")
+        logger.info(f"Uploading file: {file.filename}, Content-Type: {file.content_type} to folder: {folder}")
         
         # Read file content
         content = await file.read()
@@ -93,10 +119,14 @@ async def upload_file(file: UploadFile = File(...)):
             "content": file_content,
             "chunks": chunks,
             "upload_time": str(datetime.now()),
-            "content_type": file.content_type
+            "content_type": file.content_type,
+            "folder": folder
         }
         
-        logger.info(f"File uploaded successfully: {file.filename}, ID: {file_id}, Chunks: {len(chunks)}")
+        # Add file reference to folder structure
+        folder_structure[folder].append(file_id)
+        
+        logger.info(f"File uploaded successfully: {file.filename}, ID: {file_id}, Chunks: {len(chunks)}, Folder: {folder}")
         
         return {
             "success": True,
@@ -105,7 +135,8 @@ async def upload_file(file: UploadFile = File(...)):
                 "filename": file.filename,
                 "size": len(file_content),
                 "chunks": len(chunks),
-                "content_type": file.content_type
+                "content_type": file.content_type,
+                "folder": folder
             }
         }
     
@@ -275,26 +306,55 @@ async def get_file_info(file_id: str):
     }
 
 @router.get("/list-files", response_model=Dict[str, Any])
-async def list_files():
+async def list_files(folder: Optional[str] = Query(None, description="Folder to list files from")):
     """
     List all uploaded files
     
     This endpoint returns a list of all files that have been uploaded
     and are still available for querying.
     
+    Args:
+        folder: Optional folder name to filter files by
+        
     Returns:
         A response containing a list of file information
     """
     file_list = []
-    for file_id, file_data in uploaded_files.items():
-        file_list.append({
-            "id": file_id,
-            "filename": file_data["filename"],
-            "size": len(file_data["content"]),
-            "chunks": len(file_data["chunks"]),
-            "content_type": file_data.get("content_type", "unknown"),
-            "upload_time": file_data.get("upload_time", "unknown")
-        })
+    
+    if folder:
+        # List files from a specific folder
+        if folder not in folder_structure:
+            return {
+                "success": True,
+                "files": [],
+                "count": 0
+            }
+        
+        file_ids = folder_structure[folder]
+        for file_id in file_ids:
+            if file_id in uploaded_files:
+                file_data = uploaded_files[file_id]
+                file_list.append({
+                    "id": file_id,
+                    "filename": file_data["filename"],
+                    "size": len(file_data["content"]),
+                    "chunks": len(file_data["chunks"]),
+                    "content_type": file_data.get("content_type", "unknown"),
+                    "upload_time": file_data.get("upload_time", "unknown"),
+                    "folder": file_data.get("folder", "default")
+                })
+    else:
+        # List all files
+        for file_id, file_data in uploaded_files.items():
+            file_list.append({
+                "id": file_id,
+                "filename": file_data["filename"],
+                "size": len(file_data["content"]),
+                "chunks": len(file_data["chunks"]),
+                "content_type": file_data.get("content_type", "unknown"),
+                "upload_time": file_data.get("upload_time", "unknown"),
+                "folder": file_data.get("folder", "default")
+            })
     
     return {
         "success": True,
@@ -321,14 +381,178 @@ async def delete_file(file_id: str):
     
     file_data = uploaded_files[file_id]
     filename = file_data["filename"]
+    folder = file_data.get("folder", "default")
+    
+    # Remove file reference from folder structure
+    if folder in folder_structure and file_id in folder_structure[folder]:
+        folder_structure[folder].remove(file_id)
     
     # Remove the file from memory
     del uploaded_files[file_id]
     
-    logger.info(f"File deleted: {filename}, ID: {file_id}")
+    logger.info(f"File deleted: {filename}, ID: {file_id}, from folder: {folder}")
     
     return {
         "success": True,
         "message": f"File '{filename}' deleted successfully",
         "file_id": file_id
+    }
+
+@router.get("/list-folders", response_model=Dict[str, Any])
+async def list_folders():
+    """
+    List all available folders
+    
+    This endpoint returns a list of all folders and the number of files in each.
+    
+    Returns:
+        A response containing a list of folders with file counts
+    """
+    folder_list = []
+    
+    for folder_name, file_ids in folder_structure.items():
+        # Count only valid file IDs
+        valid_files = [file_id for file_id in file_ids if file_id in uploaded_files]
+        
+        folder_list.append({
+            "name": folder_name,
+            "files_count": len(valid_files),
+            "is_default": folder_name == "default"
+        })
+    
+    return {
+        "success": True,
+        "folders": folder_list,
+        "count": len(folder_list)
+    }
+
+@router.post("/create-folder", response_model=Dict[str, Any])
+async def create_folder(request: FolderRequest):
+    """
+    Create a new folder
+    
+    This endpoint creates a new folder to organize files.
+    
+    Args:
+        request: FolderRequest object containing folder_name
+        
+    Returns:
+        A response indicating success or failure
+    """
+    folder_name = request.folder_name.strip()
+    
+    if not folder_name:
+        raise HTTPException(status_code=400, detail="Folder name cannot be empty")
+    
+    if folder_name in folder_structure:
+        raise HTTPException(status_code=400, detail=f"Folder '{folder_name}' already exists")
+    
+    folder_structure[folder_name] = []
+    
+    logger.info(f"Folder created: {folder_name}")
+    
+    return {
+        "success": True,
+        "message": f"Folder '{folder_name}' created successfully",
+        "folder_name": folder_name
+    }
+
+@router.delete("/delete-folder/{folder_name}", response_model=Dict[str, Any])
+async def delete_folder(folder_name: str, delete_files: bool = Query(True, description="Whether to delete files in the folder")):
+    """
+    Delete a folder
+    
+    This endpoint removes a folder and optionally its files.
+    
+    Args:
+        folder_name: The name of the folder to delete
+        delete_files: Whether to delete files in the folder or move them to default
+        
+    Returns:
+        A response indicating success or failure
+    """
+    if folder_name not in folder_structure:
+        raise HTTPException(status_code=404, detail=f"Folder '{folder_name}' not found")
+    
+    if folder_name == "default":
+        raise HTTPException(status_code=400, detail="Cannot delete the default folder")
+    
+    file_ids = folder_structure[folder_name]
+    deleted_files = 0
+    moved_files = 0
+    
+    # Handle files in the folder
+    for file_id in list(file_ids):  # Create a copy of the list for iteration
+        if file_id in uploaded_files:
+            if delete_files:
+                # Delete the file
+                del uploaded_files[file_id]
+                deleted_files += 1
+            else:
+                # Move to default folder
+                file_data = uploaded_files[file_id]
+                file_data["folder"] = "default"
+                folder_structure["default"].append(file_id)
+                moved_files += 1
+    
+    # Delete the folder
+    del folder_structure[folder_name]
+    
+    logger.info(f"Folder deleted: {folder_name}, files deleted: {deleted_files}, files moved: {moved_files}")
+    
+    return {
+        "success": True,
+        "message": f"Folder '{folder_name}' deleted successfully",
+        "deleted_files": deleted_files,
+        "moved_files": moved_files
+    }
+
+@router.put("/rename-folder", response_model=Dict[str, Any])
+async def rename_folder(request: FolderRenameRequest):
+    """
+    Rename a folder
+    
+    This endpoint renames an existing folder.
+    
+    Args:
+        request: FolderRenameRequest object containing old_name and new_name
+        
+    Returns:
+        A response indicating success or failure
+    """
+    old_name = request.old_name.strip()
+    new_name = request.new_name.strip()
+    
+    if not new_name:
+        raise HTTPException(status_code=400, detail="New folder name cannot be empty")
+    
+    if old_name not in folder_structure:
+        raise HTTPException(status_code=404, detail=f"Folder '{old_name}' not found")
+    
+    if old_name == "default":
+        raise HTTPException(status_code=400, detail="Cannot rename the default folder")
+    
+    if new_name in folder_structure:
+        raise HTTPException(status_code=400, detail=f"Folder '{new_name}' already exists")
+    
+    # Get files from old folder
+    file_ids = folder_structure[old_name]
+    
+    # Create new folder with same files
+    folder_structure[new_name] = file_ids
+    
+    # Update folder name in file metadata
+    for file_id in file_ids:
+        if file_id in uploaded_files:
+            uploaded_files[file_id]["folder"] = new_name
+    
+    # Delete old folder
+    del folder_structure[old_name]
+    
+    logger.info(f"Folder renamed: {old_name} -> {new_name}")
+    
+    return {
+        "success": True,
+        "message": f"Folder renamed from '{old_name}' to '{new_name}' successfully",
+        "files_updated": len(file_ids)
     }

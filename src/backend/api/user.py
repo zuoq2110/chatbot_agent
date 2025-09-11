@@ -3,7 +3,7 @@ import hashlib
 import secrets
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends
-
+import httpx
 from bson import ObjectId
 from ..db.mongodb import MongoDB, mongodb
 from backend.models.user import UserCreate, UserResponse, UserLogin
@@ -34,6 +34,31 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     """Verify password against hash"""
     computed_hash, _ = hash_password(password, salt)
     return computed_hash == password_hash
+
+OPENWEBUI_URL = "http://localhost:8080"  # URL Open-WebUI backend
+
+async def create_webui_user(user: UserCreate):
+    """
+    Tạo user tương ứng bên Open-WebUI
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{OPENWEBUI_URL}/signup",
+                json={
+                    "email": user.email,
+                    "password": user.password,   # phải trùng để sau login
+                    "name": user.student_name or user.username,
+                    "profile_image_url": None
+                },
+                timeout=10.0
+            )
+            if resp.status_code != 200:
+                raise Exception(f"Open-WebUI signup failed: {resp.text}")
+            return resp.json()
+    except Exception as e:
+        logger.error(f"Error syncing user to Open-WebUI: {str(e)}")
+        return None
 
 
 @router.post("/", response_model=BaseResponse[UserResponse])
@@ -90,7 +115,7 @@ async def create_user(user: UserCreate):
         
         # Get created user
         created_user = await mongodb.db.users.find_one({"_id": result.inserted_id})
-        
+        await create_webui_user(user)
         # Prepare response (exclude sensitive fields)
         response_data = UserResponse(
             _id=str(created_user["_id"]),

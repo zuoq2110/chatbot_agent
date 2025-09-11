@@ -51,7 +51,7 @@ async def create_webui_user(user: UserCreate):
                     "email": user.email,
                     "password": user.password,   # phải trùng để sau login
                     "name": user.student_name or user.username,
-                    "profile_image_url": None
+                    "profile_image_url": ""
                 },
                 timeout=10.0
             )

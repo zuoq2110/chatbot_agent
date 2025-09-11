@@ -76,7 +76,19 @@ async def create_user(user: UserCreate):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Tên đăng nhập đã tồn tại"
         )
-    
+     # Check if email exists
+    if user.email:
+        existing_email = await mongodb.db.users.find_one({"email": user.email})
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email đã được sử dụng"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email là bắt buộc"
+        )
     # Hash password
     password_hash, salt = hash_password(user.password)
     
@@ -84,6 +96,7 @@ async def create_user(user: UserCreate):
     now = datetime.utcnow()
     new_user = {
         "username": user.username,
+        "email":user.email,
         "password_hash": password_hash,
         "salt": salt,
         "role": user.role or "user",  # Thêm role với giá trị mặc định là "user"

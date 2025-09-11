@@ -5,6 +5,7 @@ from datetime import datetime
 
 class UserCreate(BaseModel):
     username: str
+    email:str
     password: str  # Raw password (sẽ được hash)
     student_code: Optional[str] = None
     student_name: Optional[str] = None

@@ -46,7 +46,7 @@ async def create_webui_user(user: UserCreate):
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
-                f"{OPENWEBUI_URL}/auth/signup",
+                f"{OPENWEBUI_URL}/api/v1/auths/signup",
                 json={
                     "email": user.email,
                     "password": user.password,   # phải trùng để sau login

@@ -103,8 +103,6 @@ async def login_for_access_token(form_data: OAuth2PasswordRequestForm = Depends(
 
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-router = APIRouter()
-
 @router.get("/generate_sso_token")
 def generate_sso_token(user_id: str, email: str):
     payload = {

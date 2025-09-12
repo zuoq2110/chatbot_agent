@@ -113,11 +113,12 @@ def generate_sso_token(user_id: str, email: str):
     payload = {
         "user_id": user_id,
         "email": email,
-        "exp": datetime.datetime.utcnow() + datetime.timedelta(minutes=5)
+        "exp": datetime.utcnow() + timedelta(minutes=5)
     }
     token = jwt.encode(payload, SECRET_KEY, algorithm="HS256")
+    if isinstance(token, bytes):  # tránh lỗi serialize
+        token = token.decode("utf-8")
     return JSONResponse(content={"token": token})
-
 
 @router.get("/me", response_model=BaseResponse)
 async def get_current_user_info(current_user = Depends(get_current_user)):

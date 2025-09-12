@@ -192,49 +192,49 @@ async def get_user(username: str):
     )
 
 
-@router.post("/login", response_model=BaseResponse[dict])
-async def login_user(user_login: UserLogin):
-    """Login user with username and password"""
+# @router.post("/login", response_model=BaseResponse[dict])
+# async def login_user(user_login: UserLogin):
+#     """Login user with username and password"""
     
-    # Find user by username
-    user = await mongodb.db.users.find_one({"username": user_login.username})
+#     # Find user by username
+#     user = await mongodb.db.users.find_one({"username": user_login.username})
     
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Tên đăng nhập hoặc mật khẩu không đúng"
-        )
+#     if not user:
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Tên đăng nhập hoặc mật khẩu không đúng"
+#         )
     
-    # Verify password
-    if not verify_password(user_login.password, user["password_hash"], user["salt"]):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Tên đăng nhập hoặc mật khẩu không đúng"
-        )
+#     # Verify password
+#     if not verify_password(user_login.password, user["password_hash"], user["salt"]):
+#         raise HTTPException(
+#             status_code=status.HTTP_401_UNAUTHORIZED,
+#             detail="Tên đăng nhập hoặc mật khẩu không đúng"
+#         )
     
-    # Update last login time
-    now = datetime.utcnow()
-    await mongodb.db.users.update_one(
-        {"_id": user["_id"]},
-        {"$set": {"updated_at": now, "last_login": now}}
-    )
+#     # Update last login time
+#     now = datetime.utcnow()
+#     await mongodb.db.users.update_one(
+#         {"_id": user["_id"]},
+#         {"$set": {"updated_at": now, "last_login": now}}
+#     )
     
-    # Prepare response (same structure as get_user)
-    user_data = {
-        "_id": str(user["_id"]),
-        "username": user["username"],
-        "student_code": user.get("student_code"),
-        "student_name": user.get("student_name"),
-        "student_class": user.get("student_class"),
-        "created_at": user["created_at"],
-        "updated_at": now
-    }
+#     # Prepare response (same structure as get_user)
+#     user_data = {
+#         "_id": str(user["_id"]),
+#         "username": user["username"],
+#         "student_code": user.get("student_code"),
+#         "student_name": user.get("student_name"),
+#         "student_class": user.get("student_class"),
+#         "created_at": user["created_at"],
+#         "updated_at": now
+#     }
     
-    return BaseResponse(
-        statusCode=status.HTTP_200_OK,
-        message="Đăng nhập thành công",
-        data=user_data
-    )
+#     return BaseResponse(
+#         statusCode=status.HTTP_200_OK,
+#         message="Đăng nhập thành công",
+#         data=user_data
+#     )
 
 
 @router.get("/admin/all", response_model=BaseResponse)

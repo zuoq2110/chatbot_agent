@@ -7,7 +7,6 @@ This package provides tools for accessing and processing student score data.
 from .score_tool import get_student_scores
 from .student_tool import get_student_info
 from .calculator_tool import calculate_average_scores
-from .calculate_gpa_from_db import calculate_gpa_from_db
 from .database import Database
 from .models import Student, Subject, Score, ScoreWithDetails, ScoreFilter, ScoreResponse
 
@@ -16,7 +15,6 @@ __all__ = [
     "get_student_scores",
     "get_student_info",
     "calculate_average_scores",
-    "calculate_gpa_from_db",
     "Database",
     "Student", 
     "Subject", 

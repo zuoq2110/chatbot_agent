@@ -12,7 +12,7 @@ from langgraph.prebuilt import ToolNode
 from agent.state import MyAgentState
 from llm.config import get_gemini_llm, get_llm
 from rag import create_rag_tool
-from score import get_student_scores, get_student_info, calculate_average_scores, calculate_gpa_from_db
+from score import get_student_scores, get_student_info, calculate_average_scores
 
 load_dotenv()
 
@@ -24,7 +24,7 @@ logger = logging.getLogger(__name__)
 score_tool = get_student_scores
 student_info_tool = get_student_info
 rag_tool = create_rag_tool()
-calculator_tool = calculate_gpa_from_db
+calculator_tool = calculate_average_scores
 
 # Get all tools
 tools = [score_tool, student_info_tool, calculator_tool, rag_tool]

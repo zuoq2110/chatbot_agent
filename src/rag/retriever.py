@@ -100,13 +100,13 @@ def create_vector_database(output_path, data_dir="./data"):
         )
         chunks = text_splitter.split_text(regulations)
 
-        # embeddings = OllamaEmbeddings(
-        #     model="nomic-embed-text",
-        #     base_url="http://ollama:11434"
-        # )
         embeddings = OllamaEmbeddings(
-            model="nomic-embed-text"
+            model="nomic-embed-text",
+            base_url="http://ollama:11434"
         )
+        # embeddings = OllamaEmbeddings(
+        #     model="nomic-embed-text"
+        # )
 
         vectorstore = FAISS.from_texts(chunks, embeddings)
 
@@ -124,13 +124,13 @@ def create_vector_database(output_path, data_dir="./data"):
 
 def load_vector_database(output_path, data_dir="./data"):
     try:
-        # embeddings = OllamaEmbeddings(
-        #     model="nomic-embed-text",
-        #     base_url="http://ollama:11434"
-        # )
         embeddings = OllamaEmbeddings(
-            model="nomic-embed-text"
+            model="nomic-embed-text",
+            base_url="http://ollama:11434"
         )
+        # embeddings = OllamaEmbeddings(
+        #     model="nomic-embed-text"
+        # )
 
         if not os.path.exists(output_path):
             chunks = create_vector_database(output_path, data_dir)
@@ -216,13 +216,13 @@ def create_in_memory_retriever(file_content: str, chunk_size: int = 400, chunk_o
         chunks = text_splitter.split_text(file_content)
         
         # Create embeddings
-        embeddings = OllamaEmbeddings(
-            model="nomic-embed-text"
-        )
         # embeddings = OllamaEmbeddings(
-        #     model="nomic-embed-text",
-        #     base_url="http://ollama:11434"
+        #     model="nomic-embed-text"
         # )
+        embeddings = OllamaEmbeddings(
+            model="nomic-embed-text",
+            base_url="http://ollama:11434"
+        )
         # Create in-memory FAISS vector store
         vectorstore = FAISS.from_texts(chunks, embeddings)
         

@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field,EmailStr
 from typing import Optional
 from datetime import datetime
 
@@ -10,7 +10,7 @@ class UserCreate(BaseModel):
     student_name: Optional[str] = None
     student_class: Optional[str] = None
     role: Optional[str] = "user"  # Thêm role, mặc định là "user"
-    email: Optional[str] = None
+    email: EmailStr = Field(..., description="Email là bắt buộc")
 
 
 class UserLogin(BaseModel):

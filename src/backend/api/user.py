@@ -1,6 +1,7 @@
 import logging
 import hashlib
 import secrets
+import httpx
 from datetime import datetime
 from fastapi import APIRouter, HTTPException, status, Depends
 import httpx
@@ -61,6 +62,32 @@ async def create_webui_user(user: UserCreate):
         return None
 
 
+OPENWEBUI_URL = "http://localhost:8080"  # URL Open-WebUI backend
+
+async def create_webui_user(user: UserCreate):
+    """
+    Tạo user tương ứng bên Open-WebUI
+    """
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                f"{OPENWEBUI_URL}/api/v1/auths/signup",
+                json={
+                    "email": user.email,
+                    "password": user.password,   # phải trùng để sau login
+                    "name": user.student_name or user.username,
+                    "profile_image_url": ""
+                },
+                timeout=10.0
+            )
+            if resp.status_code != 200:
+                raise Exception(f"Open-WebUI signup failed: {resp.text}")
+            return resp.json()
+    except Exception as e:
+        logger.error(f"Error syncing user to Open-WebUI: {str(e)}")
+        return None
+
+
 @router.post("/", response_model=BaseResponse[UserResponse])
 async def create_user(user: UserCreate):
     """Create a new user"""
@@ -74,7 +101,19 @@ async def create_user(user: UserCreate):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Tên đăng nhập đã tồn tại"
         )
-    
+     # Check if email exists
+    if user.email:
+        existing_email = await mongodb.db.users.find_one({"email": user.email})
+        if existing_email:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Email đã được sử dụng"
+            )
+    else:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email là bắt buộc"
+        )
     # Hash password
     password_hash, salt = hash_password(user.password)
     
@@ -82,6 +121,7 @@ async def create_user(user: UserCreate):
     now = datetime.utcnow()
     new_user = {
         "username": user.username,
+        "email":user.email,
         "password_hash": password_hash,
         "salt": salt,
         "role": user.role or "user",  # Thêm role với giá trị mặc định là "user"
@@ -141,6 +181,7 @@ async def create_user(user: UserCreate):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Có lỗi xảy ra khi tạo tài khoản"
         )
+
 
 
 @router.get("/{username}", response_model=BaseResponse[dict])

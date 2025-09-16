@@ -10,12 +10,13 @@ from ..db.mongodb import MongoDB, mongodb
 from backend.models.user import UserCreate, UserResponse, UserLogin
 from backend.models.responses import BaseResponse
 from backend.auth.dependencies import require_auth
-
+import os
+from dotenv import load_dotenv
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
-
+load_dotenv()
 
 def hash_password(password: str, salt: str = None) -> tuple[str, str]:
     """Hash password with salt"""
@@ -36,7 +37,7 @@ def verify_password(password: str, password_hash: str, salt: str) -> bool:
     computed_hash, _ = hash_password(password, salt)
     return computed_hash == password_hash
 
-OPENWEBUI_URL = "http://localhost:8080"  # URL Open-WebUI backend
+OPENWEBUI_URL = os.getenv("OPENWEBUI_URL")  
 
 async def create_webui_user(user: UserCreate):
     """
@@ -60,33 +61,6 @@ async def create_webui_user(user: UserCreate):
     except Exception as e:
         logger.error(f"Error syncing user to Open-WebUI: {str(e)}")
         return None
-
-
-OPENWEBUI_URL = "http://localhost:8080"  # URL Open-WebUI backend
-
-async def create_webui_user(user: UserCreate):
-    """
-    Tạo user tương ứng bên Open-WebUI
-    """
-    try:
-        async with httpx.AsyncClient() as client:
-            resp = await client.post(
-                f"{OPENWEBUI_URL}/api/v1/auths/signup",
-                json={
-                    "email": user.email,
-                    "password": user.password,   # phải trùng để sau login
-                    "name": user.student_name or user.username,
-                    "profile_image_url": ""
-                },
-                timeout=10.0
-            )
-            if resp.status_code != 200:
-                raise Exception(f"Open-WebUI signup failed: {resp.text}")
-            return resp.json()
-    except Exception as e:
-        logger.error(f"Error syncing user to Open-WebUI: {str(e)}")
-        return None
-
 
 @router.post("/", response_model=BaseResponse[UserResponse])
 async def create_user(user: UserCreate):

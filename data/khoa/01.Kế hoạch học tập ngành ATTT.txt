@@ -1,0 +1,433 @@
+CHƯƠNG TRÌNH GIÁO DỤC ĐẠI HỌC
+
+Tên chương trình: Chương trình giáo dục đại học hệ Chính quy ngành An toàn thông tin
+Trình độ đào tạo: Đại học
+MỤC TIÊU ĐÀO TẠO
+1. 1Mục tiêu chung
+Các chương trình đào tạo đại học chính quy ngành An toàn thông tin sẽ trang bị cho người học:
+- Kiến thức đại cương phù hợp với khối ngành đào tạo, đảm bảo tính liên thông với các chương trình đào tạo khác của Học viện và của các cơ sở đào tạo khác.
+- Kiến thức cơ sở ngành An toàn thông tin để người học hiểu được cấu trúc, hoạt động của các hệ thống công nghệ thông tin, nắm bắt được các hiểm họa an toàn đối với các hệ thống công nghệ thông tin, cũng như các phương pháp để phòng chống các hiểm họa đó.
+- Kiến thức và kỹ năng chuyên sâu để tác nghiệp trong lĩnh vực an toàn thông tin ứng với chuyên ngành được đào tạo.
+1.1.1 Mục tiêu riêng của từng chuyên ngành
+1.1.1.1 Chuyên ngành An toàn hệ thống thông tin
+Chương trình đạo tạo theo chuyên ngành An toàn hệ thống thông tin trang bị cho người học kiến thức, kỹ năng chuyên sâu để có thể: thiết kế, triển khai giải pháp đảm bảo an toàn cho một hệ thống thông tin; tư vấn giải pháp an toàn thông tin cho các cơ quan, tổ chức; vận hành các công cụ phần cứng, phần mềm nhằm đảm bảo an toàn cho hệ thống thông tin; và giải quyết các sự cố an toàn thông tin phát sinh trong quá trình vận hành hệ thống.
+1.1.1.2. Chuyên ngành Kỹ nghệ an toàn mạng
+Chương trình đạo tạo theo chuyên ngành Kỹ nghệ an toàn mạng trang bị cho
+người học kiến thức, kỹ năng chuyên sâu để có thể: tác nghiệp, triển khai các
+nghiệp vụ chuyên sâu liên quan đến an toàn thông tin, an toàn các hệ thống mạng
+như: phân tích mã độc, giám sát an toàn hệ thống thôn tin, phát hiện và khai thác lỗ
+hổng phần mềm, đánh giá và kiểm định an toàn hệ thống thông tin, các tác vụ liên
+quan đến tấn công và phòng thủ hệ thống mạng Ngoài ra, chương trình đào tạo
+này cũng cung cấp khả năng thiết kế, phát triển, triển khai các giải pháp đảm bảo
+an toàn thông tin; tư vấn các giải pháp công nghệ an toàn thông tin; vận hành các
+công cụ phần cứng, phần mềm nhằm đảm bảo an toàn cho hệ thống thông tin; đồng
+thời có khả năng giải quyết các sự cố an toàn thông tin phát sinh trong quá trình
+vận hành hệ thống.
+1.1.3. Chuyên ngành Công nghệ phần mềm an toàn
+Chương trình đạo tạo theo chuyên ngành Công nghệ phần mềm an toàn trang bị cho người học kiến thức cơ bản và chuyên sâu về công nghệ phần mềm, công
+nghệ phần mềm an toàn, giải pháp công nghệ an toàn: quy trình xây dựng, quản lý
+và bảo trì phần mềm an toàn, giải pháp công nghệ an toàn; phân tích, thiết kế và
+quản lý các dự án phần mềm an toàn/giải pháp công nghệ an toàn. Kỹ sư chuyên
+ngành Công nghệ phần mềm an toàn có khả năng tổ chức thực hiện và quản lý
+được các công việc trong lĩnh vực công nghệ phần mềm an toàn, có khả năng xây
+dựng mô hình và áp dụng các nguyên tắc của công nghệ phần mềm an toàn vào
+thực tế; Phân tích, kiểm chứng, kiểm thử, đánh giá phần mềm an toàn.
+1.2 THỜI GIAN ĐÀO TẠO
+Tổng thời gian đào tạo: 4,5 năm.
+1.3 KHỐI LƯỢNG KIẾN THỨC TOÀN KHÓA
+Khối lượng kiến thức toàn khóa: 165 TC.
+1.4 ĐỐI TƯỢNG TUYỂN SINH
+Theo quy chế tuyển sinh của Bộ Giáo dục và Đào tạo và các quy định khác
+của Ban Cơ yếu Chính phủ.
+1.5 QUY TRÌNH ĐÀO TẠO, ĐIỀU KIỆN TỐT NGHIỆP
+Theo quy chế đào tạo trình độ đại học của Bộ Giáo dục và Đào tạo và các
+quy định của Học viện Kỹ thuật mật mã.
+1.6 CHƯƠNG TRÌNH ĐÀO TẠO
+1.6.1 Khối lượng kiến thức giáo dục đại cương (57 TC)
+Ghi chú:
+Trong khối kiến thức này, sinh viên đã có chứng chỉ Toeic từ 550 trở lên (hoặc chứng chỉ Ielts, Toefl, với cách quy đổi theo khung tham chiếu châu Âu) và đang còn hạn có giá trị được miễn học Tiếng Anh 1, 2, 3 và được tính điểm tuyệt đối.
+1.6.2. Khối kiến thức cơ sở ngành (60TC)
+1.6.3. Khối kiến thức chuyên ngành (28 TC)
+1.6.3.1 Chuyên ngành An toàn hệ thống thông tin (28TC)
+Các học phần chuyên ngành bắt buộc (22TC)
+Các học phần chuyên ngành tự chọn (6TC)
+1.6.3.2 Chuyên ngành Kỹ nghệ an toàn mạng (28TC)
+Các học phần chuyên ngành bắt buộc (22 TC)
+Các học phần chuyên ngành tự chọn (6TC)
+1.6.3.3 Chuyên ngành Công nghệ phần mềm an toàn (28 TC)
+Các học phần chuyên ngành bắt buộc (22TC)
+Các học phần chuyên ngành tự chọn (6 TC)
+Thực tập, đồ án tốt nghiệp, học bổ sung (17 TC)
+- Thực tập tốt nghiệp: 5 TC
+- Chuyên đề chuyên sâu: 4 TC
+- Đồ án tốt nghiệp; thi tốt nghiệp (2 học phần : HP thi tốt nghiệp 1 : 4TC; HP thi tốt nghiệp 2: 4TC): 8 TC (đối với sinh viên đủ điều kiện làm đồ án tốt nghiệp) hoặc học bổ sung 8 TC (đối với sinh viên không đủ điều kiện làm đồ án tốt nghiệp). Điều kiện làm đồ án tốt nghiệp, chi tiết các tín chỉ cần học bổ sung do Giám đốc Học viện quy định cho từng khóa đào tạo.
+1.6.5 Kế hoạch giảng dạy
+1.6.5.1 Phần kế hoạch chung cho tất cả các chuyên ngành
+Học kỳ 1
+Học kỳ 2
+Học kỳ 3
+Học kỳ 4
+Học kỳ 5
+Học kỳ 6
+6.4.2 Kế hoạch riêng của từng chuyên ngành
+Chuyên ngành An toàn hệ thống thông tin
+Học kỳ 7
+Học kỳ 8
+Học kỳ 9 (kế hoạch chung cho tất cả các chuyên ngành)
+Chuyên ngành Kỹ nghệ an toàn mạng
+Học kỳ 7
+Học kỳ 8
+Học kỳ 9 (kế hoạch chung cho tất cả các chuyên ngành)
+Chuyên ngành Công nghệ phần mềm an toàn
+Học kỳ 7
+Học kỳ 8
+Học kỳ 9 (kế hoạch chung cho tất cả các chuyên ngành)
+
+[BẢNG DỮ LIỆU]
+Cấp bằng:  Kỹ sư
+------------------------------------  --------------------------------------------------------------------------
+Ngành đào tạo:  An toàn thông tin
+Mã ngành:  7.48.02.02
+Loại hình đào tạo:  Chính quy
+Mã chương trình và tên chuyên ngành: 
+KM.A.2. 1 KM.A.2.2.1 KM.A.2.3.1  An toàn hệ thống thông tin Kỹ nghệ an toàn mạng Công nghệ phần mềm an toàn
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+----  -----------  ------------------------------------------------------------------------------------------------------------------------------------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng  Cộng
+ CBTT1  Giải tích 1  3  40  10  0  0  50  50
+ CBTT2  Giải tích 2  3  40  10  0  0  50  50
+ CBTT3  Đại số tuyến tính  3  40  10  0  0  50  50
+ CBTT4  Toán xác suất thống kê  2  26  8  0  0  34  34
+ CBTT6  Toán rời rạc  2  25  10  0  0  35  35
+ CBLH1  Vật lý đại cương 1  3  37  16  0  0  53  53
+ CBLH2  Vật lý đại cương 2  3  40  10  0  0  50  50
+ LLDL2  Pháp luật VN đại cương;  2  20  0  20  0  40  40
+ LLDL3  Kỹ năng mềm  2  20  0  20  0  40  40
+ CBNN1  Tiếng Anh 1  3  32  9  6  11  58  58
+ CBNN2  Tiếng Anh 2  3  32  7  7  12  58  58
+ CBNN3  Tiếng Anh 3  4  42  15  7  14  78  78
+ LLLM1  Triết học Mác  Lê nin  3  30  0  30  0  60  60
+ LLLM2  Chủ Nghĩa xã hội Khoa học  2  20  0  20  0  40  40
+ LLLM6  Lịch sử Đảng Cộng sản Việt Nam  2  20  0  20  0  40  40
+ LLDL1  Kinh tế chính trị Mác  Lênin  2  20  0  20  0  40  40
+ LLTH1  Tư tưởng Hồ Chí Minh  2  20  0  20  0  40  40
+ CTKH1  Tin học đại cương  2  20  0  0  20  40  40
+ QGQG1  Giáo dục quốc phòng an ninh + Đường lối quân sự của Đảng (3 TC) + Công tác quốc phòng (2 TC) + Quân sự chung và chiến thuật, kỹ thuật bắn súng tiểu liên AK (3 TC)  8  123  0  0  42  165  165
+ QGTC  Giáo dục thể chất 1,2,3  3  0  0  0  90  90  90
+TỔNG  TỔNG  TỔNG  57      1111
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+----  -----------  --------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ CBNN4  Tiếng Anh chuyên ngành  4  40  2   38  80
+ CBTT5  Phương pháp tính  2  25  10    35
+ CBTT7  Toán chuyên đề  3  30  30    60
+ DVVT1  Cơ sở lý thuyết truyền tin  2  30     30
+ DTVT2  Kỹ thuật truyền số liệu  2  30     30
+ CTKH2  Lập trình căn bản  3  35    20  55
+ CTKH6  Cấu trúc dữ liệu và giải thuật  2  20  10  10   40
+ CTKH7  Lý thuyết cơ sở dữ liệu  2  25  10    35
+ CTKH8  Hệ quản trị cơ sở dữ liệu  2  20    20  40
+ CTKH10  Lập trình hướng đối tượng  2  20    20  40
+ CTKH11  Phân tích, thiết kế hệ thống thông tin  2  25    10  35
+ CTKT2  Mạng máy tính  3  40    10  50
+ CTKT3  Quản trị mạng máy tính  2  20    20  40
+ CTKT4  Nguyên lý hệ điều hành  2  20  8  12   40
+ CTKT7  Linux và phần mềm nguồn mở  2  20    20  40
+ CT.HT10  Chuyên đề cơ sở  2  0    60  60
+ AT.PM1  Kiến trúc máy tính và hợp ngữ  3  30    30  60
+ AT.PM2  Thuật toán trong an toàn thông tin  2  18    24  42
+ AT.PM3  Kỹ thuật lập trình  2  18    24  42
+ AT.PM4  Công nghệ web an toàn  3  30    30  60
+ AT.KH1  Nhập môn mật mã học  3  36  18    54
+ AT.KH2  Cơ sở an toàn thông tin  3  45     45
+ AT.TM1  An toàn cơ sở dữ liệu  2  24  12    36
+ AT.AM1  An toàn mạng máy tính  3  30    30  60
+ AT.AM2  Giao thức an toàn mạng  2  24  12    36
+TỔNG  TỔNG  TỔNG  60      1145
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+--  -----------  -----------------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ AT.TT1  Chuyên đề An toàn hệ thống thông tin  2     60  60
+ AT.TM3  Giám sát và ứng phó sự cố an toàn mạng  2  24  12    36
+ AT.AM4  An toàn mạng không dây và di động  2  24  12    36
+ AT.TM4  Quản lý an toàn thông tin  2  24  12    36
+ AT.AM5  Phân tích thiết kế an toàn mạng máy tính  2  24  12    36
+ AT.TM5  Điều tra số  3  30    30  60
+ AT.PM9  Mã độc  3  30    30  60
+ AT.AM6  Quản trị an toàn hệ thống  3  30    30  60
+ AT.AM7  Kiểm thử và đánh giá an toàn hệ thống thông tin  3  30    30  60
+  Tổng cộng  22      444
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+--  -----------  --------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ AT.TM6  An toàn điện toán đám mây  2  24  12    36
+ AT.TM7  An toàn thương mại điện tử  2  24  12    36
+ AT.PM6  Khai thác lỗ hổng phần mềm  2  15    30  45
+ AT.TM2  Chứng thực điện tử  2  24  12    36
+ AT.AM8  Công nghệ IoT và an toàn  2  24  6   6  36
+ AT.AM3  Mạng máy tính nâng cao  2  24    12  36
+ AT.KH5  Công nghệ blockchain  2  24    12  36
+  Tổng cộng  14      252
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+--  -----------  -----------------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ AT.TT2  Chuyên đề Kỹ nghệ an toàn mạng  2     60  60
+ AT.AM9  Tấn công và phòng thủ hệ thống  3  30    30  60
+ AT.TM3  Giám sát và ứng phó sự cố an toàn mạng  2  24    12  36
+ AT.AM4  An toàn mạng không dây và di động  2  24  12    36
+ AT.TM4  Quản lý an toàn thông tin  2  24  12    36
+ AT.TM5  Điều tra số  3  30    30  60
+ AT.PM9  Mã độc  3  30    30  60
+ AT.PM6  Khai thác lỗ hổng phần mềm  2  15    30  45
+ AT.AM7  Kiểm thử và đánh giá an toàn hệ thống thông tin  3  30    30  60
+  Tổng cộng  22      444
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+--  -----------  ----------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ AT.AM3  Mạng máy tính nâng cao  2  24    12  36
+ AT.KM7  Kỹ thuật giấu tin  2  24  12    36
+ AT.KH3  An toàn điện toán đám mây  2  24  12    36
+ AT.KH8  Khai phá dữ liệu trong an toàn thông tin  2  30     30
+ AT.AM8  Công nghệ IoT và an toàn  2  24  6   6  36
+ AT.TM2  Chứng thực điện tử  2  24  12    36
+ AT.KH5  Công nghệ blockchain  2  24    12  36
+  Tổng cộng  14      252
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+--  -----------  -----------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ AT.TT3  Chuyên đề công nghệ phần mềm an toàn  2     60  60
+ AT.KH10  Công nghệ phần mềm  3  36   18   54
+ AT.KH3  Thiết kế giao diện người dùng  2  24   12   36
+ AT.KH4  Đặc tả hình thức  2  24  12    36
+ AT.KH9  Mật mã ứng dụng trong ATTT  3  30    30  60
+ AT.PM8  Kỹ thuật lập trình an toàn  3  30    30  60
+ AT.KH11  Kiểm thử và đảm bảo chất lượng phần mềm  2  24   12   36
+ AT.PM13  Phát triển ứng dụng trên nền tảng di động  3  30    30  60
+ AT.KH8  Khai phá dữ liệu trong an toàn thông tin  2  30  0    30
+  Tổng cộng  22      438
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết  Phân bổ theo tiết
+--  -----------  ---------------------------------------  ----------  -----------------  -----------------  -----------------  -----------------  -----------------
+TT  Mã học phần  Tên học phần  Số tín chỉ  Lên lớp  Lên lớp  Lên lớp  TN/ TH  Cộng
+TT  Mã học phần  Tên học phần  Số tín chỉ  LT  BT  TL  TN/ TH  Cộng
+ AT.PM12  Cấu trúc dữ liệu và giải thuật nâng cao  2  24    12  36
+ AT.PM7  Phát triển phần mềm an toàn  2  24  12    36
+ AT.PM12  Công nghệ .NET  2  24  12    36
+ AT.PM11  Lập trình nhúng  2  21    18  39
+ AT.AM8  Công nghệ IoT và an toàn  2  24  6   6  36
+ AT.KH6  Quản trị dự án CNTT  2  24  12    36
+ AT.KH5  Công nghệ blockchain  2  24    12  36
+  Tổng cộng  14      252
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -------------------------------  ----------  -------
+ QGQG1  Giáo dục quốc phòng an ninh  8  165
+ CTKH1  Tin học đại cương  2  40
+ LLLM1  Triết học Mác Lênin  3  60
+ CBTT1  Giải tích 1  3  50
+ CBTT3  Đại số tuyến tính  3  50
+ QGTC1  Giáo dục thể chất 1  1  30
+ LLLM6  Pháp luật đại cương  2  30
+  Tổng cộng  22  415
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -----------------------------  ----------  -------
+ CBTT2  Giải tích 2  3  50
+ CBLH1  Vật lý đại cương 1  3  53
+ LLDL1  Kinh tế chính trị Mác  Lênin  2  40
+ LLLM2  Chủ Nghĩa xã hội Khoa học  2  40
+ QGTC2  Giáo dục thể chất 2  1  30
+ LLTH1  Tư tưởng Hồ Chí Minh  2  40
+ CTKH2  Lập trình căn bản  3  55
+ LLDL2  Pháp luật VN đại cương  2  40
+ LLDL3  Kỹ năng mềm  2  40
+  Tổng cộng  18  388
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  ------------------------------  ----------  -------
+ CBLH2  Vật lý đại cương 2  3  50
+ CBTT4  Toán xác suất thống kê  2  35
+ CBTT7  Toán chuyên đề  3  60
+ CBNN1  Tiếng Anh 1  3  58
+ CTKH5  Cấu trúc dữ liệu và giải thuật  2  40
+ CTKT2  Mạng máy tính  3  50
+ CBTT6  Toán rời rạc  2  35
+ CBTT5  Phương pháp tính  2  35
+ QGTC3  Giáo dục thể chất 3  1  30
+ LLLM6  Lịch sử Đảng Cộng sản Việt Nam  2  40
+  Tổng cộng  23  443
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -----------------------------  ----------  -------
+ CBNN2  Tiếng Anh 2  3  58
+ DVVT2  Kỹ thuật truyền số liệu  2  30
+ DVVT1  Cơ sở lý thuyết truyền tin  2  30
+ CTKH7  Lý thuyết cơ sở dữ liệu  2  35
+ CTKH8  Hệ quản trị cơ sở dữ liệu  2  40
+ CTKT3  Quản trị mạng máy tính  2  40
+ AT.PM1  Kiến trúc máy tính và hợp ngữ  3  60
+  Tổng cộng  16  293
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  --------------------------------------  ----------  -------
+ CBNN3  Tiếng Anh 3  4  78
+ CTKH10  Lập trình hướng đối tượng  2  40
+ CTKH11  Phân tích, thiết kế hệ thống thông tin  2  35
+ CTKT4  Nguyên lý hệ điều hành  2  40
+ CTKT7  Linuxvà phần mềm nguồn mở  2  40
+ AT.PM2  Thuật toán trong an toàn thông tin  2  42
+ AT.KH1  Nhập môn mật mã học  3  54
+  Tổng cộng  17  329
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -------------------------  ----------  -------
+ CBNN4  Tiếng Anh chuyên ngành  4  80
+ CT.HT10  Chuyên đề cơ sở  2  60
+ AT.KH2  Cơ sở an toàn thông tin  3  45
+ AT.AM1  An toàn mạng máy tính  3  60
+ AT.PM3  Kỹ thuật lập trình  2  42
+ AT.TM1  An toàn cơ sở dữ liệu  2  36
+ AT.AM2  Giao thức an toàn mạng  2  36
+  Tổng cộng  18  359
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  ----------------------------------------  ----------  -------
+ AT.PM4  Công nghệ web an toàn  3  60
+ AT.AM6  Quản trị an toàn hệ thống  3  60
+ AT.AM4  An toàn mạng không dây và di động  2  36
+ AT.AM5  Phân tích thiết kế an toàn mạng máy tính  2  36
+ AT.PM4  Mã độc  3  60
+ AT.AT1  Chuyên đề An toàn hệ thống thông tin  2  60
+  Tổng cộng  15  312
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -----------------------------------------------  ----------  -------
+ AT.TM3  Giám sát và ứng phó sự cố an toàn mạng  2  36
+ AT.AM7  Kiểm thử và đánh giá an toàn hệ thống thông tin  3  60
+ AT.TM4  Quản lý an toàn thông tin  2  36
+ AT.TM5  Điều tra số  3  60
+  Học phần chuyên ngành tự chọn 1  2  36
+  Học phần chuyên ngành tự chọn 2  2  36
+  Học phần chuyên ngành tự chọn 3  2  36
+  Tổng cộng  16  300
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -------------------  ----------  -------
+ AT.AT2  Thực tập tốt nghiệp  3  90
+ AT.AT3  Đồ án tốt nghiệp  8  240
+  Tổng cộng  11  330
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  ---------------------------------  ----------  -------
+ AT.PM4  Công nghệ web an toàn  3  60
+ AT.AM4  An toàn mạng không dây và di động  2  36
+ AT.PM4  Mã độc  3  60
+ AT.PM6  Khai thác lỗ hổng phẩn mềm  2  45
+ AT.AM9  Tấn công và phòng thủ hệ thống  3  60
+ AT.AT2  Chuyên đề Kỹ nghệ an toàn mạng  2  60
+  Tổng cộng  15  312
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -----------------------------------------------  ----------  -------
+ AT.TM3  Giám sát và ứng phó sự cố an toàn mạng  2  36
+ AT.AM7  Kiểm thử và đánh giá an toàn hệ thống thông tin  3  60
+ AT.TM4  Quản lý an toàn thông tin  2  36
+ AT.TM5  Điều tra số  3  60
+  Học phần chuyên ngành tự chọn 1  2  36
+  Học phần chuyên ngành tự chọn 2  2  36
+  Học phần chuyên ngành tự chọn 3  2  36
+  Tổng cộng  16  300
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -------------------  ----------  -------
+ AT.AT2  Thực tập tốt nghiệp  3  90
+ AT.AT3  Đồ án tốt nghiệp  8  240
+  Tổng cộng  11  330
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -----------------------------------------  ----------  -------
+ AT.PM4  Công nghệ web an toàn  3  60
+ AT.KH10  Công nghệ phần mềm  3  54
+ AT.KH3  Thiết kế giao diện người dùng  2  36
+ AT.KH4  Đặc tả hình thức  2  36
+ AT.PM13  Phát triển ứng dụng trên nền tảng di động  3  60
+ AT.AT3  Chuyên đề Công nghệ phần mềm an toàn  2  60
+  Tổng cộng  15  306
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  ----------------------------------------  ----------  -------
+ AT.KH9  Mật mã ứng dụng trong ATTT  3  60
+ AT.PM8  Kỹ thuật lập trình an toàn  3  60
+ AT.KH11  Kiểm thử và đảm bảo chất lượng phần mềm  2  36
+ AT.TM4  Khai phá dữ liệu trong an toàn thông tin  2  30
+  Học phần chuyên ngành tự chọn 1  2  36
+  Học phần chuyên ngành tự chọn 2  2  36
+  Học phần chuyên ngành tự chọn 3  2  36
+  Tổng cộng  16  300
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Mã học phần  Tên học phần  Số tín chỉ  Số tiết
+--  -----------  -------------------  ----------  -------
+ AT.AT2  Thực tập tốt nghiệp  3  90
+ AT.AT3  Đồ án tốt nghiệp  8  240
+  Tổng cộng  11  330
+[KẾT THÚC BẢNG]

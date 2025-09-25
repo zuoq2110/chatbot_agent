@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Query, status, Header, Depends
@@ -17,6 +17,7 @@ from agent.supervisor_agent import ReActGraph
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize agent once
 agent = ReActGraph()
 agent.create_graph()
 agent.print_mermaid()
@@ -38,9 +39,7 @@ from backend.api.rate_limit import check_rate_limit
 
 router = APIRouter()
 
-agent = ReActGraph()
-agent.create_graph()
-agent.print_mermaid()
+# Agent already initialized above, no need to recreate
 
 # Helper function to check if ObjectId is valid
 def validate_object_id(id: str):
@@ -479,3 +478,32 @@ async def quick_chat(
         message="Quick chat response generated successfully",
         data=response_data
     )
+
+
+@router.post("/test-rag", response_model=BaseResponse[dict])
+async def test_rag_endpoint(message: MessageQuickChat):
+    """Test RAG functionality without authentication - FOR TESTING ONLY"""
+    
+    try:
+        logger.info(f"Testing RAG with message: {message.content}")
+        
+        # Use the existing agent instance and chat_with_memory method
+        result = await agent.chat_with_memory([], message.content)
+        
+        response_message = result[-1].content if result else "No response generated"
+        
+        return BaseResponse(
+            statusCode=status.HTTP_200_OK,
+            message="Test RAG completed",
+            data={
+                "response": response_message,
+                "input": message.content
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in test RAG: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Test failed: {str(e)}"
+        )

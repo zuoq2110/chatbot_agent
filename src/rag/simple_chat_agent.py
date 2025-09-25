@@ -5,7 +5,7 @@ from typing import Dict, Any
 
 from langchain_core.messages import HumanMessage
 from llm import get_gemini_llm, LLMConfig
-from rag.retriever import create_hybrid_retriever
+from rag.retriever import create_enhanced_hybrid_retriever, smart_retrieve, get_metadata_config, MetadataEnhancedHybridRetriever
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -42,8 +42,17 @@ class SimpleChatAgent:
         vector_db_path = os.path.join(project_root, "vector_db")
         data_dir = os.path.join(project_root, "data")
         
-        hybrid_retriever, _ = create_hybrid_retriever(vector_db_path=vector_db_path, data_dir=data_dir)
-        return hybrid_retriever
+        # Use enhanced hybrid retriever with sliding window
+        config = get_metadata_config()
+        chunk_settings = config.get_chunk_settings()
+        window_size = chunk_settings.get('sliding_window_size', 2)
+        
+        enhanced_retriever, _ = create_enhanced_hybrid_retriever(
+            vector_db_path=vector_db_path, 
+            data_dir=data_dir,
+            window_size=window_size
+        )
+        return enhanced_retriever
     
     def _load_prompts(self):
         """Load prompts from files"""
@@ -89,8 +98,11 @@ Trả lời chi tiết:"""
         try:
             logger.info(f"Processing query: {message}")
             
-            # Retrieve relevant documents (more documents for better context)
-            docs = self.retriever.get_relevant_documents(message)
+            # Retrieve relevant documents using smart retrieval with sliding window
+            if isinstance(self.retriever, MetadataEnhancedHybridRetriever):
+                docs = smart_retrieve(self.retriever, message, use_smart_filtering=True)
+            else:
+                docs = self.retriever.get_relevant_documents(message)
             
             # Use more context for detailed answers
             context_docs = docs[:8]  # Increase from 5 to 8 for more context
@@ -154,8 +166,11 @@ async def process_simple_query(query: str, retriever=None, llm=None) -> Dict[str
         # Process query
         answer = agent.chat(query)
         
-        # Get sources
-        docs = agent.retriever.get_relevant_documents(query)
+        # Get sources using smart retrieval
+        if isinstance(agent.retriever, MetadataEnhancedHybridRetriever):
+            docs = smart_retrieve(agent.retriever, query, use_smart_filtering=True)
+        else:
+            docs = agent.retriever.get_relevant_documents(query)
         sources = [doc.page_content for doc in docs[:3]]
         
         return {

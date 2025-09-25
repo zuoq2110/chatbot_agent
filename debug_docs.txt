@@ -1,0 +1,148 @@
+=== DEBUGGING RETRIEVED DOCUMENTS ===
+✅ Import successful
+✅ RAG agent created
+🔍 Testing query: thành viên hội đồng đảm bảo chất lượng giáo dục của học viện kỹ thuật mật mã gồm những ai
+📄 Retrieved 26 documents
+
+=== DOCUMENT 1 ===
+Content length: 1146
+Content preview: GIÁM Đ ỐC HỌC VI ỆN KỸ THU ẬT MẬT MÃ
+Căn cứ Thông tư số 54/2014/TT -BQP ngày 12/6/2014 của Bộ trưởng Bộ
+Quốc phòng quy định chức năng, nhiệm vụ, quyền hạn và mối quan hệ công tác
+của Học viện Kỹ thuật...
+Metadata: {}
+✅ Found keywords: ['hội đồng']
+FULL CONTENT:
+GIÁM Đ ỐC HỌC VI ỆN KỸ THU ẬT MẬT MÃ
+Căn cứ Thông tư số 54/2014/TT -BQP ngày 12/6/2014 của Bộ trưởng Bộ
+Quốc phòng quy định chức năng, nhiệm vụ, quyền hạn và mối quan hệ công tác
+của Học viện Kỹ thuật mật mã thuộc Ban Cơ yếu Chính phủ ;
+Căn cứ Quyết định số 95/QĐ-BCY ngày 0 5/3/2025 của Trưởng ban Ban Cơ
+yếu Chính phủ ban hành Quy định cơ cấu tổ chức, biên chế của Học viện Kỹ thuật
+mật mã;
+Căn cứ Quyết định số 542/QĐ-HVM ngày 31/05/2023 của Giám đốc Học
+viện Kỹ thuật mật mã ban hành Quy định về hoạt động đảm bảo chất lượng giáo
+dục tại Học viện Kỹ thuật mật mã ;
+Theo đề nghị của Trưởng phòng Khảo th í và Đảm bảo chất lượng đào tạo.
+QUY ẾT ĐỊNH:
+Điều 1 . Thành lập Hội đồng Đảm bảo chất lượng giáo dục của Học viện Kỹ
+thuật mật mã gồm các đồng chí có tên trong danh sách kèm theo .
+Điều 2 . Cử các đồng chí Đỗ Như Quỳnh và Tr iệu Thị Yến (Trợ lý Khảo thí
+và Đảm bảo chất lượng đào tạo, Phòng KT&ĐBCLĐT) làm Thư ký Hội đồng.
+Điều 3 . Quyết định này có hiệu lực kể từ ngày ký và thay thế Quyết định số
+757/QĐ -HVM ngày 14 tháng 7 năm 2023 của Học viện Kỹ thuật mật mã.
+Điều 4. Trưởng phòng Khảo thí và Đảm bảo chất lượng đào tạo , Thủ trưởng
+--------------------------------------------------
+=== DOCUMENT 2 ===
+Content length: 1061
+Content preview: NHỮNG QUY ĐỊNH CHUNG
+Phạm vi điều chỉnh, đối tượng áp dụng
+Văn bản này quy định về công tác khảo thí của Học viện Kỹ thuật mật mã (sau đây gọi là Học viện), bao gồm: kiểm tra thường xuyên, thi giữa kỳ...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+=== DOCUMENT 3 ===
+Content length: 1120
+Content preview: Thông tư số 27/2016/TT-BGDĐT ngày 30/12/2016 của Bộ trưởng Bộ GD&ĐT Quy định thời hạn bảo quản tài liệu chuyên môn nghiệp vụ của ngành Giáo dục (sau đây gọi là Thông tư 27).
+Quy chế đào tạo trình độ đ...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+=== DOCUMENT 4 ===
+Content length: 687
+Content preview: - Tài liệu (công văn, thông báo, hình ảnh) thể hiện việc Hội Phụ nữ chăm
+lo đời sống vật chất, tinh thần (thể dục thể thao, văn hóa văn nghệ)... cho hội viên.
+XIV. PHÂN HIỆU HỌC VIỆN TẠI THÀNH PHỐ HỒ ...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+=== DOCUMENT 5 ===
+Content length: 1131
+Content preview: Ngưỡng đảm bảo chất lượng
+Điểm kiểm tra thường xuyên (ĐKTTX) và Điểm đánh giá ý thức (ĐĐGYT) quy định tại khoản 1 Điều 13 Quy chế 284 phải đạt 4,0 trở lên theo thang điểm 10.
+Điểm thi kết thúc học phầ...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+=== DOCUMENT 6 ===
+Content length: 282
+Content preview: [Tài liệu từ Phòng Khảo thí]
+[TRANG 1]
+BAN CƠ YẾU CHÍNH PHỦ
+HỌC VIỆN KỸ THUẬT MẬT MÃ
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập Tự do Hạnh phúc
+Số: /QĐ-HVM Hà Nội, ngày tháng năm 2025
+
+QUY ẾT ĐỊNH
+Về ...
+Metadata: {}
+✅ Found keywords: ['hội đồng']
+FULL CONTENT:
+[Tài liệu từ Phòng Khảo thí]
+[TRANG 1]
+BAN CƠ YẾU CHÍNH PHỦ
+HỌC VIỆN KỸ THUẬT MẬT MÃ
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập Tự do Hạnh phúc
+Số: /QĐ-HVM Hà Nội, ngày tháng năm 2025
+
+QUY ẾT ĐỊNH
+Về việc thành l ập Hội đồng Đảm bảo chất lượng giáo d ục
+của Học viện Kỹ thuật mật mã
+--------------------------------------------------
+=== DOCUMENT 7 ===
+Content length: 204
+Content preview: [TRANG 2]
+Danh sách
+THÀNH VIÊN HỘI ĐỒNG Đ ẢM BẢO CH ẤT LƯ ỢNG GIÁO D ỤC
+CỦA HỌC VI ỆN KỸ THU ẬT MẬT MÃ
+(Ban hành kèm theo Quy ết định số /QĐ-HVM ngày tháng năm 2025
+của Giám đ ốc Học viện Kỹ thuật mật...
+Metadata: {}
+✅ Found keywords: ['hội đồng', 'thành viên']
+FULL CONTENT:
+[TRANG 2]
+Danh sách
+THÀNH VIÊN HỘI ĐỒNG Đ ẢM BẢO CH ẤT LƯ ỢNG GIÁO D ỤC
+CỦA HỌC VI ỆN KỸ THU ẬT MẬT MÃ
+(Ban hành kèm theo Quy ết định số /QĐ-HVM ngày tháng năm 2025
+của Giám đ ốc Học viện Kỹ thuật mật mã)
+--------------------------------------------------
+=== DOCUMENT 8 ===
+Content length: 264
+Content preview: [Tài liệu từ Phòng Khảo thí]
+[TRANG 1]
+BAN CƠ YẾU CHÍNH PHỦ
+HỌC VIỆN KỸ THUẬT MẬT MÃ
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập Tự do Hạnh phúc
+
+Số: /HD-HVM Hà Nội, ngày tháng năm 2024
+
+HƯỚNG D ẪN
+Hoạ...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+=== DOCUMENT 9 ===
+Content length: 772
+Content preview: lượng CTĐT các trình độ của GDĐH ban hành kèm theo Công văn số 769/QLCL -
+KĐCLGD ;
+Căn cứ Quyết định số 46/QĐ -HVM ngày 16/06/2023 của Giám đốc Học
+viện Kỹ thuật mật mã ban hành Quy định chức năng, nh...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+=== DOCUMENT 10 ===
+Content length: 1051
+Content preview: Làm cơ sở để các đơn vị, cá nhân có liên quan thực hiện tốt chức năng, nhiệm vụ trong công tác khảo thí.
+Yêu cầu
+Đảm bảo tính nghiêm túc trong quản lý công tác thi và đánh giá kết quả học tập theo đún...
+Metadata: {}
+❌ No relevant keywords found
+--------------------------------------------------
+
+=== SUMMARY ===
+Council information found: YES
+✅ Documents contain council information - problem is in answer generation

@@ -36,9 +36,11 @@ with open(os.path.join(prompts_dir, "system_prompt.txt"), "r", encoding="utf-8")
 
 
 def get_tool_descriptions(tools_list: list) -> str:
-    return "\n".join([
+    descriptions = "\n".join([
         f"- {tool.name}: {tool.description} (args: {tool.args_schema.schema()['properties'].keys() if tool.args_schema else 'None'})"
         for tool in tools_list])
+    logger.info(f"--- AGENT: Available tools: {[tool.name for tool in tools_list]} ---")
+    return descriptions
 
 # Query reformulation prompt
 conversational_prompt = """
@@ -122,8 +124,12 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
     logger.info("--- AGENT (No Human Loop): Calling LLM ---")
 
     # Prepare the prompts
+    tool_descriptions = get_tool_descriptions(tools)
+    logger.info(f"Available tools: {[tool.name for tool in tools]}")
+    logger.info(f"Tool descriptions length: {len(tool_descriptions)}")
+    
     prompt = ChatPromptTemplate.from_messages(
-        [("system", react_prompt.format(tool_descriptions=get_tool_descriptions(tools))),
+        [("system", react_prompt.format(tool_descriptions=tool_descriptions)),
          MessagesPlaceholder(variable_name="messages"), ])
 
     # Bind tools and structured output
@@ -132,6 +138,14 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
 
     try:
         response = chains.invoke({"messages": state["messages"]})
+        
+        # Log tool calls for debugging
+        if hasattr(response, 'tool_calls') and response.tool_calls:
+            logger.info(f"--- AGENT: Tool calls detected: {[tool_call.get('name', 'unknown') for tool_call in response.tool_calls]} ---")
+        else:
+            logger.info("--- AGENT: No tool calls detected ---")
+            logger.info(f"Response content preview: {response.content[:200]}...")
+            
         return {"messages": state['messages'] + [response]}
 
     except Exception as e:

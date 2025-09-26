@@ -59,9 +59,9 @@ a) Căn cứ kế hoạch đào tạo năm học của Học viện và số lư
 - Xác định đối tượng giảng viên dự kiến mời: trình độ chuyên môn, học hàm học vị, thâm niên công tác.
 - Các yêu cầu đặc thù khác.
 b) Khoa chủ động liên hệ, tìm nguồn giảng viên thỉnh giảng; xây dựng dự thảo Kế hoạch thỉnh giảng; Lập đề nghị thỉnh giảng gửi về Phòng Đào tạo (MS01-TG).
-c) Phòng Đào tạo tiến hành thẩm định Đề nghị thỉnh giảng và dự thảo Kế hoạch thỉnh giảng của các Khoa. 
+c) Phòng Đào tạo tiến hành thẩm định Đề nghị thỉnh giảng và dự thảo Kế hoạch thỉnh giảng của các Khoa.
 2. Liên hệ mời giảng
-a) Căn cứ Kế hoạch thỉnh giảng của các Khoa đã được phê duyệt, các khoa chủ động liên hệ với các giảng viên thỉnh giảng đủ tiêu chuẩn, đúng đối tượng, và gửi giấy mời tham gia thỉnh giảng (MS02-TG). 
+a) Căn cứ Kế hoạch thỉnh giảng của các Khoa đã được phê duyệt, các khoa chủ động liên hệ với các giảng viên thỉnh giảng đủ tiêu chuẩn, đúng đối tượng, và gửi giấy mời tham gia thỉnh giảng (MS02-TG).
 b) Các Khoa hướng dẫn giảng viên làm hồ sơ đăng ký thỉnh giảng quy định tại điểm a, b,c, d, đ khoản 1 Điều 9 Quy định này; tiếp nhận và tiến hành kiểm tra, đối chiếu hồ sơ giảng viên thỉnh giảng với các yêu cầu, phô tô lưu lại bản sao. Tập hợp hồ sơ giảng viên đăng ký thỉnh giảng gửi về Phòng Đào tạo.
 3. Quyết định và ký kết hợp đồng thỉnh giảng
 a) Phòng Đào tạo tham mưu tiến hành xét duyệt hồ sơ giảng viên thỉnh giảng, thẩm định xác nhận giảng viên đủ tiêu chuẩn và yêu cầu thỉnh giảng của Học viện. Trình Giám đốc ban hành quyết định thỉnh giảng.
@@ -70,7 +70,7 @@ b) Căn cứ vào Kế hoạch thỉnh giảng của các Khoa và Quyết đị
 a) Các khoa chủ động gửi chương trình, tài liệu giảng dạy; các quy chế, quy định của Học viện đến giảng viên thỉnh giảng.
 b) Phòng Đào tạo xây dựng lịch dạy các lớp học phần.
 c) Căn cứ lịch dạy các học phần, Khoa phân công, thống nhất lịch dạy với giảng viên thỉnh giảng, đề nghị Phòng Đào tạo điều chỉnh lịch dạy cho phù hợp với yêu cầu của giảng viên thỉnh giảng (nếu cần).
-5. Thực hiện hợp đồng 
+5. Thực hiện hợp đồng
 a) Giảng viên thỉnh giảng thực hiện giảng dạy theo lịch phân công và hợp đồng đã ký kết.
 b) Khoa quản lý, theo dõi, giám sát toàn bộ quá trình chấp hành các quy định và thực hiện hợp đồng giảng dạy của giảng viên thỉnh giảng.
 c) Các Phòng chức năng kiểm tra việc chấp hành các quy định và thực hiện hợp đồng giảng dạy của giảng viên thỉnh giảng theo nhiệm vụ quy định của đơn vị.
@@ -126,7 +126,7 @@ c) Xếp loại không hoàn thành nhiệm vụ trong năm học hoặc năm h�
 3. Được Học viện cung cấp, hỗ trợ tài liệu, thiết bị, phương tiện làm việc cần thiết; được đánh giá, xếp loại, khen thưởng nếu có thành tích trong hoạt động giáo dục, đào tạo theo quy định của pháp luật.
 Chương V
 TRÁCH NHIỆM, QUYỀN CỦA HỌC VIỆN KỸ THUẬT MẬT MÃ
-Điều 13. Trách nhiệm Học viện 
+Điều 13. Trách nhiệm Học viện
 1. Xác định cá nhân đáp ứng tiêu chuẩn giảng viên thỉnh giảng và yêu cầu của Học viện, ra quyết định giảng viên thỉnh giảng, tổ chức giao kết hợp đồng thỉnh giảng. Công khai danh sách giảng viên thỉnh giảng.
 2. Thực hiện nghĩa vụ của Học viện được quy định tại hợp đồng thỉnh giảng. Tạo điều kiện để giảng viên thỉnh giảng sử dụng thiết bị, phương tiện làm việc của Học viện để thực hiện hợp đồng thỉnh giảng.
 3. Thực hiện các quy định về quản lý, đánh giá chất lượng hoạt động thỉnh giảng.
@@ -147,12 +147,9 @@ Chương VI
 TỔ CHỨC THỰC HIỆN
 Điều 16. Tổ chức thực hiện
 Trong quá trình triển khai thực hiện, nếu có khó khăn, vướng mắc, đề nghị các đơn vị phản ánh bằng văn bản về Phòng Đào tạo để tổng hợp, báo cáo Giám đốc xem xét, quyết định sửa đổi, bổ sung cho phù hợp với tình hình thực tế./.
- 
 PHỤ LỤC
 Biều mẫu hồ sơ thỉnh giảng của Học viện Kỹ thuật mật mã
-(Ban hành kèm theo Quyết định số: …../QĐ-HVM ngày ….. tháng 10 năm 2021 của Giám đốc Học viện Kỹ thuật mật mã
-
-
+(Ban hành kèm theo Quyết định số: ../QĐ-HVM ngày .. tháng 10 năm 2021 của Giám đốc Học viện Kỹ thuật mật mã
 MS01-TG: Mẫu Phiếu đề nghị thỉnh giảng.
 MS02-TG: Mẫu Giấy mời tham gia thỉnh giảng.
 MS03.1-TG: Mẫu Phiếu đăng ký tham gia thỉnh giảng.
@@ -160,301 +157,269 @@ MS03.2-TG: Mẫu Phiếu đăng ký tham gia thỉnh giảng (dành cho giảng 
 MS04-TG: Mẫu Lý lịch khoa học của giảng viên thỉnh giảng.
 MS05-TG: Mẫu Hợp đồng thỉnh giảng.
 MS06-TG: Mẫu Phiếu nhận xét, xác nhận kết quả thực hiện hợp đồng thỉnh giảng.
-MS07-TG: Mẫu Biên bản nghiệm thu và thanh lý hợp đồng. 
-BAN CƠ YẾU CHÍNH PHỦ
-HỌC VIỆN KỸ THUẬT MẬT MÃ
-
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
-
-Hà Nội, ngày tháng năm 2021
-
-
+MS07-TG: Mẫu Biên bản nghiệm thu và thanh lý hợp đồng.
 PHIẾU ĐỀ NGHỊ THỈNH GIẢNG
 Năm học 2021-2022/ Học kỳ 1, năm học 2021-2022
-
 Kính gửi: Phòng Đào tạo
 Căn cứ kế hoạch đào tạo năm học 2021-2022 và số lượng giảng viên cơ hữu của Khoa, Khoa đề nghị thỉnh giảng như sau;
-1. Bộ môn….
-- Số lượng giảng viên cơ hữu: ….. giảng viên
-- Số lượng giảng viên nghỉ theo các chế độ: ….. giảng viên
-- Tổng số giờ định mức: …. tiết
-- Tổng số giờ giảng dạy dự kiến vượt định mức: ….. tiết
-- Tổng số giờ phải hoàn thành theo kế hoạch năm học/học kỳ: ….. tiết
-- Tổng số giờ dự kiến mời giảng: ….. tiết. Cụ thể các học phần mời giảng:
-TT	Tên học phần mời giảng	Số lớp hp mời giảng	Tổng số tiết mời giảng	Ghi chú
-				
-				
-2. Bộ môn …
-
-
-	CHỦ NHIỆM KHOA
-(Ký, ghi rõ họ tên)
-
- 
-BAN CƠ YẾU CHÍNH PHỦ
-HỌC VIỆN KỸ THUẬT MẬT MÃ
-
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
-
-Hà Nội, ngày tháng năm 2021
-
-
+1. Bộ môn.
+- Số lượng giảng viên cơ hữu: .. giảng viên
+- Số lượng giảng viên nghỉ theo các chế độ: .. giảng viên
+- Tổng số giờ định mức: . tiết
+- Tổng số giờ giảng dạy dự kiến vượt định mức: .. tiết
+- Tổng số giờ phải hoàn thành theo kế hoạch năm học/học kỳ: .. tiết
+- Tổng số giờ dự kiến mời giảng: .. tiết. Cụ thể các học phần mời giảng:
+2. Bộ môn 
 GIẤY MỜI
 Tham gia thỉnh giảng
-
-
 Trân trọng kính mời
-………………………………………………………
 
-Tham gia giảng dạy học phần (hướng dẫn đồ án, luận văn, luận án/tham gia hội đồng chấm…):	
-Chuyên ngành/ngành: 	
-Đào tạo đại học chính quy (liên thông đại học/đại học vừa làm vừa học/thạc sĩ/tiến sĩ )	
-Thời gian: từ ngày … tháng … năm …. đến ngày …. tháng … năm 	
+Tham gia giảng dạy học phần (hướng dẫn đồ án, luận văn, luận án/tham gia hội đồng chấm):
+Chuyên ngành/ngành:
+Đào tạo đại học chính quy (liên thông đại học/đại học vừa làm vừa học/thạc sĩ/tiến sĩ )
+Thời gian: từ ngày  tháng  năm . đến ngày . tháng  năm
 (thời gian cụ thể theo Thời khóa biểu giảng dạy lớp học phần)
 Địa điểm: Học viện Kỹ thuật mật mã số 141, đường Chiến Thắng, xã Tân Triều, huyện Thanh Trì, thành phố Hà Nội.
 Kính mong Ông (bà) sắp xếp thời gian tham gia thỉnh giảng tại Học viện.
 Xin trân trọng cảm ơn!
-	GIÁM ĐỐC HỌC VIỆN
-
-
-
-
-
- 
 CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập – Tự do – Hạnh phúc
-
+Độc lập  Tự do  Hạnh phúc
 PHIẾU ĐĂNG KÝ THAM GIA THỈNH GIẢNG
-
 Kính gửi:
 - Ban Giám đốc Học viện Kỹ thuật mật mã
-- Lãnh đạo Khoa ….
-- (Đơn vị nơi giảng viên thỉnh giảng công tác)….
-
-Tên tôi là:	Giới tính:	
-Ngày sinh: 	
-Thường trú tại: 	
-Đang (đã) công tác tại: 	
-Chức vụ: 	
-Trình độ chuyên môn:	
-Chức danh GS/PGS (nếu có):	
-Ngạch công chức, viên chức:	
-Căn cứ tiêu chuẩn, yêu cầu của giảng viên thỉnh giảng và các điều khoản quy định trong Quy chế thỉnh giảng của Học viện Kỹ thuật mật mã và các quy định của pháp luật và điều kiện công tác, tôi thấy bản thân có đủ điều kiện và có nguyện vọng tham gia thỉnh giảng tại Học viện Kỹ thuật mật mã. 
-Kính đề nghị Ban Giám đốc Học viện xem xét cho tôi được tham gia thỉnh giảng tại Khoa/Trung tâm/Phân hiệu 	
+- Lãnh đạo Khoa .
+- (Đơn vị nơi giảng viên thỉnh giảng công tác).
+Tên tôi là: Giới tính:
+Ngày sinh:
+Thường trú tại:
+Đang (đã) công tác tại:
+Chức vụ:
+Trình độ chuyên môn:
+Chức danh GS/PGS (nếu có):
+Ngạch công chức, viên chức:
+Căn cứ tiêu chuẩn, yêu cầu của giảng viên thỉnh giảng và các điều khoản quy định trong Quy chế thỉnh giảng của Học viện Kỹ thuật mật mã và các quy định của pháp luật và điều kiện công tác, tôi thấy bản thân có đủ điều kiện và có nguyện vọng tham gia thỉnh giảng tại Học viện Kỹ thuật mật mã.
+Kính đề nghị Ban Giám đốc Học viện xem xét cho tôi được tham gia thỉnh giảng tại Khoa/Trung tâm/Phân hiệu
 Tôi xin cam đoan hoàn thành tốt trách nhiệm của giảng viên thỉnh giảng, chấp mọi nội quy, quy định của Nhà nước, Học viện Kỹ thuật mật mã và đảm bảo hoàn thành nhiệm vụ ở cơ quan tôi đang công tác.
-Xin trân trọng cảm ơn! 
-LÃNH ĐẠO ĐƠN VỊ
-NƠI GV THỈNH GIẢNG CÔNG TÁC
-(Ký tên, đóng dấu)
-	NGƯỜI LÀM ĐỀ NGHỊ
-(Ký, ghi rõ họ tên)
-
-
- 
+Xin trân trọng cảm ơn!
 CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập – Tự do – Hạnh phúc
-
+Độc lập  Tự do  Hạnh phúc
 PHIẾU ĐĂNG KÝ THAM GIA THỈNH GIẢNG
 (dành cho Giảng viên thỉnh giảng tham gia không liên tục tại Học viện)
 Kính gửi:
 - Ban Giám đốc Học viện Kỹ thuật mật mã
-- Lãnh đạo Khoa ….
-- (Đơn vị nơi giảng viên thỉnh giảng công tác)….
-
-Tên tôi là:	Giới tính:	
-Ngày sinh: 	
-Thường trú tại: 	
-Đang (đã) công tác tại: 	
-Chức vụ: 	
-Trình độ chuyên môn:	
-Chức danh GS/PGS (nếu có):	
-Ngạch công chức, viên chức:	
-Tôi đã có quyết định công nhận là giảng viên thỉnh giảng của Học viện Kỹ thuật mật mã năm học/học kỳ …………….. Tuy nhiên, tôi đã không tham gia thỉnh giảng các năm học/học kỳ ………….. vì lý do 	
-Căn cứ tiêu chuẩn, yêu cầu của giảng viên thỉnh giảng và các điều khoản quy định hiện hành trong Quy chế thỉnh giảng của Học viện Kỹ thuật mật mã và các quy định của pháp luật và điều kiện công tác, tôi thấy bản thân hiện tại có đủ điều kiện và có nguyện vọng tham gia thỉnh giảng tại Học viện Kỹ thuật mật mã. 
-Kính đề nghị Ban Giám đốc Học viện xem xét cho tôi được tham gia thỉnh giảng tại Khoa/Trung tâm/Phân hiệu 	
+- Lãnh đạo Khoa .
+- (Đơn vị nơi giảng viên thỉnh giảng công tác).
+Tên tôi là: Giới tính:
+Ngày sinh:
+Thường trú tại:
+Đang (đã) công tác tại:
+Chức vụ:
+Trình độ chuyên môn:
+Chức danh GS/PGS (nếu có):
+Ngạch công chức, viên chức:
+Tôi đã có quyết định công nhận là giảng viên thỉnh giảng của Học viện Kỹ thuật mật mã năm học/học kỳ .. Tuy nhiên, tôi đã không tham gia thỉnh giảng các năm học/học kỳ .. vì lý do
+Căn cứ tiêu chuẩn, yêu cầu của giảng viên thỉnh giảng và các điều khoản quy định hiện hành trong Quy chế thỉnh giảng của Học viện Kỹ thuật mật mã và các quy định của pháp luật và điều kiện công tác, tôi thấy bản thân hiện tại có đủ điều kiện và có nguyện vọng tham gia thỉnh giảng tại Học viện Kỹ thuật mật mã.
+Kính đề nghị Ban Giám đốc Học viện xem xét cho tôi được tham gia thỉnh giảng tại Khoa/Trung tâm/Phân hiệu
 Tôi xin cam đoan hoàn thành tốt trách nhiệm của giảng viên thỉnh giảng, chấp mọi nội quy, quy định của Nhà nước, Học viện Kỹ thuật mật mã và đảm bảo hoàn thành nhiệm vụ ở cơ quan tôi đang công tác.
-Xin trân trọng cảm ơn! 
-LÃNH ĐẠO ĐƠN VỊ
-NƠI GV THỈNH GIẢNG CÔNG TÁC
-(Ký tên, đóng dấu)
-	NGƯỜI LÀM ĐỀ NGHỊ
-(Ký, ghi rõ họ tên)
-
-
- 
+Xin trân trọng cảm ơn!
 LÝ LỊCH KHOA HỌC
 (Mẫu dành cho giảng viên thỉnh giảng)
-
-Ảnh 3 x4		
-
 I. SƠ LƯỢC LÝ LỊCH
-Họ và tên: 	Giới tính:	
-Ngày sinh:	
-Nơi sinh:	
-Địa chỉ thường trú: 	
-Địa chỉ liên hệ:	
-Điện thoại: 	Emai: 	 
-Đơn vị công tác: 	
-Chức vụ: 	Học hàm: 	
-Chức danh khoa học: 	
-Lĩnh vực nghiên cứu:	
-Trình độ ngoại ngữ: 	
-Số CMND: 	Ngày cấp: 	Nơi cấp:	
+Họ và tên: Giới tính:
+Ngày sinh:
+Nơi sinh:
+Địa chỉ thường trú:
+Địa chỉ liên hệ:
+Điện thoại: Emai:
+Đơn vị công tác:
+Chức vụ: Học hàm:
+Chức danh khoa học:
+Lĩnh vực nghiên cứu:
+Trình độ ngoại ngữ:
+Số CMND: Ngày cấp: Nơi cấp:
 II. QUÁ TRÌNH ĐÀO TẠO
-1. Tốt nghiệp Đại học:	Năm: 	
-Chuyên ngành	
-2. Tốt nghiệp Thạc sĩ: 	Năm: 	
-Chuyên ngành:	
-3. Tốt nghiệp Tiến sĩ:	 Năm: 	
-Chuyên ngành: 	
-Tên luận án:	
-	
-	
-	
+1. Tốt nghiệp Đại học: Năm:
+Chuyên ngành
+2. Tốt nghiệp Thạc sĩ: Năm:
+Chuyên ngành:
+3. Tốt nghiệp Tiến sĩ: Năm:
+Chuyên ngành:
+Tên luận án:
 III. QUÁ TRÌNH CÔNG TÁC
-Thời gian	Nơi công tác	Công việc đảm nhiệm
-		
-		
 IV. QUÁ TRÌNH NGHIÊN CỨU KHOA HỌC VÀ GIẢNG DẠY
-1. Các đề tài nghiên cứu khoa học đã và đang tham gia (ghi rõ: tên đề tài, cấp quản ý, thời gian thực hiện, trách nhiệm tham gia đề tài, …)
+1. Các đề tài nghiên cứu khoa học đã và đang tham gia (ghi rõ: tên đề tài, cấp quản ý, thời gian thực hiện, trách nhiệm tham gia đề tài, )
 2. Các bài báo, báo cáo khoa học (ghi rõ: tên tác giả, tên bài báo, nơi đăng, số, trang, năm đăng bài)
 3. Sách, giáo trình (ghi rõ: tên tác giả, tên sách, nhà xuất bản, năm xuất bản)
-4. Hướng dẫn luận văn, luận án sau đại học (ghi rõ tên đề tài, học viên/nghiên cứu sinh, cơ sở đào tạo, năm hướng dẫn, năm bảo vệ, …).
+4. Hướng dẫn luận văn, luận án sau đại học (ghi rõ tên đề tài, học viên/nghiên cứu sinh, cơ sở đào tạo, năm hướng dẫn, năm bảo vệ, ).
 5. Các học phần giảng dạy (ghi rõ các học phần đã và đang giảng dạy ở bậc đại học và sau đại học).
-Xác nhận của cơ quan	….., ngày …. tháng … năm ….
-Người khai
-(ký, ghi rõ họ tên)
-
- 
-BAN CƠ YẾU CHÍNH PHỦ
-HỌC VIỆN KỸ THUẬT MẬT MÃ
-
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
-
-Hà Nội, ngày tháng năm 2021
-
 HỢP ĐỒNG THỈNH GIẢNG
-Số: ………/HĐ-HVM
-
+Số: /HĐ-HVM
 Căn cứ Bộ luật dân sự số 91/2015/QH13 ban hành ngày 24 tháng 11 năm 2015;
 Căn cứ Thông tư số 44/2011/TT-BGDĐT ngày 10 tháng 10 năm 2011 của Bộ trưởng Bộ Giáo dục và đào tạo ban hành Quy định chế độ thỉnh giảng trong các cơ sở giáo dục;
-Căn cứ Quyết định số: /QĐ-HVM ngày tháng năm 2021 của Giám đốc Học viện Kỹ thuật mật mã ban hành Quy định chế độ thỉnh giảng của Học viện Kỹ thuật mật mã; 
-Căn cứ kế hoạch mời thỉnh giảng của Khoa ….đã được phê duyệt;
+Căn cứ Quyết định số: /QĐ-HVM ngày tháng năm 2021 của Giám đốc Học viện Kỹ thuật mật mã ban hành Quy định chế độ thỉnh giảng của Học viện Kỹ thuật mật mã;
+Căn cứ kế hoạch mời thỉnh giảng của Khoa .đã được phê duyệt;
 Căn cứ Quyết định số: /QĐ-HVM ngày tháng năm 2021 của Giám đốc Học viện Kỹ thuật mật mã quyết định công nhận giảng viên thỉnh giảng của Học viện Kỹ thuật mật mã,
 Hôm nay, ngày tháng năm 202..., tại Học viện Kỹ thuật mật mã, chúng tôi gồm:
 Bên A: HỌC VIỆN KỸ THUẬT MẬT MÃ
-- Đại diện: 
+- Đại diện:
 - Chức vụ: Giám đốc Học viện.
-- Địa chỉ: 141 đường Chiến Thắng, xã Tân Triều, huyện Thanh Trì, Hà Nội. 
-- Điện thoại: 043 8544244 
-- Số tài khoản: 0021 145 666 888 
-- Mở tại Ngân hàng thương mại cổ phần Quân đội, chi nhánh sở giao dịch số 3, Hà Nội. 
+- Địa chỉ: 141 đường Chiến Thắng, xã Tân Triều, huyện Thanh Trì, Hà Nội.
+- Điện thoại: 043 8544244
+- Số tài khoản: 0021 145 666 888
+- Mở tại Ngân hàng thương mại cổ phần Quân đội, chi nhánh sở giao dịch số 3, Hà Nội.
 Bên B: GIẢNG VIÊN THỈNH GIẢNG
-- Họ và tên: Ông (Bà) 	
-- Ngày sinh:	 số CMND : 	
-- Học vị/học hàm: 	 Chuyên môn: 	
-- Cơ quan công tác: 	
-- Điện thoại:	 Email: 	
-- Số tài khoản: 	
-- Tại ngân hàng (chi nhánh): 	
-Cùng thống nhất thực hiện các điều khoản sau: 
-Điều 1. Nội dung của hợp đồng 
-1. Bên B thực hiện giảng dạy cho Bên A trong học kỳ....năm học .................. như sau: 
-STT	Mã học phần	Tên học phần	Tên lớp
-	Số tín chỉ	Số tiết lên lớp theo kế hoạch
-					
-					
+- Họ và tên: Ông (Bà)
+- Ngày sinh: số CMND :
+- Học vị/học hàm: Chuyên môn:
+- Cơ quan công tác:
+- Điện thoại: Email:
+- Số tài khoản:
+- Tại ngân hàng (chi nhánh):
+Cùng thống nhất thực hiện các điều khoản sau:
+Điều 1. Nội dung của hợp đồng
+1. Bên B thực hiện giảng dạy cho Bên A trong học kỳ....năm học .................. như sau:
 2. Khối lượng giảng dạy các lớp học phần được được bên A xác định theo thực tế bên B giảng dạy sau khi kết thúc học phần (quy đổi ra giờ chuẩn theo Quy định chế độ làm việc của giảng viên Học viện Kỹ thuật mật mã).
-Điều 2. Thù lao thỉnh giảng 
-- Thù lao thỉnh giảng thực hiện theo quy định hiện hành của Học viện Kỹ thuật mật mã, áp dụng cho giảng viên thỉnh giảng là: ………… đ/1 giờ chuẩn. 
-(Bằng chữ: ...................................................................................) 
+Điều 2. Thù lao thỉnh giảng
+- Thù lao thỉnh giảng thực hiện theo quy định hiện hành của Học viện Kỹ thuật mật mã, áp dụng cho giảng viên thỉnh giảng là:  đ/1 giờ chuẩn.
+(Bằng chữ: ...................................................................................)
 - Phương thức thanh toán: Chuyển khoản.
 - Thời hạn thanh toán: Bên A sẽ thanh toán cho bên B trong vòng 10 ngày sau khi có biên bản nghiệm thu, thanh lý hợp đồng.
-Điều 3. Quyền và trách nhiệm của bên A 
+Điều 3. Quyền và trách nhiệm của bên A
 Cung cấp đầy đủ nội dung chương trình và kế hoạch giảng dạy cho bên B.
-Tạo điều kiện thuận lợi cho bên B sử dụng tài liệu, thiết bị, phương tiện làm việc cần thiết để thực hiện các hoạt động giảng dạy. 
-Thanh toán tiền thù lao giảng dạy và các kinh phí khác cho bên B đúng theo thỏa thuận tại Điều 2 Hợp đồng này. 
-Cấp cho bên B giấy xác nhận kết quả thực hiện hợp đồng thỉnh giảng. 
-Điều 4. Quyền và trách nhiệm của bên B 
+Tạo điều kiện thuận lợi cho bên B sử dụng tài liệu, thiết bị, phương tiện làm việc cần thiết để thực hiện các hoạt động giảng dạy.
+Thanh toán tiền thù lao giảng dạy và các kinh phí khác cho bên B đúng theo thỏa thuận tại Điều 2 Hợp đồng này.
+Cấp cho bên B giấy xác nhận kết quả thực hiện hợp đồng thỉnh giảng.
+Điều 4. Quyền và trách nhiệm của bên B
 Thực hiện các hoạt động giảng dạy theo đúng chương trình, kế hoạch và đảm bảo yêu cầu chất lượng của bên A đề ra.
 Đảm bảo sự khách quan, trung thực, công bằng trong giảng dạy và đánh giá kêt quả học tập của sinh viên; nộp bảng điêm và danh sách sinh viên được dự thi kết thúc học phần đúng thời hạn quy định của bên A.
 Thực hiện ra đề thi, chấm thi học phần giảng dạy (nếu được yêu cầu).
-Thực hiện nhiệm vụ của nhà giáo theo quy định của pháp luật vê giáo dục và các quy định của pháp luật có liên quan đến hợp đồng thỉnh giảng. Giảng viên thỉnh giảng cam kết bảo đảm hoàn thành nhiệm vụ ở nơi mình hiện công tác. 
-Được bên A cung cấp, hỗ trợ về tài liệu, thiết bị, phương tiện làm việc cần thiết; được tham gia sinh hoạt chuyên môn, nghiệp vụ tại bộ môn, khoa; được hưởng các quyền lợi khác của giảng viên thỉnh giảng theo quy định của pháp luật. 
-Điều 5. Điều khoản chung 
+Thực hiện nhiệm vụ của nhà giáo theo quy định của pháp luật vê giáo dục và các quy định của pháp luật có liên quan đến hợp đồng thỉnh giảng. Giảng viên thỉnh giảng cam kết bảo đảm hoàn thành nhiệm vụ ở nơi mình hiện công tác.
+Được bên A cung cấp, hỗ trợ về tài liệu, thiết bị, phương tiện làm việc cần thiết; được tham gia sinh hoạt chuyên môn, nghiệp vụ tại bộ môn, khoa; được hưởng các quyền lợi khác của giảng viên thỉnh giảng theo quy định của pháp luật.
+Điều 5. Điều khoản chung
 Hợp đồng này có hiệu lực kể từ ngày ký kết cho đến khi hai bên ký biên bản nghiệm thu và thanh lý hợp đồng.
-Hai bên cam kết thực hiện đúng nghĩa vụ của mình đã nêu trong hợp đồng. Trường hợp bên nào vì lý do bất khả kháng buộc phải thay đổi hợp đồng cần thông báo trước cho bên kia ít nhất 2 tuần. 
-Trong thời gian thực hiện hợp đồng, mọi vướng mắc, tranh chấp phát sinh giữa hai bên được giải quyết trên cơ sở thương lượng, hợp tác và theo quy định của pháp luật. 
+Hai bên cam kết thực hiện đúng nghĩa vụ của mình đã nêu trong hợp đồng. Trường hợp bên nào vì lý do bất khả kháng buộc phải thay đổi hợp đồng cần thông báo trước cho bên kia ít nhất 2 tuần.
+Trong thời gian thực hiện hợp đồng, mọi vướng mắc, tranh chấp phát sinh giữa hai bên được giải quyết trên cơ sở thương lượng, hợp tác và theo quy định của pháp luật.
 Hợp đồng này được lập thành 04 bản có giá trị pháp lý như nhau, bên A giữ 02 bản, bên B giữ 02 bản.
-ĐẠI DIỆN BÊN B
-	ĐẠI DIỆN BÊN A
-
-
- 
-HỌC VIỆN KỸ THUẬT MẬT MÃ
-KHOA ….
-
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
-
-Hà Nội, ngày tháng năm 2021
-
-
-PHIẾU NHẬN XÉT 
+PHIẾU NHẬN XÉT
 Xác nhận kết quả thực hiện hợp đồng thỉnh giảng
-
 Căn cứ Hợp đồng thỉnh giảng số ......./HĐ-HVM ngày ..... tháng ..... năm ..... đã kí giữa Học viện Kỹ thuật mật mã và .........................................................;
 Hôm nay, ngày ...... tháng ...... năm ........, Bộ môn ......và Khoa .......... xác nhận:
-- Họ và tên: Ông (Bà) 	
-- Ngày sinh:	 số CMND : 	
-- Học vị/học hàm: 	 Chuyên môn: 	
+- Họ và tên: Ông (Bà)
+- Ngày sinh: số CMND :
+- Học vị/học hàm: Chuyên môn:
 1. Đã thực hiện giảng dạy xong các lớp học phần ký kết hợp đồng với Học viện, các lớp học phần giảng dạy cụ thể như sau:
-STT	Mã học phần	Tên học phần	Tên lớp	Số tín chỉ	Số tiết lên lớp theo kế hoạch	Số tiết quy chuẩn
-						
-						
 2. Đã thực hiện giảng dạy theo đúng nội dung chương trình, đảm bảo kế hoạch và đạt yêu cầu chất lượng; đã thực hiện kiểm tra đánh giá và quản lí sinh viên theo Quy chế đào tạo của Bộ Giáo dục và Đào tạo và quy định của Học viện Kỹ thuật mật mã.
 3. Đã hoàn thiện bảng điểm và danh sách sinh viên được dự thi kết thúc và nộp về Học viện đúng hạn.
 4. Đã hoàn thành các công tác ra đề thi, chấm thi khi được yêu cầu (nếu có).
-
-CHỦ NHIỆM BỘ MÔN....	TRƯỞNG KHOA ................
-
-
-
-Ý KIẾN CỦA PHÒNG ĐÀO TẠO
-
- 
-BAN CƠ YẾU CHÍNH PHỦ
-HỌC VIỆN KỸ THUẬT MẬT MÃ
-CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
-Độc lập - Tự do - Hạnh phúc
-
-Hà Nội, ngày tháng năm 2021
-
 BIÊN BẢN NGHIỆM THU VÀ THANH LÝ HỢP ĐỒNG
-- Căn cứ Hợp đồng lao động số: ……./HĐ-HVM ngày …. tháng … năm 2021, giữa Học viện Kỹ thuật mật mã và Giảng viên thỉnh giảng 	
-- Căn cứ Bản nhận xét xác nhận giảng viên thỉnh giảng hoàn thành công việc theo hợp đồng được lập ngày … tháng … năm 2021.
-Hôm nay, ngày … tháng …. năm 2021, tại Học viện Kỹ thuật mật mã, chúng tôi gồm: 
+- Căn cứ Hợp đồng lao động số: ./HĐ-HVM ngày . tháng  năm 2021, giữa Học viện Kỹ thuật mật mã và Giảng viên thỉnh giảng
+- Căn cứ Bản nhận xét xác nhận giảng viên thỉnh giảng hoàn thành công việc theo hợp đồng được lập ngày  tháng  năm 2021.
+Hôm nay, ngày  tháng . năm 2021, tại Học viện Kỹ thuật mật mã, chúng tôi gồm:
 Bên A: HỌC VIỆN KỸ THUẬT MẬT MÃ
-- Đại diện: 	
+- Đại diện:
 - Chức vụ: Giám đốc Học viện.
-- Địa chỉ: 141 đường Chiến Thắng, xã Tân Triều, huyện Thanh Trì, Hà Nội. 
-- Điện thoại: 043 8544244 
-- Số tài khoản: 0021 145 666 888 
-- Mở tại Ngân hàng thương mại cổ phần Quân đội, chi nhánh sở giao dịch số 3, Hà Nội. 
+- Địa chỉ: 141 đường Chiến Thắng, xã Tân Triều, huyện Thanh Trì, Hà Nội.
+- Điện thoại: 043 8544244
+- Số tài khoản: 0021 145 666 888
+- Mở tại Ngân hàng thương mại cổ phần Quân đội, chi nhánh sở giao dịch số 3, Hà Nội.
 Bên B: GIẢNG VIÊN THỈNH GIẢNG
-- Họ và tên: Ông (Bà) 	
-- Ngày sinh:	 số CMND : 	
-- Học vị/học hàm: 	Chuyên môn: 	
-- Cơ quan công tác: 	
-- Điện thoại:	 Email: 	
-- Số tài khoản: 	
-- Tại ngân hàng (chi nhánh): 	
-Hai bên đã cùng nhau nghiệm thu và thanh lý hợp đống số: …./HĐ-HVM ngày … tháng … năm 2021 với những điều khoản sau đây:
+- Họ và tên: Ông (Bà)
+- Ngày sinh: số CMND :
+- Học vị/học hàm: Chuyên môn:
+- Cơ quan công tác:
+- Điện thoại: Email:
+- Số tài khoản:
+- Tại ngân hàng (chi nhánh):
+Hai bên đã cùng nhau nghiệm thu và thanh lý hợp đống số: ./HĐ-HVM ngày  tháng  năm 2021 với những điều khoản sau đây:
 Điều 1. Bên B đã hoàn thành việc giảng dạy các học phần đã ký kết trong hợp đồng và thực hiện theo đúng chương trình, kế hoạch, đảm bảo yêu cầu chất lượng của bên A đề ra.
 Điều 2. Bên A có trách nhiệm thanh toán tiền giảng dạy cho bên B theo hợp đồng:
-Tổng số tiền: 	 (Bằng chữ: 	)
-Biên bản này được lập thành 03 bản có giá trị pháp lý như nhau. Bên A giữ 02 bản, bên B giữ 01 bản. 
-ĐẠI DIỆN BÊN B	ĐẠI DIỆN BÊN A
+Tổng số tiền: (Bằng chữ: )
+Biên bản này được lập thành 03 bản có giá trị pháp lý như nhau. Bên A giữ 02 bản, bên B giữ 01 bản.
+
+[BẢNG DỮ LIỆU]
+BAN CƠ YẾU CHÍNH PHỦ HỌC VIỆN KỸ THUẬT MẬT MÃ  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM Độc lập - Tự do - Hạnh phúc
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+BAN CƠ YẾU CHÍNH PHỦ HỌC VIỆN KỸ THUẬT MẬT MÃ  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM Độc lập - Tự do - Hạnh phúc Hà Nội, ngày tháng năm 2021
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+TT  Tên học phần mời giảng  Số lớp hp mời giảng  Tổng số tiết mời giảng  Ghi chú
+--  ----------------------  -------------------  ----------------------  -------
+
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+ CHỦ NHIỆM KHOA (Ký, ghi rõ họ tên)
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+BAN CƠ YẾU CHÍNH PHỦ HỌC VIỆN KỸ THUẬT MẬT MÃ  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM Độc lập - Tự do - Hạnh phúc Hà Nội, ngày tháng năm 2021
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+ GIÁM ĐỐC HỌC VIỆN
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+LÃNH ĐẠO ĐƠN VỊ NƠI GV THỈNH GIẢNG CÔNG TÁC (Ký tên, đóng dấu)  NGƯỜI LÀM ĐỀ NGHỊ (Ký, ghi rõ họ tên)
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+LÃNH ĐẠO ĐƠN VỊ NƠI GV THỈNH GIẢNG CÔNG TÁC (Ký tên, đóng dấu)  NGƯỜI LÀM ĐỀ NGHỊ (Ký, ghi rõ họ tên)
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+Ảnh 3 x4  
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+Thời gian  Nơi công tác  Công việc đảm nhiệm
+---------  ------------  -------------------
+
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+Xác nhận của cơ quan  .., ngày . tháng  năm . Người khai (ký, ghi rõ họ tên)
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+BAN CƠ YẾU CHÍNH PHỦ HỌC VIỆN KỸ THUẬT MẬT MÃ  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM Độc lập - Tự do - Hạnh phúc Hà Nội, ngày tháng năm 2021
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+STT  Mã học phần  Tên học phần  Tên lớp  Số tín chỉ  Số tiết lên lớp theo kế hoạch
+---  -----------  ------------  -------  ----------  -----------------------------
+
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+ĐẠI DIỆN BÊN B  ĐẠI DIỆN BÊN A
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+HỌC VIỆN KỸ THUẬT MẬT MÃ KHOA .  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM Độc lập - Tự do - Hạnh phúc Hà Nội, ngày tháng năm 2021
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+STT  Mã học phần  Tên học phần  Tên lớp  Số tín chỉ  Số tiết lên lớp theo kế hoạch  Số tiết quy chuẩn
+---  -----------  ------------  -------  ----------  -----------------------------  -----------------
+
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+CHỦ NHIỆM BỘ MÔN....  TRƯỞNG KHOA ................
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+Ý KIẾN CỦA PHÒNG ĐÀO TẠO 
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+BAN CƠ YẾU CHÍNH PHỦ HỌC VIỆN KỸ THUẬT MẬT MÃ  CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM Độc lập - Tự do - Hạnh phúc Hà Nội, ngày tháng năm 2021
+[KẾT THÚC BẢNG]
+
+[BẢNG DỮ LIỆU]
+ĐẠI DIỆN BÊN B  ĐẠI DIỆN BÊN A
+[KẾT THÚC BẢNG]

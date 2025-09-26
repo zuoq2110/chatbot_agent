@@ -65,9 +65,11 @@ class Conversation(BaseModel):
 class MessageCreate(BaseModel):
     content: str
     is_user: bool = True
+    department: Optional[str] = None  # 'phongdaotao', 'phongkhaothi', or None for all
 
 class MessageQuickChat(BaseModel):
     content: str
+    department: Optional[str] = None  # 'phongdaotao', 'phongkhaothi', or None for all
 
 class ConversationCreate(BaseModel):
     user_id: str

@@ -899,7 +899,7 @@ def create_vector_database(output_path, data_dir="./data"):
 
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text",
-            base_url="http://ollama:11434"
+            base_url=OLLAMA_BASE_URL
         )
         # embeddings = OllamaEmbeddings(
         #     model="nomic-embed-text"
@@ -923,7 +923,7 @@ def load_vector_database(output_path, data_dir="./data"):
     try:
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text",
-            base_url="http://ollama:11434"
+            base_url=OLLAMA_BASE_URL
         )
         # embeddings = OllamaEmbeddings(
         #     model="nomic-embed-text"
@@ -1168,7 +1168,7 @@ def create_in_memory_retriever(file_content: str, chunk_size: int = 400, chunk_o
         # )
         embeddings = OllamaEmbeddings(
             model="nomic-embed-text",
-            base_url="http://ollama:11434"
+            base_url=OLLAMA_BASE_URL
         )
         # Create in-memory FAISS vector store
         vectorstore = FAISS.from_texts(chunks, embeddings)

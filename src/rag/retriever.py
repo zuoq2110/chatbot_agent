@@ -17,7 +17,9 @@ from llm.config import get_gemini_llm
 
 # Import metadata configuration
 from .metadata_config import get_metadata_config
-
+from dotenv import load_dotenv
+load_dotenv()
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 # Optional imports for file processing
 try:
     import PyPDF2

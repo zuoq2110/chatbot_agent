@@ -92,12 +92,12 @@
       "giangvien": ["giảng viên", "giáo viên", "gv", "teacher", "lecturer"]
     },
     "departments": {
-      "phongdaotao": ["phòng đào tạo", "đào tạo", "pdt", "education"],
+      "phongdaotao": ["phòng đào tạo", "quy chế đào tạo", "pdt", "education", "điểm học phần", "điểm trung bình", "tích lũy", "cách tính điểm", "tốt nghiệp", "xếp loại", "thang điểm", "điểm số", "đăng ký học", "học bổng", "kết quả học tập", "học kỳ"],
       "vanphong": ["văn phòng", "hành chính", "vp", "office"],
       "phongkhcn": ["phòng khcn", "khoa học công nghệ", "nghiên cứu", "research"],
       "phongtccb": ["phòng tccb", "tổ chức cán bộ", "nhân sự", "hr"],
-      "phongkhaothi": ["phòng khảo thí", "khảo thí", "thi cử", "examination", "đảm bảo chất lượng", "hội đồng"],
-      "khoa": ["khoa", "bộ môn", "giảng dạy", "academic", "department", "ngành", "chương trình đào tạo", "an toàn thông tin", "attt", "chuyên ngành", "kế hoạch học tập", "thời gian đào tạo"],
+      "phongkhaothi": ["phòng khảo thí", "khảo thí", "thi cử", "examination", "đảm bảo chất lượng", "hội đồng", "coi thi", "chấm thi", "tổ chức thi", "kỳ thi", "phòng thi", "giám thị", "quy định thi"],
+      "khoa": ["khoa", "bộ môn", "giảng dạy", "academic", "department", "ngành", "chuyên ngành", "an toàn thông tin", "attt", "chương trình đào tạo", "kế hoạch học tập", "học phần", "tín chỉ", "môn học", "mã học phần", "khối lượng kiến thức", "chương trình giáo dục", "mục tiêu đào tạo"],
       "thongtinhvktmm": ["thông tin", "giới thiệu", "hvktmm", "học viện", "general info"],
       "viennghiencuu": ["viện nghiên cứu", "nghiên cứu", "hợp tác", "phát triển", "vnc", "research collaboration"]
     },

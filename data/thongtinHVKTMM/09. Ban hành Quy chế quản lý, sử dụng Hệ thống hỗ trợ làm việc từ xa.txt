@@ -1,0 +1,193 @@
+BAN CƠ YẾU CHÍNH PHỦ
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập  Tự do  Hạnh phúc
+
+Số: /QĐ-BCY Hà Nội, ngày tháng 4 năm 20 25
+
+QUYẾT ĐỊNH
+Ban hành Quy ch ế quản lý, s ử dụng
+Hệ thống hỗ trợ làm vi ệc từ xa
+TRƯỞNG BAN BAN CƠ YẾU CHÍNH PHỦ
+Căn cứ Nghị định số 09/2014/NĐ -CP ngày 27/01/2014 của Chính phủ quy định
+chức năng, nhiệm vụ, quyền hạn và cơ cấu tổ chức của Ban Cơ yếu Chính phủ;
+Căn cứ kết quả triển khai dự án Đầu tư hệ thống hỗ trợ làm việc từ xa trong
+Ban Cơ yếu Chính phủ được Trưởng ban Ban Cơ yếu Chính phủ phê duyệt tại
+Quyết định số 242/QĐ -BCY ngày 14/6/2022;
+Căn cứ Quyết định số 647/QĐ -BCY ngày 18/10/2024 của Trưởng ban B an
+Cơ yếu Chính phủ về việc phê duyệt Đề cương và Dự toán chi tiết Tích hợp mật
+mã vào hệ thống hỗ trợ làm việc từ xa trong Ban Cơ yếu Chính phủ;
+Căn c ứ Quyết định số /QĐ-BCY ngày /4/2025 c ủa Trư ởng ban Ban
+Cơ y ếu Chính ph ủ về việc đưa H ệ thống hỗ trợ làm vi ệc từ xa vào ứng dụng
+trong ngành Cơ y ếu và các cơ quan Đ ảng, Nhà nư ớc;
+Theo đề nghị của Cục trưởng Cục Quản lý kỹ thuật n ghiệp vụ mật mã tại
+Tờ trình số 12 1/TTr-QLKT ngày 16/4/2025.
+QUYẾT ĐỊNH :
+Điều 1. Ban hành kèm theo Quyết định này Quy chế quản lý và sử dụng Hệ
+thống hỗ trợ làm việc từ xa .
+Điều 2. Quyết định này có hiệu lực thi hành kể từ ngày ký.
+Điều 3. Cục trưởng Cục Quản lý kỹ thuật nghiệp vụ mật mã, Thủ trưởng các
+cơ quan, đơn vị thuộc Ban Cơ yếu Chính phủ, người đứng đầu Tổ chức cơ yếu
+đầu Hệ chịu trách nhiệm thi hành Quyết định này ./.
+Nơi nhận:
+- Như Đ iều 3;
+- Lãnh đạo Ban CYCP;
+- Lưu: VT, QLKT . Th28.
+
+KT. TRƯỞNG BAN
+PHÓ TRƯỞNG BAN
+
+Nguyễn Hữu Hùng
+BAN CƠ YẾU CHÍNH PHỦ
+CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập  Tự do  Hạnh phúc
+
+QUY CHẾ
+Quản lý, s ử dụng H ệ thống hỗ trợ làm vi ệc từ xa
+(Ban hành kèm theo Quyết định số /QĐ-BCY ngày tháng 4 năm 2025
+của Trưởng ban Ban Cơ yếu Chính phủ)
+
+Chương I
+QUY ĐỊNH CHUNG
+Điều 1. Phạm vi đi ều chỉnh
+Quy ch ế này quy đ ịnh về cách th ức sử dụng Hệ thống hỗ trợ làm vi ệc từ xa
+trong qu ản lý, đi ều hành, s ử dụng, trao đ ổi công vi ệc không ch ứa thông tin, bí mật
+nhà nư ớc tại các cơ quan, đơn v ị ngành Cơ y ếu và các cơ quan Đ ảng, Nhà nư ớc
+khi có nhu c ầu.
+Điều 2. Đối tượng áp d ụng
+Quy ch ế này áp d ụng v ới Tổ chức cơ y ếu và ngư ời làm vi ệc trong T ổ
+chức cơ y ếu và các cơ quan Đ ảng, Nhà nư ớc.
+Điều 3. Giải thích t ừ ngữ
+Trong Quy ch ế này, các t ừ ngữ dưới đây đư ợc hiểu như sau:
+1. Hệ thống hỗ trợ làm vi ệc từ xa là ph ần mềm hỗ trợ làm vi ệc từ xa của Ban
+Cơ yếu Chính ph ủ với các ch ức năng nh ắn tin; g ọi điện, gọi điện có hình ; lưu tr ữ
+tập tin/d ữ liệu; họp trực tuy ến và các ch ức năng k ết nối khác.
+2. Người dùng là tổ chức, cá nhân cài đ ặt, sử dụng Hệ thống hỗ trợ làm vi ệc
+từ xa trên thi ết bị điện tho ại, máy tính b ảng, máy tính bàn, laptop .
+3. Nhóm là không gian trò chuy ện chung, nơi t ất cả người dùng đư ợc thêm vào
+có th ể chia s ẻ thông tin, nh ắn tin và trao đ ổi trực tiếp với nhau; dùng cho vi ệc trao
+đổi, thảo luận công vi ệc, ph ối hợp theo phòng ban, d ự án ho ặc nhóm nhi ệm vụ.
+4. Kênh là không gian chia s ẻ thông tin theo chi ều rộng và chi ều sâu, cho
+phép đ ọc nội dung công khai ho ặc giới hạn tùy theo ch ế độ công khai/riêng tư.
+Kênh công khai là nơi mà m ọi người dùng có th ể nhìn th ấy và đ ọc nội dung mà
+không c ần tham gia. Kênh riêng tư là nơi mà ch ỉ những ngư ời dùng đư ợc thêm
+vào m ới có quy ền truy c ập và đ ọc nội dung.
+2
+
+Điều 4. Nguyên t ắc quản lý, sử dụng Hệ thống hỗ trợ làm vi ệc từ xa
+1. Người dùng s ử dụng Hệ thống hỗ trợ làm vi ệc từ xa để trao đ ổi thông tin
+phục vụ thực hiện nhi ệm vụ và các thông tin đư ợc phép theo quy ch ế này.
+2. Thông tin cung c ấp, trao đ ổi trên Hệ thống hỗ trợ làm vi ệc từ xa phải bảo
+đảm chính xác, khách quan, phù h ợp với quan đi ểm, ch ủ trương, đư ờng lối của
+Đảng, tuân th ủ quy đ ịnh của pháp lu ật về bảo vệ dữ liệu cá nhân, b ảo vệ bí mật
+nhà nư ớc, an toàn thông tin m ạng, an ninh m ạng và các quy đ ịnh khác c ủa pháp
+luật có liên quan.
+CHƯƠNG II
+QUẢN LÝ , SỬ DỤNG HỆ THỐNG HỖ TRỢ LÀM VIỆC TỪ XA
+Điều 5. Thiết lập tài khoản cá nhân, nhóm, kênh
+1. Tài kho ản cá nhân :
+- Mỗi người dùng được cấp 01 tài khoản cá nhân; ngoại trừ đối với tổ đảm
+bảo kỹ thuật và thử nghiệm được cấp nhiều hơn 01 tài khoản và được thu hồi sau
+khi kết thúc nhiệm vụ.
+- Việc tạo tài khoản phải thôn g qua đơn vị quản trị người dùng được phân quyền.
+2. Nhóm ( kênh ):
+- Mỗi nhó m (kênh ) được tạo ra dựa trên mục tiêu, nhiệm vụ được giao và
+hoạt động tu ân thủ theo nội dung tại Khoản 1 và Khoản 2 của Điều 6 .
+- Các tài khoản thuộc nhóm (kênh ) được phân quyền rõ ràng.
+3. Cập nh ật, điều chỉnh thông tin tài kho ản:
+- Cơ quan, đơn vị có trách nh iệm cung cấp thông tin người dùn g (nếu thông
+tin người dùng có sự thay đổi) về đơn vị quản trị người dùng được phân quyền.
+- Mọi điều chỉnh đều phải được lưu nhật ký và báo cáo hệ thống.
+- Việc hủy bỏ tài kho ản được thực hiện trong các trư ờng hợp sau:
++ Khi người dùng là tổ chức : Tài khoản bị hủy bỏ khi tổ chức giải thể, sát
+nhập hoặc kết thúc hoạt động .
++ Khi người dùng là c án bộ, nhân viên (cá nhân): Tài khoản bị hủy bỏ khi cán
+bộ, nhân viên nghỉ hưu ; chuyển công tác khỏi ngành Cơ yếu và các cơ quan Đảng,
+Nhà nước ; bị kỷ luật cho thôi công tác; qua đờ i trong thời gian đang công tác .
+Điều 6. Quy đ ịnh về sử dụng Hệ thống hỗ trợ làm vi ệc từ xa
+1. Các t ổ chức, cá nhân khi cung c ấp thông tin trên các nhóm (kênh) phải
+chịu sự kiểm duy ệt của Trư ởng nhóm (kênh) ho ặc Phó Trư ởng nhóm (kênh) đư ợc
+Trưởng nhóm (kênh) ủy quy ền kiểm duy ệt nội dung thông tin.
+3
+2. Việc đăng t ải các thông tin thu th ập trên các nhóm (kênh) hoặc trao đ ổi
+riêng ph ải trên cơ s ở trích d ẫn nguyên văn, chính xác theo ngu ồn thông tin chính
+thức, đúng quy đ ịnh của pháp lu ật.
+3. Người dùng ph ải có trách nghi ệm bảo vệ thông tin đăng nh ập, khi phát
+hiện sự cố hoặc vi ph ạm, ph ải báo ngay v ề đơn v ị quản trị hệ thống.
+4. Khi có v ấn đề liên quan đ ến tài kho ản, nội dung ho ặc lỗi hệ thống, ngư ời
+dùng thông báo cho đơn v ị quản trị hệ thống; T hời gian x ử lý: không quá 0 1 ngày
+làm vi ệc đối với lỗi thông thư ờng và không quá 02 ngày đ ối với lỗi nghiêm tr ọng.
+Điều 7. Quy đ ịnh về quản trị thông tin trên Hệ thống hỗ trợ làm vi ệc từ xa
+1. Các n ội dung trao đ ổi trên Hệ thống hỗ trợ làm vi ệc từ xa được mã hóa
+đầu cuối, chỉ người tham gia m ới đọc được nội dung g ửi cho mình ; Quản trị viên
+chỉ quản lý thông tin truy c ập, tần suất, thiết bị truy c ập, không đọc được các nội
+dung tin nh ắn.
+2. Xử lý tài kho ản vi ph ạm đư ợc quy đ ịnh cụ thể như sau: T ạm đình ch ỉ (vô
+hiệu hóa tài kho ản) đối với các tài kho ản của người dùng có d ấu hiệu nghi ng ờ vi
+phạm và ch ờ xác minh , nếu xác minh đư ợc các hành vi vi ph ạm đến mức cho thôi
+việc hoặc phải chuy ển công tác kh ỏi ngành C ơ yếu và các cơ quan Đ ảng, Nhà
+nước thì sẽ hủy bỏ tài kho ản, nếu không đ ến mức xử lý vi ph ạm trên s ẽ cho sử
+dụng tài kho ản trở lại.
+3. Mọi dữ liệu lưu tr ữ được mã hóa t ại máy ch ủ; dữ liệu phải được sao lưu
+định kỳ 01 tuần/01 lần, lưu tr ữ tổi thiểu 36 tháng ph ục vụ truy v ết, giám sát khi
+cần thiết.
+Điều 8. Trách nhi ệm của ngư ời dùng
+1. Thực hiện cài đ ặt phần mềm Hệ thống hỗ trợ làm vi ệc từ xa trên trên thi ết
+bị điện tho ại, máy tính b ảng, máy tính bàn, laptop .
+2. Cung c ấp thông tin cho đ ầu mối cơ quan, đơn v ị để người quản trị thiết
+lập tài kho ản.
+3. Đối với việc tạo các nhóm (kênh) phải phù h ợp với yêu c ầu, nhi ệm vụ
+được giao nh ằm đảm bảo công tác tri ển khai, trao đ ổi công vi ệc.
+4. Thường xuyên ki ểm tra, x ử lý kịp thời nội dung tin nh ắn Hệ thống hỗ trợ
+làm vi ệc từ xa.
+5. Thành viên c ủa các nhóm (kênh) phải chịu trách nhi ệm trư ớc lãnh đ ạo các
+cơ quan, đơn v ị về việc tiếp nhận và x ử lý thông tin mà mình là thành viên trong
+nhóm, kênh đó.
+6. Không ủy quy ền các th ao tác trên các nhóm ( kênh) cho ngư ời khác.
+4
+7. Trường hợp phát sinh s ự cố, thông báo cho cán b ộ quản trị Hệ thống hỗ
+trợ làm vi ệc từ xa của Cục QLKTNVMM đ ể được hướng dẫn, hỗ trợ khắc phục.
+CHƯƠNG III
+TỔ CHỨC THỰC HIỆN
+Điều 9. Trách nhi ệm của Cục Qu ản lý k ỹ thuật nghi ệp vụ mật mã
+1. Giúp Trư ởng ban Ban CYCP th ực hiện quản lý th ống nh ất việc kết nối, sử
+dụng Hệ thống hỗ trợ làm vi ệc từ xa.
+2. Phối hợp với các cơ quan, đơn v ị có liên quan :
+- Quản lý, vận hành, khai thác hi ệu quả Hệ thống hỗ trợ làm vi ệc từ xa.
+- Đảm bảo an toàn thông tin cho Hệ thống hỗ trợ làm vi ệc từ xa: Triển khai
+các bi ện pháp đ ảm bảo an toàn thông tin, g iám sát và k ịp thời xử lý sự cố, rủi ro
+mất an toàn trong quá trình v ận hành h ệ thống.
+- Đề xuất đầu tư, nâng c ấp Hệ thống hỗ trợ làm vi ệc từ xa đáp ứng đư ợc yêu
+cầu đề ra.
+3. Hướng dẫn các cơ quan, đơn v ị cung c ấp thông tin, d ữ liệu ngư ời dùng đ ể
+khai báo trên hệ thống qu ản trị.
+4. Tổ chức đào t ạo, tập huấn hướng dẫn cài đ ặt và s ử dụng Hệ thống hỗ trợ
+làm vi ệc từ xa.
+5. Định kỳ hàng năm hoặc đột xuất, tổ chức kiểm tra vi ệc thực hiện Quy ch ế
+quản lý, sử dụng Hệ thống hỗ trợ làm vi ệc từ xa; tổng hợp, báo cáo Lãnh đ ạo Ban
+về kết quả thực hiện và đ ề xuất phương hư ớng gi ải quy ết các vư ớng m ắc, bất cập
+trong quá trình th ực hiện.
+Điều 10. Trách nhi ệm Tổ chức cơ y ếu đầu Hệ
+1. Chủ trì, p hối hợp với Cục QLKTNVMM th ực hiện triển khai cho cán b ộ,
+nhân viên cơ quan, đơn v ị cài đ ặt, sử dụng Hệ thống hỗ trợ làm vi ệc từ xa đúng
+mục đích.
+2. Giới thiệu, ph ối hợp triển khai h ệ thống Hệ thống hỗ trợ làm vi ệc từ xa
+cho các cơ quan Đ ảng, Nhà nư ớc khi có yêu c ầu.
+3. Quản lý vi ệc sử dụng Hệ thống hỗ trợ làm vi ệc từ xa của cán b ộ, nhân viên
+thuộc phạm vi qu ản lý.
+4. Tổng hợp, báo cáo phản hồi chất lượng sản phẩm về Cục Quản lý kỹ thuật
+nghiệp vụ mật mã .
+5. Tổ chức hướng dẫn, kiểm tra vi ệc sử dụng Hệ thống hỗ trợ làm vi ệc từ xa
+được quy đ ịnh tại Quy ch ế này.
+5
+CHƯƠNG IV
+ĐIỀU KHOẢN THI HÀNH
+Điều 11. Trách nhi ệm của các t ổ chức, cá nhân
+1. Thủ trưởng các cơ quan, đơn v ị chịu trách nhi ệm phổ biến, triển khai th ực
+hiện và đôn đ ốc, kiểm tra vi ệc thực hiện Quy ch ế này t ại đơn v ị mình qu ản lý.
+2. Người dùng có trách nhi ệm sử dụng Hệ thống hỗ trợ làm vi ệc từ xa đúng
+mục đích và chấp hành Quy c hế này.
+3. Giao C ục QLKTNVMM ch ủ trì theo dõi, đánh giá vi ệc thực hiện Quy ch ế này.
+Điều 12. Hiệu lực thi hành
+Trong quá trình triển khai thực hiện, nếu phát sinh khó khă n, vướng mắc đề
+nghị các tổ ch ức, cá nhân kịp thời phản ánh về Cục QLKTNVMM để hướng dẫn
+kịp thời./.

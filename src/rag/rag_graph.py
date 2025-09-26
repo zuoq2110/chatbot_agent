@@ -311,13 +311,14 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
     }
 
 
-def process_kma_query_sync(query: str, retriever=None, llm=None) -> Dict[str, Any]:
+def process_kma_query_sync(query: str, retriever=None, llm=None, department_filter=None) -> Dict[str, Any]:
     """Synchronous version of process_kma_query for tool usage.
     
     Args:
         query: The question to answer
         retriever: Optional retriever to use (will create one if not provided)
         llm: Optional LLM to use (will create one if not provided)
+        department_filter: Department filter for restricted queries
         
     Returns:
         Dictionary with answer and sources
@@ -340,7 +341,19 @@ def process_kma_query_sync(query: str, retriever=None, llm=None) -> Dict[str, An
     from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
     
     if isinstance(retriever, MetadataEnhancedHybridRetriever):
-        docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+        # If department filter is specified, apply folder-based filtering
+        if department_filter and department_filter != 'chung':
+            from backend.services.department_filter import DepartmentFilterService
+            metadata_filter = DepartmentFilterService.get_metadata_filter(department_filter)
+            print(f"Applied folder-based metadata filters: {metadata_filter}")
+            docs = retriever._get_relevant_documents(query, metadata_filter)
+            
+            # Apply context boosting to filtered results
+            from .retriever import apply_context_boosting
+            docs = apply_context_boosting(docs, query)
+        else:
+            # No department filtering, use smart retrieve as normal
+            docs = smart_retrieve(retriever, query, use_smart_filtering=True)
     else:
         docs = retriever.get_relevant_documents(query)
 

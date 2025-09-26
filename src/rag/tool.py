@@ -14,6 +14,7 @@ from rag.rag_graph import process_kma_query_sync
 
 class KMARegulationInput(BaseModel):
     query: str = Field(description="The query to search for in all available documents")
+    department: str = Field(default=None, description="User's department for filtering (phongdaotao/phongkhaothi/chung)")
 
 
 @tool("search_kma_regulations", args_schema=KMARegulationInput,
@@ -21,20 +22,21 @@ class KMARegulationInput(BaseModel):
                    "rules, policies, and any other uploaded documents in the data directory. "
                    "Uses enhanced RAG system with smart retrieval and context boosting. "
                    "The query must be provided."))
-def search_kma_regulations(query: str) -> str:
+def search_kma_regulations(query: str, department: str = None) -> str:
     """
     Search for information in all training documents in the knowledge base.
     Uses enhanced RAG system with smart retrieval, sliding window and context boosting.
 
     Args:
         query: The question or search query about any content in the knowledge base
+        department: User's department for content filtering (phongdaotao/phongkhaothi/chung)
 
     Returns:
         A string containing the retrieved information
     """
     try:
-        # Use the improved process_kma_query_sync function
-        result = process_kma_query_sync(query)
+        # Use the improved process_kma_query_sync function with department filter
+        result = process_kma_query_sync(query, department_filter=department)
         return result['answer']
 
     except Exception as e:

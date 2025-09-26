@@ -36,6 +36,7 @@ from backend.models.user import UserResponse
 from backend.models.responses import BaseResponse
 from backend.auth.dependencies import require_auth
 from backend.api.rate_limit import check_rate_limit
+from backend.services.department_filter import DepartmentFilterService
 
 router = APIRouter()
 
@@ -318,6 +319,24 @@ async def query_ai(
         logger.error("User ID not found in current_user object")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
     
+    # Get selected folder from message
+    selected_folder = message.department
+    
+    # Detect query metadata department using existing logic
+    from rag.retriever import analyze_query_for_metadata_filter
+    query_metadata = analyze_query_for_metadata_filter(message.content)
+    query_metadata_department = query_metadata.get('department') if query_metadata else None
+    
+    # Validate query scope based on folder selection
+    is_allowed, reason = DepartmentFilterService.validate_query_scope(
+        message.content, selected_folder, query_metadata_department
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail=reason
+        )
+    
     # Kiểm tra rate limit trước khi xử lý tin nhắn - không tính request ở đây
     # vì mỗi cặp câu hỏi và câu trả lời chỉ tính là 1 request
     allowed, error_message = await check_rate_limit(user_id, 0, count_as_request=False)  
@@ -428,6 +447,24 @@ async def quick_chat(
     if not user_id:
         logger.error("User ID not found in current_user object")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
+    
+    # Get selected folder from message
+    selected_folder = message.department
+    
+    # Detect query metadata department using existing logic
+    from rag.retriever import analyze_query_for_metadata_filter
+    query_metadata = analyze_query_for_metadata_filter(message.content)
+    query_metadata_department = query_metadata.get('department') if query_metadata else None
+    
+    # Validate query scope based on folder selection
+    is_allowed, reason = DepartmentFilterService.validate_query_scope(
+        message.content, selected_folder, query_metadata_department
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail=reason
+        )
     
     # Kiểm tra rate limit trước khi xử lý tin nhắn - không tính request ở đây
     # vì mỗi cặp câu hỏi và câu trả lời chỉ tính là 1 request

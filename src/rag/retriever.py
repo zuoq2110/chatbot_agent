@@ -649,33 +649,15 @@ def create_enhanced_hybrid_retriever(vector_db_path: str, data_dir: str = "./dat
     ), documents
 
 
-def smart_retrieve(retriever: MetadataEnhancedHybridRetriever, query: str, use_smart_filtering: bool = False) -> List[Document]:
-    """Smart retrieval with optional metadata filtering and context boosting
-    
-    Args:
-        retriever: The enhanced hybrid retriever
-        query: User query
-        use_smart_filtering: If False (default), no metadata filtering applied
-                            If True, applies metadata filtering based on keywords
-    """
+def smart_retrieve(retriever: MetadataEnhancedHybridRetriever, query: str, use_smart_filtering: bool = True) -> List[Document]:
+    """Smart retrieval with automatic metadata filtering and context boosting"""
     if use_smart_filtering:
         # Analyze query to determine filters
         metadata_filter = analyze_query_for_metadata_filter(query)
         if metadata_filter:
             print(f"Applied metadata filters: {metadata_filter}")
-            # Try with filter first
-            filtered_results = retriever._get_relevant_documents(query, metadata_filter)
-            
-            # If we get too few results (< 3), fallback to no filter
-            if len(filtered_results) < 3:
-                print(f"⚠️  Only {len(filtered_results)} results with filter, falling back to no filter")
-                initial_results = retriever._get_relevant_documents(query)
-            else:
-                initial_results = filtered_results
-        else:
-            initial_results = retriever._get_relevant_documents(query)
+        initial_results = retriever._get_relevant_documents(query, metadata_filter)
     else:
-        # Default: No metadata filtering, get all relevant documents
         initial_results = retriever._get_relevant_documents(query)
     
     # Apply context boosting - promote chunks that are part of the same context

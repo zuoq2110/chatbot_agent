@@ -1,0 +1,133 @@
+BAN CƠ YẾU CHÍNH PHỦ
+HỌC VIỆN KỸ THUẬT MẬT MÃ
+ CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập  Tự do  Hạnh phúc
+
+Số: /QĐ-HVM Hà Nội, ngày tháng năm 20 24
+
+QUY ẾT ĐỊNH
+Thành l ập Tổ Ứng dụng công nghệ thông tin
+và ban hành Quy ch ế Tổ chức và ho ạt động của
+Tổ Ứng dụng công ngh ệ thông tin
+
+GIÁM ĐỐC HỌC VI ỆN KỸ THU ẬT MẬT MÃ
+Căn cứ Thô ng tư số 54/2014/TT -BQP ngày 12/ 06/2014 của Bộ trưởng Bộ
+Quốc phòng quy định chức năng, nhiệm vụ, quyền hạn và mối quan hệ công tác
+của Học viện Kỹ thuật mật mã thuộc Ban Cơ yếu Chính phủ;
+Căn cứ Quyết định số 563/QĐ -BCY ngày 02/12/2022 của Trưởng ban Ban
+Cơ yếu Chính phủ quy định cơ cấu tổ chức, biên chế của Học viện Kỹ thuật mật mã ;
+Căn cứ Quyết định số 46/QĐ -HVM ngày 16/6/2023 của Giám đốc Học viện
+Kỹ thuật mật mã Ban hành Quy định chức năng, nhiệm vụ và mối quan hệ công tác
+của các tổ chức thuộc Học viện Kỹ thuật mật mã ;
+Theo đề nghị của Giám đốc Trung tâm Thông tin - Thư viện .
+QUY ẾT ĐỊNH:
+Điều 1. Ban hành kèm theo Quyết định này Quy chế Tổ chức và hoạt động
+của Tổ Ứng dụng công nghệ thông tin.
+Điều 2. Thành lập Tổ Ứng dụng công nghệ thông tin gồm các đồng chí có
+tên trong danh sách kèm theo. Tổ Ứng dụng công nghệ thông tin hoạt động theo
+Quy chế tại Điều 1.
+Điều 3. Giám đốc Trung tâm Thông tin - Thư viện, Thủ trưởng các cơ quan ,
+đơn vị có liên quan và các đồng chí có tên tại Điều 2 chịu trách nhiệm thi hành
+Quyết định này ./.
+Nơi nhận:
+- Như Điều 3;
+- Giám đốc (để b/c);
+- Lưu: VT, TTTV. L22 . KT. GIÁM ĐỐC
+PHÓ GIÁM ĐỐC
+Lương Thế Dũng
+DANH SÁCH THÀNH VIÊN T Ổ ỨNG D ỤNG CÔNG NGH Ệ THÔNG TIN
+(Kèm theo Quy ết định /QĐ-HVM ngày tháng 01 năm 2024
+của Học viện Kỹ thuật mật mã)
+
+TT Họ và tên Chức vụ, đơn v ị Vai trò
+1 Nguy ễn Tuấn Anh Trưởng phòng KT&ĐBCLĐT Tổ trưởng
+2 Phạm Văn Hư ởng Phó Ch ủ nhiệm Khoa CNTT Tổ phó
+3 Lê Đức Quý Nhân viên , Trung tâm TTTV Thư ký
+4 Lê Kh ắc Vinh Trợ lý, Trung tâm TTTV Tổ viên
+5 Lê Bá Cư ờng Chủ nhiệm bộ môn, Khoa CNTT Tổ viên
+6 Hoàng Thanh Nam Chủ nhiệm bộ môn, Khoa ATTT Tổ viên
+7 Nguy ễn Ng ọc Qu ỳnh Viện NCUD KHCN Tổ viên
+8 Nguy ễn Mạnh Thắng Chủ nhiệm bộ môn, Khoa ATTT Tổ viên
+9 Lê Anh Ti ến Giảng viên, Khoa CNTT Tổ viên
+10 Cao Minh Tu ấn Giảng viên, Khoa CNTT&ATTT Tổ viên
+11 Lại Minh Tu ấn Chủ nhiệm bộ môn, Khoa ATTT Tổ viên
+12 Trần Anh Tú Chủ nhiệm bộ môn, Khoa ATTT Tổ viên
+(Danh sách này g ồm 12 đồng chí )
+BAN CƠ YẾU CHÍNH PHỦ
+HỌC VIỆN KỸ THUẬT MẬT MÃ
+ CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM
+Độc lập  Tự do  Hạnh phúc
+
+QUY CH Ế
+Tổ chức và ho ạt động của Tổ Ứng dụng công ngh ệ thông tin
+Học viện Kỹ thuật mật mã
+(Ban hành k èm theo Quy ết định /QĐ-HVM ngày tháng năm 2024
+của Học viện Kỹ thuật mật mã)
+
+Chương I
+CHỨC NĂNG, NHI ỆM V Ụ
+Điều 1. Chức năng
+Tổ Ứng dụng công nghệ thông tin ( ƯDCNTT ) có chức năng phối hợp, hỗ
+trợ Trung tâm Thông tin  Thư viện trong thực hiện nhiệm vụ "Chủ trì quản lý,
+vận hành, bảo trì, bảo dưỡng, đảm bảo an toàn an ninh , nâng cấp và phát triển
+thêm phận hệ mới cho hệ thống công nghệ thông tin của Học viện" .
+Điều 2. Nhiệm vụ
+Tổ ƯDCNTT phối hợp , hỗ trợ Trung tâm Thông tin  Thư viện thực hiện
+các nhiệm vụ sau đây:
+1. Tiếp nhận, quản lý tài liệu về ứng dụng , hệ thống công nghệ thông tin
+được bàn giao cho Học viện.
+2. Nghiên cứu làm chủ, triển khai vận hành , bảo trì các ứng dụng , hệ thống
+công nghệ thông tin của Học viện.
+3. Đề xuất triển khai giải pháp đảm bảo an toàn cho các ứng dụng, hệ thống
+công nghệ thông tin của Học viện.
+4. Đề xuất phát triển, tích hợp , nâng cấ p các ứng dụng, hệ thống công nghệ
+thông tin phù hợp với nhu cầu của Học viện.
+5. Các nhiệm vụ khác trong lĩnh vực công nghệ thông tin mà Giám đốc Học
+viện giao cho Trung tâm Thông tin  Thư viện.
+Chương I I
+TỔ CHỨC, HO ẠT ĐỘNG
+Điều 3. Cơ cấu tổ chức
+1. Tổ ƯDCNTT có 01 Tổ trưởng, 01 Tổ phó, 01 Thư ký và các tổ viên.
+Thư ký là cán bộ của Trung tâm Thông tin  Thư viện ; Tổ trưởng , Tổ phó và các
+thành viên khác là cán bộ của Học viện có năng lực chuyên môn phù hợp với
+nhiệm vụ của Tổ.
+2. Việc bổ nhiệm, miễn nhiệm, bổ sung thành viên của Tổ ƯDCNTT do
+Giám đốc Học viện quyết định.
+2
+Điều 4. Chế độ làm việc
+1. Tổ ƯDCNTT chịu sự chỉ đạo trực tiếp của thành viên Ban Giám đốc phụ
+trách mảng công nghệ thông tin của Học viện.
+2. Các thành viên của Tổ ƯDCNTT làm việc theo chế độ kiêm nhiệm.
+3. Tổ ƯDCNTT họp định kỳ 1 lần/quý; họp đột xuất theo yêu cầu thực tế
+công việc. Cuộc họp của Tổ chỉ diễn ra khi có mặt quá 1/2 số thành viên của Tổ.
+4. Tổ ƯDCNTT làm việc theo nguyên tắc đồng thuận. Mọi quyết sách của
+Tổ chỉ được thông qua khi nhận được sự tán thành của 100% thành viên dự họp.
+Điều 5. Trách nhiệm , quyền hạn của các thành viên
+1. Tổ trưởng:
+a) Tổ chức thực hiện các nhiệm vụ của Tổ.
+b) Triệu tập và chủ trì các phiên họp của Tổ.
+c) Chịu trách nhiệm trước Ban Giám đốc về kết quả hoạt động của Tổ.
+2. Tổ phó:
+Giúp Tổ trưởng điều hành công việc khi vắng mặt tại đơn vị. Thực hiện các
+công việc khi được Tổ trưởng giao.
+3. Thư ký:
+a) Giúp Tổ trưởng chuẩn bị nội dung và điều kiện làm việc cho các buổi
+họp của Tổ.
+b) Ghi biên bản cho các buổi họp của Tổ.
+c) Có trách nhiệm, quyền hạn như tổ viên tại khoản 3 Điều này.
+4. Tổ viên :
+a) Tham gia các cuộc họp của Tổ khi được triệu tập; cho ý kiến về việc xác
+định các công việc cụ thể của Tổ và việc tổ chức thực hiện các công việc đó .
+b) Thực hiện phần việc được phân công.
+Điều 6. Cơ chế phối hợp với các tổ chức thuộc Học viện
+1. Trung tâm Thông tin  Thư viện đề xuất các công việc cần sự phối hợp,
+hỗ trợ của Tổ ƯDCNTT .
+2. Các tổ chức có cán bộ tham gia Tổ ƯDCNTT tạo điều kiện để cán bộ
+hoàn thành các nhiệm vụ của mình trong Tổ.
+3. Các tổ chức, cá nhân được Giám đốc Học viện giao nhiệm vụ phát triển,
+mua sắm, nhận chuyển giao sản phẩm công nghệ thông tin phối với Tổ ƯDCNTT
+để triển khai sản phẩm.
+Chương I II
+ĐIỀU KHO ẢN THI HÀNH
+Điều 7. Hiệu lực thi h ành
+Quy chế này có hiệu lực thi hành từ ngày Học viện ký quyết định ban hành. /.

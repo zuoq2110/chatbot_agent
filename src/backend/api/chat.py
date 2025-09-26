@@ -2,7 +2,7 @@ import logging
 import os
 import sys
 from datetime import datetime
-from typing import List
+from typing import List, Dict
 
 from bson import ObjectId
 from fastapi import APIRouter, HTTPException, Query, status, Header, Depends
@@ -17,6 +17,7 @@ from agent.supervisor_agent import ReActGraph
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+# Initialize agent once
 agent = ReActGraph()
 agent.create_graph()
 agent.print_mermaid()
@@ -35,12 +36,11 @@ from backend.models.user import UserResponse
 from backend.models.responses import BaseResponse
 from backend.auth.dependencies import require_auth
 from backend.api.rate_limit import check_rate_limit
+from backend.services.department_filter import DepartmentFilterService
 
 router = APIRouter()
 
-agent = ReActGraph()
-agent.create_graph()
-agent.print_mermaid()
+# Agent already initialized above, no need to recreate
 
 # Helper function to check if ObjectId is valid
 def validate_object_id(id: str):
@@ -319,6 +319,24 @@ async def query_ai(
         logger.error("User ID not found in current_user object")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
     
+    # Get selected folder from message
+    selected_folder = message.department
+    
+    # Detect query metadata department using existing logic
+    from rag.retriever import analyze_query_for_metadata_filter
+    query_metadata = analyze_query_for_metadata_filter(message.content)
+    query_metadata_department = query_metadata.get('department') if query_metadata else None
+    
+    # Validate query scope based on folder selection
+    is_allowed, reason = DepartmentFilterService.validate_query_scope(
+        message.content, selected_folder, query_metadata_department
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail=reason
+        )
+    
     # Kiểm tra rate limit trước khi xử lý tin nhắn - không tính request ở đây
     # vì mỗi cặp câu hỏi và câu trả lời chỉ tính là 1 request
     allowed, error_message = await check_rate_limit(user_id, 0, count_as_request=False)  
@@ -430,6 +448,24 @@ async def quick_chat(
         logger.error("User ID not found in current_user object")
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
     
+    # Get selected folder from message
+    selected_folder = message.department
+    
+    # Detect query metadata department using existing logic
+    from rag.retriever import analyze_query_for_metadata_filter
+    query_metadata = analyze_query_for_metadata_filter(message.content)
+    query_metadata_department = query_metadata.get('department') if query_metadata else None
+    
+    # Validate query scope based on folder selection
+    is_allowed, reason = DepartmentFilterService.validate_query_scope(
+        message.content, selected_folder, query_metadata_department
+    )
+    if not is_allowed:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail=reason
+        )
+    
     # Kiểm tra rate limit trước khi xử lý tin nhắn - không tính request ở đây
     # vì mỗi cặp câu hỏi và câu trả lời chỉ tính là 1 request
     allowed, error_message = await check_rate_limit(user_id, 0, count_as_request=False)
@@ -479,3 +515,32 @@ async def quick_chat(
         message="Quick chat response generated successfully",
         data=response_data
     )
+
+
+@router.post("/test-rag", response_model=BaseResponse[dict])
+async def test_rag_endpoint(message: MessageQuickChat):
+    """Test RAG functionality without authentication - FOR TESTING ONLY"""
+    
+    try:
+        logger.info(f"Testing RAG with message: {message.content}")
+        
+        # Use the existing agent instance and chat_with_memory method
+        result = await agent.chat_with_memory([], message.content)
+        
+        response_message = result[-1].content if result else "No response generated"
+        
+        return BaseResponse(
+            statusCode=status.HTTP_200_OK,
+            message="Test RAG completed",
+            data={
+                "response": response_message,
+                "input": message.content
+            }
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in test RAG: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
+            detail=f"Test failed: {str(e)}"
+        )

@@ -1,0 +1,26 @@
+{
+  "phongdaotao": {
+    "name": "phongdaotao",
+    "display_name": "Phòng Đào Tạo",
+    "data_folder": "d:\\KMA_ChatBot_Frontend_System\\chatbot_agent\\data\\phongdaotao",
+    "vector_db_path": "d:\\KMA_ChatBot_Frontend_System\\chatbot_agent\\department_vector_dbs\\phongdaotao",
+    "description": "Vector database cho tài liệu phòng đào tạo",
+    "enabled": true
+  },
+  "vanphong": {
+    "name": "vanphong",
+    "display_name": "Văn Phòng",
+    "data_folder": "d:\\KMA_ChatBot_Frontend_System\\chatbot_agent\\data\\vanphong",
+    "vector_db_path": "d:\\KMA_ChatBot_Frontend_System\\chatbot_agent\\department_vector_dbs\\vanphong",
+    "description": "Vector database cho tài liệu văn phòng",
+    "enabled": true
+  },
+  "phongkhaothi": {
+    "name": "phongkhaothi",
+    "display_name": "Phòng Khảo Thí",
+    "data_folder": "d:\\KMA_ChatBot_Frontend_System\\chatbot_agent\\data\\phongkhaothi",
+    "vector_db_path": "d:\\KMA_ChatBot_Frontend_System\\chatbot_agent\\department_vector_dbs\\phongkhaothi",
+    "description": "Vector database cho tài liệu phòng khảo thí",
+    "enabled": true
+  }
+}

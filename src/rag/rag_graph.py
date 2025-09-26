@@ -288,11 +288,74 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
 
     # Load prompts
     prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
-    with open(os.path.join(prompts_dir, "generate.txt"), "r") as f:
+    with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
         generate_prompt = f.read().strip()
 
-    # Retrieve documents
-    docs = retriever.get_relevant_documents(query)
+    # Retrieve documents using smart retrieval with sliding window and context boosting
+    from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
+    
+    if isinstance(retriever, MetadataEnhancedHybridRetriever):
+        docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+    else:
+        docs = retriever.get_relevant_documents(query)
+
+    # Combine document content
+    context = "\n\n".join([doc.page_content for doc in docs])
+
+    # Generate answer
+    prompt = generate_prompt.format(question=query, context=context)
+    response = llm.invoke([{"role": "user", "content": prompt}])
+
+    # Return the answer and sources
+    return {"answer": response.content, "sources": [doc.page_content for doc in docs[:3]]  # Return top 3 sources
+    }
+
+
+def process_kma_query_sync(query: str, retriever=None, llm=None, department_filter=None) -> Dict[str, Any]:
+    """Synchronous version of process_kma_query for tool usage.
+    
+    Args:
+        query: The question to answer
+        retriever: Optional retriever to use (will create one if not provided)
+        llm: Optional LLM to use (will create one if not provided)
+        department_filter: Department filter for restricted queries
+        
+    Returns:
+        Dictionary with answer and sources
+    """
+    # Create components if not provided
+    if retriever is None:
+        retriever = get_retriever()
+
+    if llm is None:
+        # Trong hàm trợ giúp này, nếu LLM không được cung cấp,
+        # chúng ta sẽ sử dụng Gemini làm mặc định thay vì ChatOllama
+        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL) 
+
+    # Load prompts
+    prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
+    with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
+        generate_prompt = f.read().strip()
+
+    # Retrieve documents using smart retrieval with sliding window and context boosting
+    from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
+    
+    if isinstance(retriever, MetadataEnhancedHybridRetriever):
+        # If department filter is specified, apply folder-based filtering
+        if department_filter and department_filter != 'chung':
+            from backend.services.department_filter import DepartmentFilterService
+            metadata_filter = DepartmentFilterService.get_metadata_filter(department_filter)
+            print(f"Applied folder-based metadata filters: {metadata_filter}")
+            docs = retriever._get_relevant_documents(query, metadata_filter)
+            
+            # Apply context boosting to filtered results
+            from .retriever import apply_context_boosting
+            docs = apply_context_boosting(docs, query)
+        else:
+            # No department filtering, use smart retrieve as normal
+            docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+    else:
+        docs = retriever.get_relevant_documents(query)
 
     # Combine document content
     context = "\n\n".join([doc.page_content for doc in docs])
@@ -323,11 +386,16 @@ async def process_file_query(query: str, retriever, llm=None) -> Dict[str, Any]:
     
     # Load prompts
     prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
-    with open(os.path.join(prompts_dir, "generate.txt"), "r") as f:
+    with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
         generate_prompt = f.read().strip()
     
-    # Retrieve documents from uploaded file
-    docs = retriever.get_relevant_documents(query)
+    # Retrieve documents from uploaded file using smart retrieval if available
+    from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
+    
+    if isinstance(retriever, MetadataEnhancedHybridRetriever):
+        docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+    else:
+        docs = retriever.get_relevant_documents(query)
     
     # Combine document content
     context = "\n\n".join([doc.page_content for doc in docs])
@@ -352,15 +420,38 @@ Trả lời:"""
 
 
 def get_retriever():
-    """Get the hybrid retriever for KMA regulations"""
+    """Get the enhanced hybrid retriever for KMA regulations with table-aware chunking and sliding window"""
     # Define paths
     current_dir = Path(__file__).parent.absolute()
     project_root = current_dir.parent.parent
     vector_db_path = os.path.join(project_root, "vector_db")
     data_dir = os.path.join(project_root, "data")
 
-    hybrid_retriever, _ = create_hybrid_retriever(vector_db_path=vector_db_path, data_dir=data_dir)
-    return hybrid_retriever
+    # Use the enhanced retriever with metadata support, table-aware chunking, and sliding window
+    from .retriever import create_enhanced_hybrid_retriever, get_metadata_config
+    
+    try:
+        # Get sliding window size from config
+        config = get_metadata_config()
+        chunk_settings = config.get_chunk_settings()
+        window_size = chunk_settings.get('sliding_window_size', 2)
+        
+        # Create enhanced hybrid retriever with sliding window
+        enhanced_retriever, all_documents = create_enhanced_hybrid_retriever(
+            vector_db_path=vector_db_path,
+            data_dir=data_dir,
+            window_size=window_size
+        )
+        
+        logger.info(f"Enhanced hybrid retriever with sliding window (size={window_size}) initialized successfully")
+        logger.info(f"Loaded {len(all_documents)} total documents")
+        return enhanced_retriever
+        
+    except Exception as e:
+        logger.error(f"Failed to load enhanced retriever: {e}")
+        # Fallback to old retriever if enhanced fails
+        hybrid_retriever, _ = create_hybrid_retriever(vector_db_path=vector_db_path, data_dir=data_dir)
+        return hybrid_retriever
 
 
 class KMAChatAgent:
@@ -489,13 +580,35 @@ class KMAChatAgent:
         return state # Trả về toàn bộ state đã cập nhật
 
     def retrieve_documents(self, state: MessagesState):
-        """Directly retrieve documents using the retriever"""
+        """Directly retrieve documents using the enhanced retriever with smart retrieval"""
         query = state["messages"][0].content
         logger.info(f"Retrieving documents for query: {query}")
-        # Get documents from the retriever
-        docs = self.retriever.get_relevant_documents(query)
+        
+        # Debug: Check retriever type
+        logger.info(f"Retriever type: {type(self.retriever).__name__}")
+        
+        # Get documents using smart retrieval with sliding window and context boosting
+        from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
+        
+        if isinstance(self.retriever, MetadataEnhancedHybridRetriever):
+            logger.info(f"Using smart_retrieve with enhanced retriever")
+            docs = smart_retrieve(self.retriever, query, use_smart_filtering=True)
+            logger.info(f"smart_retrieve returned {len(docs)} documents")
+        else:
+            logger.info(f"Using regular retrieval with legacy retriever")
+            docs = self.retriever.get_relevant_documents(query)
+            logger.info(f"regular retrieval returned {len(docs)} documents")
+        
+        # Debug: Check first few documents
+        for i, doc in enumerate(docs[:3]):
+            content_preview = doc.page_content[:100].replace('\n', ' ')
+            logger.info(f"Doc {i+1}: {content_preview}...")
+            
         # Combine document content
         combined_content = "\n\n".join([doc.page_content for doc in docs])
+        logger.info(f"Combined content length: {len(combined_content)} characters")
+        logger.info(f"Combined content contains 'Quân y': {'quân y' in combined_content.lower()}")
+        
         # Add the retrieved content as a system message
         retrieval_message = AIMessage(content=combined_content, name="retrieved_context") # Đặt tên để dễ debug
         # Update the state with the retrieved documents

@@ -48,7 +48,12 @@ dependencies = [
     "python-docx (>=0.8.11)",
     "nltk (>=3.8.1)",
     "plotly (>=6.3.0,<7.0.0)",
-    "email-validator (>=2.3.0,<3.0.0)"
+    "email-validator (>=2.3.0,<3.0.0)",
+    "pdfplumber (>=0.11.7,<0.12.0)",
+    "pytesseract (>=0.3.13,<0.4.0)",
+    "pillow (>=11.3.0,<12.0.0)",
+    "pdf2image (>=1.17.0,<2.0.0)",
+    "opencv-python (>=4.12.0.88,<5.0.0.0)"
 ]
 
 [tool.poetry]

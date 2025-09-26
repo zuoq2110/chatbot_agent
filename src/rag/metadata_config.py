@@ -88,7 +88,10 @@ class MetadataConfig:
                     "giangvien": ["giảng viên", "giáo viên", "gv"]
                 },
                 "departments": {
-                    "phongdaotao": ["phòng đào tạo", "đào tạo", "pdt"],
+                    "phongdaotao": ["phòng đào tạo", "đào tạo", "pdt", "điểm học phần", "điểm số", "tín chỉ", 
+                                   "học phần", "điểm trung bình", "tích lũy", "học tập", "học kỳ", "thi cử", 
+                                   "kiểm tra", "đánh giá", "tốt nghiệp", "xếp loại", "thang điểm", "quy chế đào tạo",
+                                   "chương trình đào tạo", "đăng ký học", "học bổng", "kết quả học tập"],
                     "phongkhaothi": ["phòng khảo thí", "khảo thí", "đảm bảo chất lượng", "pkt", "dbcldt"],
                     "vanphong": ["văn phòng", "hành chính", "vp"],
                     "khoa": ["khoa", "bộ môn", "giảng dạy"],

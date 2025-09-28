@@ -103,7 +103,8 @@ class MetadataConfig:
                 "chunk_size": 1200,  # Increased for better context preservation
                 "chunk_overlap": 300,  # Increased for better continuity  
                 "separators": ["\n\n", "\n", ". ", " ", ""],
-                "keep_separator": True
+                "keep_separator": True,
+                "sliding_window_size": 4  # Increased to capture more context (from 2 to 4)
             }
         }
     

@@ -254,6 +254,7 @@ from pydantic import Field, BaseModel
 # Đảm bảo bạn đã import get_gemini_llm từ llm.py
 from llm import LLMConfig, get_gemini_llm 
 from rag.retriever import create_hybrid_retriever
+from rag.semantic_analyzer import analyze_query_semantic_filter
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -291,11 +292,20 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
     with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
         generate_prompt = f.read().strip()
 
-    # Retrieve documents using smart retrieval with sliding window and context boosting
+    # Use semantic analysis to get appropriate metadata filters
+    print(f"🔍 Analyzing query semantically: {query}")
+    metadata_filter = analyze_query_semantic_filter(query, confidence_threshold=0.65)
+    
+    # Retrieve documents using smart retrieval with semantic filtering
     from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
     
     if isinstance(retriever, MetadataEnhancedHybridRetriever):
-        docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+        if metadata_filter:
+            print(f"🎯 Using semantic metadata filter: {metadata_filter}")
+            docs = retriever._get_relevant_documents(query, metadata_filter)
+        else:
+            print(f"📚 Using full database search (low semantic confidence)")
+            docs = smart_retrieve(retriever, query, use_smart_filtering=True)
     else:
         docs = retriever.get_relevant_documents(query)
 
@@ -337,23 +347,31 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
     with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
         generate_prompt = f.read().strip()
 
-    # Retrieve documents using smart retrieval with sliding window and context boosting
+    # Use semantic analysis to get appropriate metadata filters
     from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
     
     if isinstance(retriever, MetadataEnhancedHybridRetriever):
-        # If department filter is specified, apply folder-based filtering
+        # If department filter is specified, use it directly (override semantic analysis)
         if department_filter and department_filter != 'chung':
             from backend.services.department_filter import DepartmentFilterService
             metadata_filter = DepartmentFilterService.get_metadata_filter(department_filter)
-            print(f"Applied folder-based metadata filters: {metadata_filter}")
+            print(f"📁 Applied folder-based metadata filters: {metadata_filter}")
             docs = retriever._get_relevant_documents(query, metadata_filter)
             
             # Apply context boosting to filtered results
             from .retriever import apply_context_boosting
             docs = apply_context_boosting(docs, query)
         else:
-            # No department filtering, use smart retrieve as normal
-            docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+            # Use semantic analysis for automatic filtering
+            print(f"🔍 Analyzing query semantically: {query}")
+            semantic_filter = analyze_query_semantic_filter(query, confidence_threshold=0.65)
+            
+            if semantic_filter:
+                print(f"🎯 Using semantic metadata filter: {semantic_filter}")
+                docs = retriever._get_relevant_documents(query, semantic_filter)
+            else:
+                print(f"📚 Using full database search (low semantic confidence)")
+                docs = smart_retrieve(retriever, query, use_smart_filtering=True)
     else:
         docs = retriever.get_relevant_documents(query)
 
@@ -580,20 +598,29 @@ class KMAChatAgent:
         return state # Trả về toàn bộ state đã cập nhật
 
     def retrieve_documents(self, state: MessagesState):
-        """Directly retrieve documents using the enhanced retriever with smart retrieval"""
+        """Retrieve documents using enhanced retriever with semantic analysis"""
         query = state["messages"][0].content
         logger.info(f"Retrieving documents for query: {query}")
         
         # Debug: Check retriever type
         logger.info(f"Retriever type: {type(self.retriever).__name__}")
         
-        # Get documents using smart retrieval with sliding window and context boosting
+        # Use semantic analysis to get appropriate metadata filters
+        logger.info(f"🔍 Analyzing query semantically: {query}")
+        metadata_filter = analyze_query_semantic_filter(query, confidence_threshold=0.65)
+        
+        # Get documents using semantic filtering or smart retrieval
         from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
         
         if isinstance(self.retriever, MetadataEnhancedHybridRetriever):
-            logger.info(f"Using smart_retrieve with enhanced retriever")
-            docs = smart_retrieve(self.retriever, query, use_smart_filtering=True)
-            logger.info(f"smart_retrieve returned {len(docs)} documents")
+            if metadata_filter:
+                logger.info(f"🎯 Using semantic metadata filter: {metadata_filter}")
+                docs = self.retriever._get_relevant_documents(query, metadata_filter)
+                logger.info(f"semantic filtering returned {len(docs)} documents")
+            else:
+                logger.info(f"📚 Using full database search (low semantic confidence)")
+                docs = smart_retrieve(self.retriever, query, use_smart_filtering=True)
+                logger.info(f"smart_retrieve returned {len(docs)} documents")
         else:
             logger.info(f"Using regular retrieval with legacy retriever")
             docs = self.retriever.get_relevant_documents(query)

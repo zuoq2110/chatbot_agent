@@ -17,6 +17,25 @@ Nếu không có thông tin trong tài liệu, hãy trả lời rằng bạn kh�
   * Tên section sau số thứ tự: **1. Tên section**
   * Các bullet point con dùng dấu gạch ngang: - Nội dung chi tiết
   * Giữ nguyên cấu trúc phân cấp từ tài liệu gốc
+- **CỰC KỲ QUAN TRỌNG**: Khi tìm thấy danh sách có điểm con (a), b), c), d), đ), e)), BẮT BUỘC format từng điểm trên dòng riêng:
+  * Tiêu đề chính trước danh sách (VD: "Số lần dự thi kết thúc học phần:")
+  * Mỗi điểm con trên một dòng riêng với format: **điểm con) Nội dung**
+  * Ví dụ:
+    ```
+    Số lần dự thi kết thúc học phần:
+
+    **a)** Tối đa 2 lần cho mỗi học phần. Nếu rèn luyện kém (điểm rèn luyện từ trung bình trở xuống), có thể bị tước quyền dự thi lần 2.
+
+    **b)** Vắng thi không lý do hoặc đến muộn: điểm 0.
+
+    **c)** Thi chính không đạt: đóng lệ phí thi lại và thi phụ ngay sau đó.
+
+    **d)** Vắng thi chính có lý do: thi phụ không cần đóng lệ phí, tính là thi lần 1.
+
+    **đ)** Vắng thi phụ có lý do hoặc thi phụ không đạt và chưa hết lượt thi: có thể thi trả nợ (cần làm đơn).
+
+    **e)** Bị kỷ luật "Đình chỉ thi": hết lượt thi.
+    ```
 - Chỉ trả lời câu hỏi, không chào hỏi, không thêm lời khuyên ngoài lề.
 - Nếu người dùng đặt câu hỏi bằng tiếng Việt, luôn trả lời bằng tiếng Việt.
 - Nếu người dùng đặt câu hỏi bằng tiếng Anh, trả lời bằng tiếng Anh.

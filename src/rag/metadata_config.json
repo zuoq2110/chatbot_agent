@@ -118,6 +118,6 @@
     "k_documents": 8,
     "table_aware_chunking": true,
     "preserve_table_structure": true,
-    "sliding_window_size": 2
+    "sliding_window_size": 10
   }
 }

@@ -17,6 +17,7 @@ from llm.config import get_gemini_llm
 
 # Import metadata configuration
 from .metadata_config import get_metadata_config
+from .semantic_analyzer import analyze_query_semantic_filter
 from dotenv import load_dotenv
 load_dotenv()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -95,9 +96,9 @@ class MetadataEnhancedHybridRetriever(BaseRetriever, BaseModel):
         # Get initial relevant documents
         initial_docs = vector_docs + bm25_docs
         
-        # Apply sliding window to get adjacent chunks
+        # Apply sliding window to get adjacent chunks - but preserve ranking
         if self.window_size > 0 and self.all_documents:
-            expanded_docs = self._apply_sliding_window(initial_docs)
+            expanded_docs = self._apply_sliding_window_smart(initial_docs)
         else:
             expanded_docs = initial_docs
 
@@ -110,6 +111,39 @@ class MetadataEnhancedHybridRetriever(BaseRetriever, BaseModel):
                 seen_content.add(doc.page_content)
 
         return all_docs
+    
+    def _apply_sliding_window_smart(self, initial_docs: List[Document]) -> List[Document]:
+        """Apply sliding window smartly - preserve ranking and avoid dilution"""
+        expanded_docs = []
+        seen_positions = set()
+        
+        # Priority 1: Keep original documents in their original order
+        for doc in initial_docs:
+            expanded_docs.append(doc)
+            # Mark the position as seen
+            current_idx = self._find_document_index(doc)
+            if current_idx is not None:
+                seen_positions.add(current_idx)
+        
+        # Priority 2: Add adjacent chunks only for high-ranking documents (top 30%)
+        high_priority_count = max(1, len(initial_docs) // 3)
+        
+        for i, doc in enumerate(initial_docs[:high_priority_count]):
+            current_idx = self._find_document_index(doc)
+            
+            if current_idx is not None:
+                # Get window range - use full configured window size for complete coverage
+                window_size = self.window_size  # Use full window size from config
+                start_idx = max(0, current_idx - window_size)
+                end_idx = min(len(self.all_documents), current_idx + window_size + 1)
+                
+                # Add adjacent documents that aren't already included
+                for j in range(start_idx, end_idx):
+                    if j not in seen_positions:
+                        expanded_docs.append(self.all_documents[j])
+                        seen_positions.add(j)
+        
+        return expanded_docs
     
     def _apply_sliding_window(self, initial_docs: List[Document]) -> List[Document]:
         """Apply sliding window to get adjacent chunks"""
@@ -238,7 +272,16 @@ def extract_metadata_from_path(file_path: str, base_data_dir: str) -> Dict[str, 
 
 
 def analyze_query_for_metadata_filter(query: str) -> Dict[str, Any]:
-    """Analyze query to determine appropriate metadata filters using dynamic configuration"""
+    """
+    DEPRECATED: Use semantic analysis instead of keyword matching
+    Kept for backward compatibility - now delegates to semantic analyzer
+    """
+    print("⚠️  Using legacy keyword matching - consider upgrading to semantic analysis")
+    return analyze_query_semantic_filter(query, confidence_threshold=0.65)
+
+
+def analyze_query_for_metadata_filter_legacy(query: str) -> Dict[str, Any]:
+    """Legacy keyword-based analysis - kept as fallback only"""
     config = get_metadata_config()
     query_keywords = config.get_query_keywords()
     filters = {}
@@ -424,97 +467,21 @@ def read_all_text_files(data_dir):
 
 
 def smart_text_chunking(content: str, metadata: Dict[str, str], chunk_settings: Dict[str, Any]) -> List[str]:
-    """Smart text chunking that preserves table structure"""
+    """Enhanced smart text chunking that preserves structure and ensures proper overlap"""
+    
+    # First, detect and preserve structured content (lists, sections, tables)
+    preserved_chunks = detect_and_preserve_structured_content(content, chunk_settings)
+    
+    if preserved_chunks:
+        print(f"📋 Preserved {len(preserved_chunks)} structured sections")
+        return preserved_chunks
     
     # Check if content contains tables
     if "[BẢNG DỮ LIỆU]" in content and "[KẾT THÚC BẢNG]" in content:
-        # Handle table-containing content specially
-        chunks = []
-        current_pos = 0
-        
-        while current_pos < len(content):
-            # Look for table start
-            table_start = content.find("[BẢNG DỮ LIỆU]", current_pos)
-            
-            if table_start == -1:
-                # No more tables, chunk the rest normally
-                remaining_content = content[current_pos:]
-                if remaining_content.strip():
-                    text_splitter = RecursiveCharacterTextSplitter(
-                        chunk_size=chunk_settings.get('chunk_size', 1200),
-                        chunk_overlap=chunk_settings.get('chunk_overlap', 300),
-                        length_function=len,
-                        separators=chunk_settings.get('separators', ["\n\n", "\n", ". ", " ", ""]),
-                        keep_separator=chunk_settings.get('keep_separator', True)
-                    )
-                    normal_chunks = text_splitter.split_text(remaining_content)
-                    chunks.extend(normal_chunks)
-                break
-            
-            # Add content before table if significant
-            before_table = content[current_pos:table_start].strip()
-            if len(before_table) > 100:  # Only if substantial content
-                text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=chunk_settings.get('chunk_size', 1200),
-                    chunk_overlap=chunk_settings.get('chunk_overlap', 300),
-                    length_function=len,
-                    separators=chunk_settings.get('separators', ["\n\n", "\n", ". ", " ", ""]),
-                    keep_separator=chunk_settings.get('keep_separator', True)
-                )
-                before_chunks = text_splitter.split_text(before_table)
-                chunks.extend(before_chunks)
-            
-            # Find table end
-            table_end = content.find("[KẾT THÚC BẢNG]", table_start)
-            if table_end == -1:
-                # Malformed table, treat as normal text
-                remaining_content = content[table_start:]
-                text_splitter = RecursiveCharacterTextSplitter(
-                    chunk_size=chunk_settings.get('chunk_size', 1200),
-                    chunk_overlap=chunk_settings.get('chunk_overlap', 300),
-                    length_function=len,
-                    separators=chunk_settings.get('separators', ["\n\n", "\n", ". ", " ", ""]),
-                    keep_separator=chunk_settings.get('keep_separator', True)
-                )
-                normal_chunks = text_splitter.split_text(remaining_content)
-                chunks.extend(normal_chunks)
-                break
-            
-            # Extract complete table as single chunk
-            table_end += len("[KẾT THÚC BẢNG]")
-            table_content = content[table_start:table_end]
-            
-            # Add some context before and after if available
-            context_before = content[max(0, table_start-200):table_start].strip()
-            context_after = content[table_end:table_end+200].strip()
-            
-            # Create table chunk with context
-            if context_before:
-                table_chunk = context_before + "\n\n" + table_content
-            else:
-                table_chunk = table_content
-                
-            if context_after and not context_after.startswith("[BẢNG DỮ LIỆU]"):
-                table_chunk += "\n\n" + context_after
-                # Skip the context we added
-                current_pos = table_end + min(200, len(context_after))
-            else:
-                current_pos = table_end
-            
-            chunks.append(table_chunk)
-        
-        return chunks
+        return handle_table_content(content, chunk_settings)
     
-    else:
-        # Normal chunking for non-table content
-        text_splitter = RecursiveCharacterTextSplitter(
-            chunk_size=chunk_settings.get('chunk_size', 1200),
-            chunk_overlap=chunk_settings.get('chunk_overlap', 300),
-            length_function=len,
-            separators=chunk_settings.get('separators', ["\n\n", "\n", ". ", " ", ""]),
-            keep_separator=chunk_settings.get('keep_separator', True)
-        )
-        return text_splitter.split_text(content)
+    # Enhanced normal chunking with improved overlap
+    return enhanced_text_chunking(content, chunk_settings)
 
 
 def create_enhanced_vector_database(output_path: str, data_dir: str = "./data"):
@@ -652,12 +619,13 @@ def create_enhanced_hybrid_retriever(vector_db_path: str, data_dir: str = "./dat
 
 
 def smart_retrieve(retriever: MetadataEnhancedHybridRetriever, query: str, use_smart_filtering: bool = True) -> List[Document]:
-    """Smart retrieval with automatic metadata filtering and context boosting"""
+    """Smart retrieval with automatic semantic metadata filtering and fallback to full search"""
     if use_smart_filtering:
-        # Analyze query to determine filters
-        metadata_filter = analyze_query_for_metadata_filter(query)
+        # Use semantic analysis instead of keyword matching
+        metadata_filter = analyze_query_semantic_filter(query, confidence_threshold=0.65)
+        
         if metadata_filter:
-            print(f"Applied metadata filters: {metadata_filter}")
+            print(f"🎯 Applying semantic metadata filters: {metadata_filter}")
         initial_results = retriever._get_relevant_documents(query, metadata_filter)
     else:
         initial_results = retriever._get_relevant_documents(query)
@@ -1015,6 +983,304 @@ def clean_extracted_text(text: str) -> str:
     cleaned_text = re.sub(r'\n\s*\n\s*\n', '\n\n', cleaned_text)
     
     return cleaned_text.strip()
+
+
+def detect_and_preserve_structured_content(content: str, chunk_settings: Dict[str, Any]) -> List[str]:
+    """Detect and preserve structured content like numbered lists, sections"""
+    chunks = []
+    
+    # Pattern for structured lists (a), b), c), d), đ), e) or 1., 2., 3., etc.
+    structured_patterns = [
+        r'\b[a-zA-ZđĐ]\)\s+[^\n]{10,}',  # a), b), c), đ) patterns
+        r'\b\d+\.\s+[^\n]{10,}',         # 1., 2., 3. patterns  
+        r'\b[IVX]+\.\s+[^\n]{10,}',      # I., II., III. patterns
+        r'-\s+[^\n]{10,}',               # - bullet points
+    ]
+    
+    # Find all structured sections
+    structured_sections = find_structured_sections(content, structured_patterns)
+    
+    if not structured_sections:
+        return []  # No structured content found
+    
+    # Process content with structured sections preserved
+    current_pos = 0
+    
+    for section_start, section_end, section_content in structured_sections:
+        # Add content before structured section
+        if section_start > current_pos:
+            before_content = content[current_pos:section_start].strip()
+            if before_content and len(before_content) > 50:
+                before_chunks = enhanced_text_chunking(before_content, chunk_settings)
+                chunks.extend(before_chunks)
+        
+        # Add structured section as complete chunk with context
+        context_before = content[max(0, section_start-200):section_start].strip()
+        context_after = content[section_end:min(len(content), section_end+200)].strip()
+        
+        complete_section = ""
+        if context_before and not any(pattern in context_before for pattern in ['a)', 'b)', 'c)', 'd)', 'đ)', 'e)']):
+            complete_section += context_before + "\n\n"
+        
+        complete_section += section_content
+        
+        if context_after and not any(pattern in context_after for pattern in ['a)', 'b)', 'c)', 'd)', 'đ)', 'e)']):
+            complete_section += "\n\n" + context_after
+        
+        # Only split if the section is too large (over 2000 chars)
+        if len(complete_section) > 2000:
+            # Split while trying to preserve structure
+            section_chunks = split_large_structured_section(complete_section, chunk_settings)
+            chunks.extend(section_chunks)
+        else:
+            chunks.append(complete_section)
+        
+        current_pos = section_end
+    
+    # Add remaining content
+    if current_pos < len(content):
+        remaining_content = content[current_pos:].strip()
+        if remaining_content:
+            remaining_chunks = enhanced_text_chunking(remaining_content, chunk_settings)
+            chunks.extend(remaining_chunks)
+    
+    return chunks if chunks else []
+
+
+def find_structured_sections(content: str, patterns: List[str]) -> List[tuple]:
+    """Find sections with structured content like lists"""
+    import re
+    
+    sections = []
+    lines = content.split('\n')
+    
+    i = 0
+    while i < len(lines):
+        line = lines[i].strip()
+        
+        # Check if line matches any structured pattern
+        for pattern in patterns:
+            if re.match(pattern, line):
+                # Found start of structured section
+                section_start_line = i
+                section_lines = [line]
+                
+                # Look for continuation of the same pattern type
+                j = i + 1
+                consecutive_items = 1
+                
+                while j < len(lines):
+                    next_line = lines[j].strip()
+                    
+                    # Skip empty lines
+                    if not next_line:
+                        j += 1
+                        continue
+                    
+                    # Check if continues the pattern
+                    if re.match(pattern, next_line):
+                        section_lines.append(next_line)
+                        consecutive_items += 1
+                        j += 1
+                    else:
+                        # Check if it's continuation of previous item (no pattern but indented or related)
+                        if (len(next_line) > 20 and consecutive_items >= 2 and 
+                            (next_line.startswith(' ') or next_line.startswith('\t') or 
+                             any(keyword in next_line.lower() for keyword in ['theo', 'của', 'trong', 'được', 'phải']))):
+                            section_lines.append(next_line)
+                            j += 1
+                        else:
+                            break
+                
+                # Only consider as structured if we have multiple items (2+)
+                if consecutive_items >= 2:
+                    section_content = '\n'.join(section_lines)
+                    section_start_pos = content.find(section_lines[0])
+                    section_end_pos = section_start_pos + len(section_content)
+                    
+                    sections.append((section_start_pos, section_end_pos, section_content))
+                    i = j  # Continue from after this section
+                    break
+                else:
+                    i += 1
+                    break
+        else:
+            i += 1
+    
+    # Sort sections by start position and merge overlapping
+    sections.sort(key=lambda x: x[0])
+    merged_sections = []
+    
+    for start, end, content in sections:
+        if merged_sections and start <= merged_sections[-1][1] + 50:  # Allow small gap
+            # Merge with previous section
+            prev_start, prev_end, prev_content = merged_sections[-1]
+            merged_content = prev_content + "\n" + content
+            merged_sections[-1] = (prev_start, max(end, prev_end), merged_content)
+        else:
+            merged_sections.append((start, end, content))
+    
+    return merged_sections
+
+
+def split_large_structured_section(section_content: str, chunk_settings: Dict[str, Any]) -> List[str]:
+    """Split large structured sections while preserving related items"""
+    lines = section_content.split('\n')
+    chunks = []
+    current_chunk = []
+    current_size = 0
+    max_size = chunk_settings.get('chunk_size', 1200)
+    overlap_size = chunk_settings.get('chunk_overlap', 300)
+    
+    for line in lines:
+        line_size = len(line)
+        
+        # If adding this line would exceed max size and we have content
+        if current_size + line_size > max_size and current_chunk:
+            # Complete current chunk
+            chunks.append('\n'.join(current_chunk))
+            
+            # Start new chunk with overlap
+            overlap_lines = []
+            overlap_size_current = 0
+            
+            # Take last few lines for overlap
+            for prev_line in reversed(current_chunk):
+                if overlap_size_current + len(prev_line) <= overlap_size:
+                    overlap_lines.insert(0, prev_line)
+                    overlap_size_current += len(prev_line)
+                else:
+                    break
+            
+            current_chunk = overlap_lines
+            current_size = overlap_size_current
+        
+        current_chunk.append(line)
+        current_size += line_size
+    
+    # Add final chunk if any content remains
+    if current_chunk:
+        chunks.append('\n'.join(current_chunk))
+    
+    return chunks
+
+
+def handle_table_content(content: str, chunk_settings: Dict[str, Any]) -> List[str]:
+    """Handle table-containing content with enhanced processing"""
+    chunks = []
+    current_pos = 0
+    
+    while current_pos < len(content):
+        # Look for table start
+        table_start = content.find("[BẢNG DỮ LIỆU]", current_pos)
+        
+        if table_start == -1:
+            # No more tables, chunk the rest normally
+            remaining_content = content[current_pos:]
+            if remaining_content.strip():
+                remaining_chunks = enhanced_text_chunking(remaining_content, chunk_settings)
+                chunks.extend(remaining_chunks)
+            break
+        
+        # Add content before table if significant
+        before_table = content[current_pos:table_start].strip()
+        if len(before_table) > 100:
+            before_chunks = enhanced_text_chunking(before_table, chunk_settings)
+            chunks.extend(before_chunks)
+        
+        # Find table end and extract as complete unit
+        table_end = content.find("[KẾT THÚC BẢNG]", table_start)
+        if table_end == -1:
+            remaining_content = content[table_start:]
+            remaining_chunks = enhanced_text_chunking(remaining_content, chunk_settings)
+            chunks.extend(remaining_chunks)
+            break
+        
+        table_end += len("[KẾT THÚC BẢNG]")
+        table_content = content[table_start:table_end]
+        
+        # Add context around table
+        context_before = content[max(0, table_start-300):table_start].strip()
+        context_after = content[table_end:min(len(content), table_end+300)].strip()
+        
+        complete_table = ""
+        if context_before:
+            complete_table += context_before + "\n\n"
+        complete_table += table_content
+        if context_after and not context_after.startswith("[BẢNG DỮ LIỆU]"):
+            complete_table += "\n\n" + context_after
+            current_pos = table_end + min(300, len(context_after))
+        else:
+            current_pos = table_end
+        
+        chunks.append(complete_table)
+    
+    return chunks
+
+
+def enhanced_text_chunking(content: str, chunk_settings: Dict[str, Any]) -> List[str]:
+    """Enhanced text chunking with improved overlap and separators"""
+    # Enhanced separators that respect Vietnamese text structure
+    separators = [
+        "\n\n\n",     # Multiple paragraph breaks
+        "\n\n",       # Paragraph breaks
+        "\n",         # Line breaks
+        ". ",         # Sentence endings with space
+        ".",          # Sentence endings
+        "; ",         # Semi-colons
+        ", ",         # Commas with space  
+        " ",          # Word boundaries
+        "",           # Character level
+    ]
+    
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_settings.get('chunk_size', 1200),
+        chunk_overlap=max(300, chunk_settings.get('chunk_overlap', 300)),  # Ensure minimum overlap
+        length_function=len,
+        separators=separators,
+        keep_separator=True,  # Keep separators for better context
+        is_separator_regex=False
+    )
+    
+    chunks = text_splitter.split_text(content)
+    
+    # Post-process to ensure actual overlap exists
+    if len(chunks) > 1:
+        chunks = ensure_chunk_overlap(chunks, chunk_settings.get('chunk_overlap', 300))
+    
+    return chunks
+
+
+def ensure_chunk_overlap(chunks: List[str], target_overlap: int) -> List[str]:
+    """Ensure chunks have actual overlap by post-processing"""
+    if len(chunks) <= 1:
+        return chunks
+    
+    enhanced_chunks = []
+    
+    for i, chunk in enumerate(chunks):
+        if i == 0:
+            # First chunk remains as is
+            enhanced_chunks.append(chunk)
+        else:
+            # Add overlap from previous chunk
+            prev_chunk = chunks[i-1]
+            
+            # Take last 'target_overlap' characters from previous chunk
+            overlap_text = prev_chunk[-target_overlap:] if len(prev_chunk) > target_overlap else prev_chunk
+            
+            # Find a good break point in the overlap (prefer word boundaries)
+            if len(overlap_text) == target_overlap:
+                # Find last space in the overlap to avoid splitting words
+                last_space = overlap_text.rfind(' ')
+                if last_space > target_overlap // 2:  # Only if we don't lose too much
+                    overlap_text = overlap_text[last_space+1:]
+            
+            # Combine overlap with current chunk
+            enhanced_chunk = overlap_text + "\n" + chunk
+            enhanced_chunks.append(enhanced_chunk)
+    
+    return enhanced_chunks
 
 
 def extract_table_data(doc) -> str:

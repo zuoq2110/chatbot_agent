@@ -7,7 +7,8 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 from .db.mongodb import MongoDB, mongodb, get_db
 # from db.mongodb import MongoDB, mongodb
 from .models.responses import BaseResponse

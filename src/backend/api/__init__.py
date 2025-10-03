@@ -6,6 +6,7 @@ from .auth import router as auth_router
 from .rate_limit import router as rate_limit_router
 from .models import router as models_router
 from .admin_rag import router as admin_rag_router
+from .admin_model import router as admin_model_router
 
 # Create main router
 router = APIRouter()
@@ -18,5 +19,6 @@ router.include_router(auth_router, prefix="/auth", tags=["auth"])
 router.include_router(rate_limit_router, prefix="", tags=["rate_limit"])
 router.include_router(models_router, prefix="/models", tags=["models"])
 router.include_router(admin_rag_router, prefix="/admin/rag", tags=["admin_rag"])
+router.include_router(admin_model_router, prefix="/admin/models", tags=["admin_models"])
 
 __all__ = ["router"]

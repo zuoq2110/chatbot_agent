@@ -94,6 +94,8 @@ async def get_current_user(token: str = Depends(oauth2_scheme)) -> UserResponse:
     Raises:
         HTTPException: Nếu token không hợp lệ hoặc người dùng không tồn tại
     """
+    logger.info(f"🔍 Received token: {token[:20]}..." if token else "❌ No token received")
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Không thể xác thực thông tin đăng nhập",

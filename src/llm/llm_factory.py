@@ -17,7 +17,7 @@ class LLMFactory:
     @classmethod
     def create_llm(cls, callback_manager: Optional[CallbackManager] = None) -> BaseChatModel:
         """
-        Tạo instance LLM dựa trên model đang hoạt động.
+        Tạo instance LLM dựa trên model đang hoạt động với fallback logic.
         
         Args:
             callback_manager: Optional callback manager cho tracing
@@ -32,9 +32,15 @@ class LLMFactory:
         temperature = model_manager.get_temperature()
         max_tokens = model_manager.get_max_tokens()
         
-        # Tạo instance model tương ứng
+        # Tạo instance model tương ứng với fallback logic
         if model_type == ModelType.OLLAMA:
-            return cls._create_ollama_model(temperature, max_tokens, callback_manager)
+            try:
+                print("🤖 Attempting to create Ollama model...")
+                return cls._create_ollama_model(temperature, max_tokens, callback_manager)
+            except Exception as e:
+                print(f"⚠️ Ollama model failed: {e}")
+                print("🔄 Falling back to Gemini model...")
+                return cls._create_gemini_model(temperature, max_tokens, callback_manager)
         elif model_type == ModelType.GEMINI:
             return cls._create_gemini_model(temperature, max_tokens, callback_manager)
         else:  # HUGGINGFACE hoặc loại khác

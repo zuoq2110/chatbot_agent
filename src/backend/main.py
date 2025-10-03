@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.openapi.utils import get_openapi
 import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 from .db.mongodb import MongoDB, mongodb, get_db
@@ -26,12 +27,35 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="AI Chat API",
+        version="1.0.0", 
+        description="API for managing AI chat conversations",
+        routes=app.routes,
+    )
+    openapi_schema["components"]["securitySchemes"] = {
+        "HTTPBearer": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Enter JWT token"
+        }
+    }
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
 # Create FastAPI backend
 app = FastAPI(
     title="AI Chat API",
     description="API for managing AI chat conversations",
     version="1.0.0",
 )
+
+# Set custom OpenAPI
+app.openapi = custom_openapi
 
 # Configure CORS - PHẢI ĐẶT TRƯỚC KHI INCLUDE ROUTERS
 app.add_middleware(

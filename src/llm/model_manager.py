@@ -2,19 +2,12 @@
 Model Manager Module để quản lý các mô hình LLM khác nhau.
 """
 import os
-import json
-from typing import Dict, Any, Optional, List
-from pymongo import MongoClient
-from bson.objectid import ObjectId
+from typing import Dict, Any, Optional
 from dotenv import load_dotenv
 from enum import Enum
 
 # Load environment variables
 load_dotenv()
-
-# MongoDB connection
-MONGODB_URI = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
-DB_NAME = os.environ.get("DB_NAME", "kma_chatbot")
 
 class ModelType(str, Enum):
     HUGGINGFACE = "huggingface"
@@ -37,13 +30,18 @@ class ModelManager:
         if self._initialized:
             return
         
-        # Kết nối MongoDB
-        self.client = MongoClient(MONGODB_URI)
-        self.db = self.client[DB_NAME]
+        # Skip MongoDB - chỉ dùng runtime và environment variables
+        self.client = None
+        self.db = None
         
         # Cache cho active model
         self._active_model = None
         self._active_model_params = None
+        
+        # Runtime model override (sẽ ghi đè lên DB config)
+        self._runtime_model_type = None
+        self._runtime_ollama_model = None
+        self._runtime_gemini_model = None
         
         self._initialized = True
     
@@ -58,8 +56,8 @@ class ModelManager:
         if self._active_model is not None:
             return self._active_model
         
-        # Truy vấn database
-        model = self.db.llm_models.find_one({"isActive": True})
+        # Skip database - chỉ dùng environment variables và runtime overrides
+        model = None
         
         if model:
             # Convert ObjectId to string
@@ -125,21 +123,11 @@ class ModelManager:
         # Lấy giá trị tham số
         return self._active_model_params.get(param_name, default_value)
     
-    def get_all_models(self) -> List[Dict[str, Any]]:
+    def get_all_models(self):
         """
-        Lấy danh sách tất cả các mô hình có sẵn.
-        
-        Returns:
-            List[Dict[str, Any]]: Danh sách các mô hình.
+        Không cần database - models được quản lý qua runtime và environment.
         """
-        models = list(self.db.llm_models.find())
-        
-        # Convert ObjectId to string
-        for model in models:
-            model["id"] = str(model["_id"])
-            del model["_id"]
-        
-        return models
+        return []
     
     def activate_model(self, model_id: str) -> bool:
         """
@@ -322,6 +310,129 @@ class ModelManager:
             int: Giá trị max_tokens.
         """
         return self.get_model_parameter("max_tokens", 2048)
+    
+    # ============ RUNTIME MODEL SWITCHING METHODS ============
+    
+    def set_active_model_type(self, model_type: ModelType) -> None:
+        """
+        Đặt loại model đang hoạt động (runtime override).
+        
+        Args:
+            model_type: Loại model cần kích hoạt
+        """
+        self._runtime_model_type = model_type
+        # Clear cache để force reload
+        self._active_model = None
+        self._active_model_params = None
+        print(f"🔄 Runtime model type set to: {model_type}")
+    
+    def set_ollama_model(self, ollama_model: str) -> None:
+        """
+        Đặt model Ollama cụ thể (runtime override).
+        
+        Args:
+            ollama_model: Tên model Ollama
+        """
+        self._runtime_ollama_model = ollama_model
+        if self._runtime_model_type != ModelType.OLLAMA:
+            self.set_active_model_type(ModelType.OLLAMA)
+        print(f"🔄 Runtime Ollama model set to: {ollama_model}")
+    
+    def set_gemini_model(self, gemini_model: str) -> None:
+        """
+        Đặt model Gemini cụ thể (runtime override).
+        
+        Args:
+            gemini_model: Tên model Gemini
+        """
+        self._runtime_gemini_model = gemini_model
+        if self._runtime_model_type != ModelType.GEMINI:
+            self.set_active_model_type(ModelType.GEMINI)
+        print(f"🔄 Runtime Gemini model set to: {gemini_model}")
+    
+    def get_model_type(self) -> ModelType:
+        """
+        Lấy loại model đang hoạt động (có thể là runtime override).
+        
+        Returns:
+            ModelType: Loại model đang hoạt động
+        """
+        # Ưu tiên runtime override
+        if self._runtime_model_type:
+            return self._runtime_model_type
+        
+        # Fallback về environment variable
+        if os.getenv("ACTIVE_MODEL_TYPE"):
+            return ModelType(os.getenv("ACTIVE_MODEL_TYPE"))
+        
+        # Fallback về database hoặc default
+        active_model = self.get_active_model()
+        return ModelType(active_model.get("modelType", ModelType.GEMINI))
+    
+    def get_ollama_info(self) -> Dict[str, Any]:
+        """
+        Lấy thông tin Ollama đang hoạt động (có thể là runtime override).
+        
+        Returns:
+            Dict[str, Any]: Thông tin Ollama
+        """
+        # Ưu tiên runtime override
+        if self._runtime_ollama_model:
+            return {
+                "model": self._runtime_ollama_model,
+                "url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+            }
+        
+        # Ưu tiên environment variable
+        if os.getenv("ACTIVE_OLLAMA_MODEL"):
+            return {
+                "model": os.getenv("ACTIVE_OLLAMA_MODEL"),
+                "url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+            }
+        
+        # Fallback về RAG_MODEL từ env
+        return {
+            "model": os.getenv("RAG_MODEL", "qwen3:8b"),
+            "url": os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+        }
+    
+    def get_gemini_info(self) -> Dict[str, Any]:
+        """
+        Lấy thông tin Gemini đang hoạt động (có thể là runtime override).
+        
+        Returns:
+            Dict[str, Any]: Thông tin Gemini
+        """
+        # Ưu tiên runtime override
+        if self._runtime_gemini_model:
+            return {
+                "model": self._runtime_gemini_model,
+                "api_key": os.getenv("GOOGLE_API_KEY", "")
+            }
+        
+        # Ưu tiên environment variable
+        if os.getenv("ACTIVE_GEMINI_MODEL"):
+            return {
+                "model": os.getenv("ACTIVE_GEMINI_MODEL"),
+                "api_key": os.getenv("GOOGLE_API_KEY", "")
+            }
+        
+        # Fallback về GEMINI_MODEL từ env
+        return {
+            "model": os.getenv("GEMINI_MODEL", "gemini-2.0-flash"),
+            "api_key": os.getenv("GOOGLE_API_KEY", "")
+        }
+    
+    def clear_runtime_overrides(self) -> None:
+        """
+        Xóa tất cả runtime overrides và trở về cấu hình mặc định.
+        """
+        self._runtime_model_type = None
+        self._runtime_ollama_model = None
+        self._runtime_gemini_model = None
+        self._active_model = None
+        self._active_model_params = None
+        print("🔄 Runtime overrides cleared")
 
 # Singleton instance
 model_manager = ModelManager()

@@ -75,7 +75,7 @@ async def summarize_conversation(state: MyAgentState) -> MyAgentState:
         return state
     
     # The conversational context prompt helps rewrite the latest query with context
-    llm = get_gemini_llm()
+    llm = get_llm()  # Use factory method to support runtime model switching
     
     # Format the chat history for the summarization prompt
     chat_history = []
@@ -132,8 +132,8 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
         [("system", react_prompt.format(tool_descriptions=tool_descriptions)),
          MessagesPlaceholder(variable_name="messages"), ])
 
-    # Bind tools and structured output
-    model_with_tools = get_gemini_llm().bind_tools(tools)
+    # Bind tools and structured output - use factory method for runtime model switching
+    model_with_tools = get_llm().bind_tools(tools)
     chains = prompt | model_with_tools
 
     try:

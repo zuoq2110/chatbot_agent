@@ -52,11 +52,17 @@ class LLMFactory:
         """Tạo model Ollama."""
         ollama_info = model_manager.get_ollama_info()
         
+        print(f"🔧 Creating ChatOllama with:")
+        print(f"   - model: {ollama_info['model']}")
+        print(f"   - url: {ollama_info['url']}")
+        print(f"   - temperature: {temperature}")
+        print(f"   - max_tokens: {max_tokens}")
+        
         return ChatOllama(
             model=ollama_info["model"],
-            url=ollama_info["url"],
+            base_url=ollama_info["url"],  # Try base_url instead of url
             temperature=temperature,
-            max_tokens=max_tokens,
+            num_predict=max_tokens,  # Try num_predict instead of max_tokens
             callback_manager=callback_manager
         )
     

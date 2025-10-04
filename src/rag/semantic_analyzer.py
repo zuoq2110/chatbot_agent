@@ -16,7 +16,9 @@ import json
 import os
 from pathlib import Path
 from .metadata_config import get_metadata_config
-
+from dotenv import load_dotenv
+load_dotenv()
+OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 class SemanticQueryAnalyzer:
     def __init__(self):
         self.model = None
@@ -37,7 +39,7 @@ class SemanticQueryAnalyzer:
                     # Use Ollama embeddings with nomic-embed-text model
                     self.model = OllamaEmbeddings(
                         model="nomic-embed-text",
-                        # base_url="http://localhost:11434"  # Default Ollama URL
+                        base_url=OLLAMA_BASE_URL  # Default Ollama URL
                     )
                     self.model_type = "ollama"
                     print("🔗 Using Ollama embeddings with nomic-embed-text model")

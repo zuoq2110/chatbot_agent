@@ -1,6 +1,9 @@
 import logging
 import os
 
+# Fix OpenMP library conflict - MUST BE BEFORE OTHER IMPORTS
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
 import typer
 import uvicorn
 from dotenv import load_dotenv

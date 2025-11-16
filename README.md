@@ -231,7 +231,41 @@ streamlit run src/frontend/app.py
 
 ## Running the Application
 
-For convenience, a `run.sh` bash script is provided to easily run the backend API, the Streamlit frontend, or both together.
+For convenience, startup scripts are provided to easily run the backend API with the necessary environment configurations.
+
+### Using Startup Scripts (Recommended)
+
+**Windows PowerShell (Recommended):**
+```powershell
+.\start_server.ps1
+```
+
+**Windows Command Prompt:**
+```cmd
+start_server.bat
+```
+
+**Manual Start:**
+```powershell
+# Set environment variable to fix OpenMP library conflict
+$env:KMP_DUPLICATE_LIB_OK="TRUE"
+
+# Start the server
+uvicorn src.backend.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+### Troubleshooting
+
+If you encounter an OpenMP library conflict error:
+```
+OMP: Error #15: Initializing libomp140.x86_64.dll, but found libiomp5md.dll already initialized.
+```
+
+**Quick Fix:**
+Use the provided startup scripts (`start_server.ps1` or `start_server.bat`) which automatically set the necessary environment variables.
+
+**Manual Fix:**
+See [OPENMP_FIX.md](OPENMP_FIX.md) for detailed solutions and long-term fixes.
 
 ### Using the Run Script
 

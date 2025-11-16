@@ -1,6 +1,10 @@
 import logging
 import os
 import sys
+
+# Fix OpenMP library conflict - MUST BE BEFORE OTHER IMPORTS
+os.environ['KMP_DUPLICATE_LIB_OK'] = 'TRUE'
+
 from datetime import datetime
 from typing import List, Dict
 

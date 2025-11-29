@@ -128,8 +128,91 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
     logger.info(f"Available tools: {[tool.name for tool in tools]}")
     logger.info(f"Tool descriptions length: {len(tool_descriptions)}")
     
+    # FORCE tool call for regulation keywords
+    last_message = state["messages"][-1] if state["messages"] else None
+    force_tool_call = False
+    
+    if last_message and isinstance(last_message, HumanMessage):
+        query_lower = last_message.content.lower()
+        regulation_keywords = [
+            'quy định', 'quy chế', 'chính sách', 'điều kiện', 'tiêu chuẩn',
+            'hành vi', 'đình chỉ', 'kỷ luật', 'phúc khảo', 'thi', 'kiểm tra',
+            'tốt nghiệp', 'rèn luyện', 'học tập', 'thủ tục', 'xét', 'công nhận',
+            'quyết định', 'ban hành', 'điều', 'khoản', 'văn bản',
+            # Academic keywords
+            'chứng chỉ', 'bằng cấp', 'tiếng anh', 'toeic', 'ielts', 'vstep',
+            'tín chỉ', 'điểm', 'học phần', 'môn học', 'khóa luận',
+            # Process keywords  
+            'đăng ký', 'nộp', 'hồ sơ', 'giấy tờ', 'mẫu đơn'
+        ]
+        
+        if any(keyword in query_lower for keyword in regulation_keywords):
+            force_tool_call = True
+            logger.info(f"🔴 DETECTED REGULATION KEYWORDS - FORCING tool call for: {last_message.content[:100]}")
+    
+    # If forcing tool call, inject it directly
+    if force_tool_call:
+        from langchain_core.messages import ToolMessage
+        
+        # Extract query
+        query = last_message.content
+        
+        # Determine department from keywords
+        department = None
+        if any(kw in query_lower for kw in ['thi', 'kiểm tra', 'đình chỉ', 'phúc khảo', 'khảo thí']):
+            department = 'phongkhaothi'
+        elif any(kw in query_lower for kw in ['đào tạo', 'tốt nghiệp', 'học tập', 'tín chỉ']):
+            department = 'phongdaotao'
+        
+        # Call RAG tool directly
+        logger.info(f"⚡ FORCING search_kma_regulations: query='{query}', department='{department}'")
+        
+        try:
+            # Import and call tool directly
+            from rag import search_kma_regulations
+            result = search_kma_regulations.invoke({
+                "query": query, 
+                "department": department  # None is now valid
+            })
+            
+            # Create response message with result
+            response_message = AIMessage(content=result)
+            logger.info(f"✅ Forced tool call successful, result length: {len(result)}")
+            
+            return {"messages": state['messages'] + [response_message]}
+            
+        except Exception as e:
+            logger.error(f"❌ Forced tool call failed: {e}")
+            # Fall through to normal LLM call
+    
+    # Normal LLM call with few-shot examples
+    few_shot_examples = """
+
+### VÍ DỤ MINH HỌA (BẮT BUỘC HỌC THEO)
+
+**Ví dụ 1: Câu hỏi về quy định**
+User: "Những hành vi nào bị đình chỉ thi?"
+Assistant: [Phải gọi search_kma_regulations]
+Action: search_kma_regulations
+Action Input: query="hành vi bị đình chỉ thi", department="phongkhaothi"
+
+**Ví dụ 2: Câu hỏi về điều kiện**
+User: "Điều kiện tốt nghiệp là gì?"
+Assistant: [Phải gọi search_kma_regulations]
+Action: search_kma_regulations
+Action Input: query="điều kiện tốt nghiệp", department="phongdaotao"
+
+**Ví dụ 3: Câu hỏi về thủ tục**
+User: "Thủ tục phúc khảo như thế nào?"
+Assistant: [Phải gọi search_kma_regulations]
+Action: search_kma_regulations
+Action Input: query="thủ tục phúc khảo", department="phongkhaothi"
+"""
+    
+    enhanced_prompt = react_prompt.format(tool_descriptions=tool_descriptions) + few_shot_examples
+    
     prompt = ChatPromptTemplate.from_messages(
-        [("system", react_prompt.format(tool_descriptions=tool_descriptions)),
+        [("system", enhanced_prompt),
          MessagesPlaceholder(variable_name="messages"), ])
 
     # Bind tools and structured output - use factory method for runtime model switching

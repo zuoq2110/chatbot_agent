@@ -4,7 +4,7 @@
 src/app/logs/
 .vscode/
 .idea/
-
+/document_graph
 .env
 # Vagrant
 .vagrant/

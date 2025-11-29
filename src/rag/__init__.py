@@ -5,6 +5,14 @@ regulations at the Academy of Cryptographic Techniques (KMA).
 
 from .tool import create_rag_tool, search_kma_regulations
 from .rag_graph import process_kma_query, process_kma_query_sync, get_retriever
+from .table_aware_chunking import load_documents_from_folder
 
-__version__ = "0.1.0"
-__all__ = ["create_rag_tool", "search_kma_regulations", "process_kma_query", "process_kma_query_sync", "get_retriever"]
+__version__ = "0.2.0"  # GraphRAG integration
+__all__ = [
+    "create_rag_tool",
+    "search_kma_regulations",
+    "process_kma_query",
+    "process_kma_query_sync",
+    "get_retriever",
+    "load_documents_from_folder"
+]

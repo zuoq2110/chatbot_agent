@@ -322,57 +322,44 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
 
 
 def process_kma_query_sync(query: str, retriever=None, llm=None, department_filter=None) -> Dict[str, Any]:
-    """Synchronous version of process_kma_query for tool usage.
+    """
+    Synchronous GraphRAG query processing for tool usage.
     
     Args:
         query: The question to answer
-        retriever: Optional retriever to use (will create one if not provided)
-        llm: Optional LLM to use (will create one if not provided)
-        department_filter: Department filter for restricted queries
+        retriever: Optional retriever (GraphRoutedRetriever or will create one)
+        llm: Optional LLM to use (will create Gemini if not provided)
+        department_filter: Department filter (ignored for GraphRAG - routing is automatic)
         
     Returns:
         Dictionary with answer and sources
     """
+    from graph_rag import GraphRoutedRetriever
+    
     # Create components if not provided
     if retriever is None:
         retriever = get_retriever()
 
     if llm is None:
-        # Trong hàm trợ giúp này, nếu LLM không được cung cấp,
-        # chúng ta sẽ sử dụng Gemini làm mặc định thay vì ChatOllama
-        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL) 
+        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL)
 
     # Load prompts
     prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
     with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
         generate_prompt = f.read().strip()
 
-    # Use semantic analysis to get appropriate metadata filters
-    from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
-    
-    if isinstance(retriever, MetadataEnhancedHybridRetriever):
-        # If department filter is specified, use it directly (override semantic analysis)
-        if department_filter and department_filter != 'chung':
-            from backend.services.department_filter import DepartmentFilterService
-            metadata_filter = DepartmentFilterService.get_metadata_filter(department_filter)
-            print(f"📁 Applied folder-based metadata filters: {metadata_filter}")
-            docs = retriever._get_relevant_documents(query, metadata_filter)
-            
-            # Apply context boosting to filtered results
-            from .retriever import apply_context_boosting
-            docs = apply_context_boosting(docs, query)
-        else:
-            # Use semantic analysis for automatic filtering
-            print(f"🔍 Analyzing query semantically: {query}")
-            semantic_filter = analyze_query_semantic_filter(query, confidence_threshold=0.65)
-            
-            if semantic_filter:
-                print(f"🎯 Using semantic metadata filter: {semantic_filter}")
-                docs = retriever._get_relevant_documents(query, semantic_filter)
-            else:
-                print(f"📚 Using full database search (low semantic confidence)")
-                docs = smart_retrieve(retriever, query, use_smart_filtering=True)
+    # GraphRAG retrieval (automatic routing via graph)
+    if isinstance(retriever, GraphRoutedRetriever):
+        logger.info(f"🔍 GraphRAG query: {query[:100]}...")
+        
+        # GraphRoutedRetriever handles routing automatically
+        # department_filter is ignored - graph routes via semantic similarity
+        docs = retriever._get_relevant_documents(query)
+        
+        logger.info(f"📊 Retrieved {len(docs)} documents from graph")
     else:
+        # Fallback for other retriever types (shouldn't happen now)
+        logger.warning(f"⚠️  Non-GraphRAG retriever detected: {type(retriever)}")
         docs = retriever.get_relevant_documents(query)
 
     # Combine document content
@@ -383,7 +370,10 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
     response = llm.invoke([{"role": "user", "content": prompt}])
 
     # Return the answer and sources
-    return {"answer": response.content, "sources": [doc.page_content for doc in docs[:3]]  # Return top 3 sources
+    return {
+        "answer": response.content,
+        "sources": [doc.page_content for doc in docs[:3]],
+        "retrieval_method": "graphrag"
     }
 
 
@@ -438,38 +428,64 @@ Trả lời:"""
 
 
 def get_retriever():
-    """Get the enhanced hybrid retriever for KMA regulations with table-aware chunking and sliding window"""
+    """
+    Get GraphRAG retriever (ONLY GraphRAG - no mode switching)
+    
+    Returns GraphRoutedRetriever initialized from pre-built document graph.
+    Graph must be built using: python build_graph.py
+    """
+    import os
+    from pathlib import Path
+    from graph_rag import DocumentGraph, SubgraphPartitioner, GraphRoutedRetriever
+    
     # Define paths
     current_dir = Path(__file__).parent.absolute()
     project_root = current_dir.parent.parent
-    vector_db_path = os.path.join(project_root, "vector_db")
-    data_dir = os.path.join(project_root, "data")
-
-    # Use the enhanced retriever with metadata support, table-aware chunking, and sliding window
-    from .retriever import create_enhanced_hybrid_retriever, get_metadata_config
+    graph_path = os.path.join(project_root, "document_graph", "graph.pkl")
+    
+    # Check if graph exists
+    if not os.path.exists(graph_path):
+        error_msg = (
+            f"❌ Graph file not found: {graph_path}\n"
+            f"Please build the graph first using: python build_graph.py"
+        )
+        logger.error(error_msg)
+        raise FileNotFoundError(error_msg)
     
     try:
-        # Get sliding window size from config
-        config = get_metadata_config()
-        chunk_settings = config.get_chunk_settings()
-        window_size = chunk_settings.get('sliding_window_size', 2)
+        # Load pre-built graph
+        logger.info(f"Loading graph from: {graph_path}")
+        graph_builder = DocumentGraph()
+        graph_builder.load_graph(graph_path)
+        graph = graph_builder.graph
         
-        # Create enhanced hybrid retriever with sliding window
-        enhanced_retriever, all_documents = create_enhanced_hybrid_retriever(
-            vector_db_path=vector_db_path,
-            data_dir=data_dir,
-            window_size=window_size
+        logger.info(f"✅ Graph loaded: {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
+        
+        # Create partitioner (community detection)
+        logger.info("Creating subgraph partitioner...")
+        partitioner = SubgraphPartitioner(graph=graph)
+        
+        # Partition using Louvain community detection
+        partitioner.partition_by_community_detection(algorithm='louvain')
+        
+        logger.info(f"✅ Partitioner created: {len(partitioner.subgraphs)} communities")
+        
+        # Create GraphRoutedRetriever with VERY AGGRESSIVE settings for maximum recall
+        retriever = GraphRoutedRetriever(
+            graph=graph,
+            partitioner=partitioner,
+            k=15,  # Increased to 15 to reduce risk of missing relevant docs
+            internal_k=40,  # Retrieve 40 internally for wider search
+            hop_depth=2,  # 2-hop graph traversal
+            expansion_factor=2.0  # Balanced expansion
         )
         
-        logger.info(f"Enhanced hybrid retriever with sliding window (size={window_size}) initialized successfully")
-        logger.info(f"Loaded {len(all_documents)} total documents")
-        return enhanced_retriever
+        logger.info("✅ GraphRAG retriever initialized with k=15, internal_k=40, expansion=2.0")
+        return retriever
         
     except Exception as e:
-        logger.error(f"Failed to load enhanced retriever: {e}")
-        # Fallback to old retriever if enhanced fails
-        hybrid_retriever, _ = create_hybrid_retriever(vector_db_path=vector_db_path, data_dir=data_dir)
-        return hybrid_retriever
+        logger.error(f"Failed to load GraphRAG retriever: {e}")
+        raise
 
 
 class KMAChatAgent:
@@ -598,33 +614,25 @@ class KMAChatAgent:
         return state # Trả về toàn bộ state đã cập nhật
 
     def retrieve_documents(self, state: MessagesState):
-        """Retrieve documents using enhanced retriever with semantic analysis"""
+        """Retrieve documents using GraphRAG (graph-based routing)"""
         query = state["messages"][0].content
         logger.info(f"Retrieving documents for query: {query}")
         
         # Debug: Check retriever type
         logger.info(f"Retriever type: {type(self.retriever).__name__}")
         
-        # Use semantic analysis to get appropriate metadata filters
-        logger.info(f"🔍 Analyzing query semantically: {query}")
-        metadata_filter = analyze_query_semantic_filter(query, confidence_threshold=0.65)
+        # GraphRoutedRetriever uses BaseRetriever interface
+        from graph_rag import GraphRoutedRetriever
         
-        # Get documents using semantic filtering or smart retrieval
-        from .retriever import smart_retrieve, MetadataEnhancedHybridRetriever
-        
-        if isinstance(self.retriever, MetadataEnhancedHybridRetriever):
-            if metadata_filter:
-                logger.info(f"🎯 Using semantic metadata filter: {metadata_filter}")
-                docs = self.retriever._get_relevant_documents(query, metadata_filter)
-                logger.info(f"semantic filtering returned {len(docs)} documents")
-            else:
-                logger.info(f"📚 Using full database search (low semantic confidence)")
-                docs = smart_retrieve(self.retriever, query, use_smart_filtering=True)
-                logger.info(f"smart_retrieve returned {len(docs)} documents")
+        if isinstance(self.retriever, GraphRoutedRetriever):
+            logger.info("📊 Using GraphRAG retrieval (graph-based routing)")
+            docs = self.retriever._get_relevant_documents(query)
+            logger.info(f"GraphRAG returned {len(docs)} documents")
         else:
-            logger.info(f"Using regular retrieval with legacy retriever")
+            # Fallback for other retriever types
+            logger.warning(f"Unknown retriever type: {type(self.retriever).__name__}, using generic retrieval")
             docs = self.retriever.get_relevant_documents(query)
-            logger.info(f"regular retrieval returned {len(docs)} documents")
+            logger.info(f"Generic retrieval returned {len(docs)} documents")
         
         # Debug: Check first few documents
         for i, doc in enumerate(docs[:3]):

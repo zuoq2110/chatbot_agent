@@ -6,15 +6,15 @@ rules, policies, and any other uploaded documents in the data directory.
 """
 
 import asyncio
+from typing import Optional
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 from rag.rag_graph import process_kma_query_sync
 
-
 class KMARegulationInput(BaseModel):
     query: str = Field(description="The query to search for in all available documents")
-    department: str = Field(default=None, description="User's department for filtering (phongdaotao/phongkhaothi/chung)")
+    department: Optional[str] = Field(default=None, description="User's department for filtering (phongdaotao/phongkhaothi/chung)")
 
 
 @tool("search_kma_regulations", args_schema=KMARegulationInput,

@@ -9,5 +9,4 @@ COPY pyproject.toml poetry.lock* /app/
 RUN poetry config virtualenvs.create false && poetry install --no-root
 
 COPY src /app/src
-COPY document_graph /app/document_graph
 CMD ["sleep", "infinity"]

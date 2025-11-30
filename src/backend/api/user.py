@@ -129,7 +129,7 @@ async def create_user(user: UserCreate):
         
         # Get created user
         created_user = await mongodb.db.users.find_one({"_id": result.inserted_id})
-        await create_webui_user(user)
+        # await create_webui_user(user)
         # Prepare response (exclude sensitive fields)
         response_data = UserResponse(
             _id=str(created_user["_id"]),

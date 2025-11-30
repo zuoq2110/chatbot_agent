@@ -474,8 +474,8 @@ def get_retriever():
         retriever = GraphRoutedRetriever(
             graph=graph,
             partitioner=partitioner,
-            k=15,  # Increased to 15 to reduce risk of missing relevant docs
-            internal_k=40,  # Retrieve 40 internally for wider search
+            k=25,  # Increased to 25 to ensure we don't miss relevant documents
+            internal_k=50,  # Retrieve 50 internally for wider search
             hop_depth=2,  # 2-hop graph traversal
             expansion_factor=2.0  # Balanced expansion
         )

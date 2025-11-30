@@ -128,30 +128,37 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
     logger.info(f"Available tools: {[tool.name for tool in tools]}")
     logger.info(f"Tool descriptions length: {len(tool_descriptions)}")
     
-    # FORCE tool call for regulation keywords
+    # FORCE tool call for ALL queries EXCEPT personal student score queries
     last_message = state["messages"][-1] if state["messages"] else None
-    force_tool_call = False
+    force_rag_tool = False
     
     if last_message and isinstance(last_message, HumanMessage):
         query_lower = last_message.content.lower()
-        regulation_keywords = [
-            'quy định', 'quy chế', 'chính sách', 'điều kiện', 'tiêu chuẩn',
-            'hành vi', 'đình chỉ', 'kỷ luật', 'phúc khảo', 'thi', 'kiểm tra',
-            'tốt nghiệp', 'rèn luyện', 'học tập', 'thủ tục', 'xét', 'công nhận',
-            'quyết định', 'ban hành', 'điều', 'khoản', 'văn bản',
-            # Academic keywords
-            'chứng chỉ', 'bằng cấp', 'tiếng anh', 'toeic', 'ielts', 'vstep',
-            'tín chỉ', 'điểm', 'học phần', 'môn học', 'khóa luận',
-            # Process keywords  
-            'đăng ký', 'nộp', 'hồ sơ', 'giấy tờ', 'mẫu đơn'
-        ]
+        query = last_message.content
         
-        if any(keyword in query_lower for keyword in regulation_keywords):
-            force_tool_call = True
-            logger.info(f"🔴 DETECTED REGULATION KEYWORDS - FORCING tool call for: {last_message.content[:100]}")
+        # Detect student code patterns (AT170139, CT180456, DT190789, etc.)
+        import re
+        student_code_pattern = re.compile(r'\b[ACDMT]T\d{6}\b', re.IGNORECASE)
+        has_student_code = bool(student_code_pattern.search(query))
+        
+        # Check if this is a PERSONAL query (score OR info - needs student_code)
+        personal_score_keywords = ['điểm của', 'điểm em', 'điểm tôi', 'điểm mình', 'điểm sinh viên', 
+                                   'gpa của', 'gpa em', 'gpa tôi', 'gpa mình',
+                                   'xem điểm', 'tra điểm', 'kiểm tra điểm']
+        personal_info_keywords = ['thông tin của', 'thông tin em', 'thông tin tôi', 'thông tin sinh viên',
+                                  'lớp của', 'lớp em', 'lớp tôi',
+                                  'họ tên của', 'họ tên em', 'tên của', 'tên em']
+        
+        is_personal_score = any(kw in query_lower for kw in personal_score_keywords) and has_student_code
+        is_personal_info = any(kw in query_lower for kw in personal_info_keywords) and has_student_code
+        
+        # FORCE search_kma_regulations for EVERYTHING EXCEPT personal queries
+        if not (is_personal_score or is_personal_info):
+            force_rag_tool = True
+            logger.info(f"🔴 FORCING search_kma_regulations for: {query[:100]}...")
     
     # If forcing tool call, inject it directly
-    if force_tool_call:
+    if force_rag_tool:
         from langchain_core.messages import ToolMessage
         
         # Extract query

@@ -44,11 +44,14 @@ async def create_webui_user(user: UserCreate):
     Tạo user tương ứng bên Open-WebUI
     """
     try:
+        # Tạo email mặc định nếu không có
+        email = user.email or f"{user.username}@kma.edu.vn"
+        
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 f"{OPENWEBUI_URL}/api/v1/auths/signup",
                 json={
-                    "email": user.email,
+                    "email": email,
                     "password": user.password,   # phải trùng để sau login
                     "name": user.student_name or user.username,
                     "profile_image_url": "/user.png"
@@ -62,7 +65,7 @@ async def create_webui_user(user: UserCreate):
         logger.error(f"Error syncing user to Open-WebUI: {str(e)}")
         return None
 
-@router.post("/", response_model=BaseResponse[UserResponse])
+@router.post("", response_model=BaseResponse[UserResponse])
 async def create_user(user: UserCreate):
     """Create a new user"""
     
@@ -75,7 +78,7 @@ async def create_user(user: UserCreate):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Tên đăng nhập đã tồn tại"
         )
-     # Check if email exists
+     # Check if email exists (chỉ khi email được cung cấp)
     if user.email:
         existing_email = await mongodb.db.users.find_one({"email": user.email})
         if existing_email:
@@ -83,11 +86,6 @@ async def create_user(user: UserCreate):
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail="Email đã được sử dụng"
             )
-    else:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email là bắt buộc"
-        )
     # Hash password
     password_hash, salt = hash_password(user.password)
     
@@ -105,13 +103,6 @@ async def create_user(user: UserCreate):
     
     # Add optional fields if provided
     if user.student_code:
-        # Check if student_code already exists
-        existing_student = await mongodb.db.users.find_one({"student_code": user.student_code})
-        if existing_student:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Mã sinh viên đã tồn tại"
-            )
         new_user["student_code"] = user.student_code
     
     if user.student_name:

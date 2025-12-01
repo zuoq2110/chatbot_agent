@@ -34,16 +34,31 @@ def search_kma_regulations(query: str, department: str = None) -> str:
     Returns:
         A string containing the retrieved information
     """
+    import logging
+    logger = logging.getLogger(__name__)
+    
     try:
+        logger.info(f"🔍 search_kma_regulations called with query: {query[:100]}...")
+        logger.info(f"📁 Department filter: {department}")
+        
         # Use the improved process_kma_query_sync function with department filter
         result = process_kma_query_sync(query, department_filter=department)
-        return result['answer']
+        
+        answer = result.get('answer', '')
+        logger.info(f"✅ RAG query completed, answer length: {len(answer)}")
+        logger.info(f"📝 Answer preview: {answer[:200]}...")
+        
+        if not answer or len(answer.strip()) == 0:
+            logger.error("❌ Empty answer returned from RAG!")
+            return "Xin lỗi, tôi không tìm thấy thông tin phù hợp với câu hỏi của bạn."
+        
+        return answer
 
     except Exception as e:
         import traceback
         error_details = traceback.format_exc()
-        print(f"Error in search_kma_regulations: {error_details}")
-        return f"Error searching KMA regulations: {str(e)}"
+        logger.error(f"❌ Error in search_kma_regulations: {error_details}")
+        return f"Xin lỗi, đã xảy ra lỗi khi tìm kiếm thông tin: {str(e)}"
 
 
 def create_rag_tool():

@@ -2,6 +2,7 @@ import glob
 import os
 import io
 import sys
+import logging
 from typing import List, Optional, Dict, Any
 import tempfile
 import re
@@ -15,9 +16,13 @@ from langchain_ollama import OllamaEmbeddings
 from pydantic import Field, BaseModel
 from llm.config import get_gemini_llm
 
+# Set up logging
+logger = logging.getLogger(__name__)
+
 # Import metadata configuration
 from .metadata_config import get_metadata_config
 from .semantic_analyzer import analyze_query_semantic_filter
+from .docling_extractor import extract_text_with_docling, is_docling_available
 from dotenv import load_dotenv
 load_dotenv()
 OLLAMA_BASE_URL = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
@@ -321,70 +326,36 @@ def analyze_query_for_metadata_filter_legacy(query: str) -> Dict[str, Any]:
 
 
 def read_file_with_metadata(file_path: str, base_data_dir: str) -> tuple[str, Dict[str, str]]:
-    """Read file content and extract metadata using dynamic configuration with enhanced text processing"""
+    """Read file content and extract metadata using Docling for all file types"""
     try:
         # Extract metadata from path
         metadata = extract_metadata_from_path(file_path, base_data_dir)
         
-        # Read file content based on extension with enhanced processing
+        # Use Docling to extract text from all file types
         content = ""
         
-        if file_path.endswith('.txt'):
-            with open(file_path, "r", encoding="utf-8") as f:
-                raw_content = f.read()
-                content = clean_extracted_text(raw_content)
-                
-        elif file_path.endswith('.docx') and DOCX_AVAILABLE:
-            try:
-                import docx
-                doc = docx.Document(file_path)
-                text_parts = []
-                
-                # Extract paragraphs
-                for paragraph in doc.paragraphs:
-                    if paragraph.text.strip():
-                        text_parts.append(paragraph.text)
-                        text_parts.append("\n")
-                
-                # Extract table data
-                table_text = extract_table_data(doc)
-                if table_text:
-                    text_parts.append(table_text)
-                
-                raw_content = "".join(text_parts)
-                content = clean_extracted_text(raw_content)
-                
-            except Exception as e:
-                print(f"Error processing DOCX file {file_path}: {e}")
-                return "", metadata
-        
-        elif file_path.endswith('.pdf') and PDF_AVAILABLE:
-            try:
-                import PyPDF2
-                text_parts = []
-                
-                with open(file_path, 'rb') as file:
-                    pdf_reader = PyPDF2.PdfReader(file)
-                    
-                    for page_num, page in enumerate(pdf_reader.pages):
-                        page_text = page.extract_text()
-                        
-                        if page_text.strip():
-                            # Add content directly without page markers for continuous flow
-                            text_parts.append(page_text.strip())
-                            # Add a newline to separate content from different pages
-                            text_parts.append("\n")
-                
-                raw_content = "".join(text_parts)
-                content = clean_extracted_text(raw_content)
-                
-            except Exception as e:
-                print(f"Error processing PDF file {file_path}: {e}")
-                return "", metadata
+        if is_docling_available():
+            logger.info(f"Using Docling to extract text from {file_path}")
+            content = extract_text_with_docling(file_path)
+            
+            if not content:
+                logger.warning(f"Docling failed to extract text from {file_path}")
+                # Fallback to reading as plain text for .txt files
+                if file_path.endswith('.txt') or file_path.endswith('.md') or file_path.endswith('.markdown'):
+                    with open(file_path, 'r', encoding='utf-8') as f:
+                        content = f.read()
         else:
-            return "", metadata
+            logger.warning("Docling not available, falling back to legacy text extraction")
+            # Fallback to reading as plain text for .txt files only
+            if file_path.endswith('.txt') or file_path.endswith('.md') or file_path.endswith('.markdown'):
+                with open(file_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+            else:
+                logger.error(f"Cannot process {file_path} without Docling")
+                return "", metadata
         
         if not content:
+            logger.warning(f"No content extracted from {file_path}")
             return "", metadata
             
         # Create context header dynamically
@@ -423,10 +394,10 @@ def read_all_files_with_metadata(data_dir: str) -> List[tuple[str, Dict[str, str
     """Read all files and return content with metadata"""
     file_contents = []
     
-    # Process all .txt and .docx files recursively
+    # Process all .txt, .md, .markdown, .pdf, and .docx files recursively
     for root, dirs, files in os.walk(data_dir):
         for file in files:
-            if file.endswith(('.txt', '.docx')):
+            if file.endswith(('.txt', '.md', '.markdown', '.docx')):
                 file_path = os.path.join(root, file)
                 content, metadata = read_file_with_metadata(file_path, data_dir)
                 
@@ -437,13 +408,14 @@ def read_all_files_with_metadata(data_dir: str) -> List[tuple[str, Dict[str, str
 
 
 def read_all_text_files(data_dir):
-    """Đọc toàn bộ nội dung các file .txt trong thư mục và tất cả thư mục con"""
+    """Đọc toàn bộ nội dung các file .txt và .md trong thư mục và tất cả thư mục con"""
     combined_text = ""
     
-    # Đọc file trong thư mục chính
-    for file_path in glob.glob(os.path.join(data_dir, "*.txt")):
-        with open(file_path, "r", encoding="utf-8") as f:
-            combined_text += f.read() + "\n\n"
+    # Đọc file trong thư mục chính (.txt và .md)
+    for pattern in ["*.txt", "*.md", "*.markdown"]:
+        for file_path in glob.glob(os.path.join(data_dir, pattern)):
+            with open(file_path, "r", encoding="utf-8") as f:
+                combined_text += f.read() + "\n\n"
     
     # Đọc file từ tất cả các thư mục con
     for root, dirs, files in os.walk(data_dir):
@@ -452,7 +424,7 @@ def read_all_text_files(data_dir):
             continue
             
         for file in files:
-            if file.endswith('.txt'):
+            if file.endswith(('.txt', '.md', '.markdown')):
                 file_path = os.path.join(root, file)
                 try:
                     with open(file_path, "r", encoding="utf-8") as f:

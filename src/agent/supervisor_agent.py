@@ -177,19 +177,31 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
         try:
             # Import and call tool directly
             from rag import search_kma_regulations
+            logger.info(f"🔧 Calling search_kma_regulations with query: {query[:100]}...")
+            logger.info(f"🔧 Department: {department}")
+            
             result = search_kma_regulations.invoke({
                 "query": query, 
                 "department": department  # None is now valid
             })
             
+            logger.info(f"📊 Tool result length: {len(result)}")
+            logger.info(f"📝 Tool result preview: {result[:200]}...")
+            
+            if not result or len(result.strip()) == 0:
+                logger.error("❌ Empty result from forced tool call!")
+                result = "Xin lỗi, tôi không tìm thấy thông tin phù hợp với câu hỏi của bạn."
+            
             # Create response message with result
             response_message = AIMessage(content=result)
-            logger.info(f"✅ Forced tool call successful, result length: {len(result)}")
+            logger.info(f"✅ Forced tool call successful, returning response")
             
             return {"messages": state['messages'] + [response_message]}
             
         except Exception as e:
+            import traceback
             logger.error(f"❌ Forced tool call failed: {e}")
+            logger.error(traceback.format_exc())
             # Fall through to normal LLM call
     
     # Normal LLM call with few-shot examples

@@ -107,6 +107,15 @@ async def startup_db_client():
     except Exception as e:
         logger.exception(f"MongoDB connection failed: {str(e)}")
         raise Exception("Failed to connect to MongoDB. Application cannot start.")
+    
+    # Warm up GraphRAG cache on startup for instant first query
+    try:
+        logger.info("🔥 Warming up GraphRAG cache...")
+        from rag import get_retriever
+        retriever = get_retriever()
+        logger.info(f"✅ GraphRAG cache ready (retriever type: {type(retriever).__name__})")
+    except Exception as e:
+        logger.warning(f"⚠️  Failed to warm up GraphRAG cache: {e}")
 
 
 
@@ -226,12 +235,21 @@ async def db_check():
 
 @cli.command()
 def start(port: int = 8000, host: str = "0.0.0.0", reload: bool = True):
-    """Run the KMA Chat Agent backend"""
+    """Run the KMA Chat Agent backend
+    
+    Note: Use reload=False in production for better performance with cached GraphRAG
+    """
     port = os.environ.get("PORT")
     if port is None:
         port = 3434
     else:
         port = int(port)
+    
+    # Check if PRODUCTION env variable is set
+    is_production = os.environ.get("PRODUCTION", "false").lower() == "true"
+    if is_production:
+        reload = False
+        logger.info("🏭 Production mode: reload disabled for cache persistence")
 
     run_backend(port=port, host=host, reload=reload)
 

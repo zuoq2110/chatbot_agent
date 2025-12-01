@@ -17,6 +17,11 @@
 # logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 # logger = logging.getLogger(__name__)
 
+# # Global cache for GraphRAG components (initialized once)
+# _GRAPH_CACHE = None
+# _PARTITIONER_CACHE = None
+# _RETRIEVER_CACHE = None
+
 
 # class GradeDocuments(BaseModel):
 #     """Grade documents using a binary score for relevance check."""
@@ -260,6 +265,11 @@ from rag.semantic_analyzer import analyze_query_semantic_filter
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
+# Global cache for GraphRAG components (initialized once)
+_GRAPH_CACHE = None
+_PARTITIONER_CACHE = None
+_RETRIEVER_CACHE = None
+
 
 class GradeDocuments(BaseModel):
     """Grade documents using a binary score for relevance check."""
@@ -357,6 +367,11 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
         docs = retriever._get_relevant_documents(query)
         
         logger.info(f"📊 Retrieved {len(docs)} documents from graph")
+        
+        # Log first doc preview for debugging
+        if docs:
+            first_doc_preview = docs[0].page_content[:200].replace('\n', ' ')
+            logger.info(f"📄 First doc preview: {first_doc_preview}...")
     else:
         # Fallback for other retriever types (shouldn't happen now)
         logger.warning(f"⚠️  Non-GraphRAG retriever detected: {type(retriever)}")
@@ -364,10 +379,37 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
 
     # Combine document content
     context = "\n\n".join([doc.page_content for doc in docs])
+    
+    logger.info(f"📝 Context length: {len(context)} chars, {len(docs)} documents")
+    
+    if not context or len(context.strip()) == 0:
+        logger.error("❌ Empty context! No documents were retrieved or documents are empty")
+        return {
+            "answer": "Xin lỗi, tôi không tìm thấy thông tin phù hợp với câu hỏi của bạn.",
+            "sources": [],
+            "retrieval_method": "graphrag"
+        }
+    
+    logger.info(f"📄 Context preview (first 300 chars): {context[:300]}...")
 
     # Generate answer
     prompt = generate_prompt.format(question=query, context=context)
-    response = llm.invoke([{"role": "user", "content": prompt}])
+    logger.info(f"📋 Prompt length: {len(prompt)} chars")
+    logger.info(f"🤖 Invoking LLM...")
+    
+    # Call LLM directly with prompt string (same as test file)
+    response = llm.invoke(prompt)
+    
+    logger.info(f"✅ LLM response received, length: {len(response.content)} chars")
+    logger.info(f"📝 Response preview: {response.content[:200]}...")
+    
+    if not response.content or len(response.content.strip()) == 0:
+        logger.error("❌ Empty response from LLM!")
+        return {
+            "answer": "Xin lỗi, không thể tạo câu trả lời từ thông tin tìm được.",
+            "sources": [doc.page_content for doc in docs[:3]],
+            "retrieval_method": "graphrag"
+        }
 
     # Return the answer and sources
     return {
@@ -427,13 +469,33 @@ Trả lời:"""
     }
 
 
+def clear_retriever_cache():
+    """
+    Clear the GraphRAG cache. Call this when you rebuild the graph.
+    """
+    global _GRAPH_CACHE, _PARTITIONER_CACHE, _RETRIEVER_CACHE
+    _GRAPH_CACHE = None
+    _PARTITIONER_CACHE = None
+    _RETRIEVER_CACHE = None
+    logger.info("🗑️  GraphRAG cache cleared")
+
+
 def get_retriever():
     """
-    Get GraphRAG retriever (ONLY GraphRAG - no mode switching)
+    Get GraphRAG retriever with caching (ONLY GraphRAG - no mode switching)
     
     Returns GraphRoutedRetriever initialized from pre-built document graph.
     Graph must be built using: python build_graph.py
+    
+    Performance: First call ~2-3s, subsequent calls ~0.01s (cached)
     """
+    global _GRAPH_CACHE, _PARTITIONER_CACHE, _RETRIEVER_CACHE
+    
+    # Return cached retriever if available
+    if _RETRIEVER_CACHE is not None:
+        logger.info("⚡ Using cached GraphRAG retriever (instant)")
+        return _RETRIEVER_CACHE
+    
     import os
     from pathlib import Path
     from graph_rag import DocumentGraph, SubgraphPartitioner, GraphRoutedRetriever
@@ -453,34 +515,39 @@ def get_retriever():
         raise FileNotFoundError(error_msg)
     
     try:
-        # Load pre-built graph
-        logger.info(f"Loading graph from: {graph_path}")
+        # Load pre-built graph (only once)
+        logger.info(f"🔄 Loading graph from: {graph_path} (first time - caching for future queries)")
         graph_builder = DocumentGraph()
         graph_builder.load_graph(graph_path)
         graph = graph_builder.graph
         
         logger.info(f"✅ Graph loaded: {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
+        _GRAPH_CACHE = graph
         
-        # Create partitioner (community detection)
-        logger.info("Creating subgraph partitioner...")
+        # Create partitioner (community detection) - only once
+        logger.info("🔄 Creating subgraph partitioner (first time - caching)...")
         partitioner = SubgraphPartitioner(graph=graph)
         
-        # Partition using Louvain community detection
-        partitioner.partition_by_community_detection(algorithm='louvain')
+        # Partition using label_propagation (same as test file for consistency)
+        partitioner.partition_by_community_detection(algorithm='label_propagation')
         
         logger.info(f"✅ Partitioner created: {len(partitioner.subgraphs)} communities")
+        _PARTITIONER_CACHE = partitioner
         
-        # Create GraphRoutedRetriever with VERY AGGRESSIVE settings for maximum recall
+        # Create GraphRoutedRetriever with optimized settings
         retriever = GraphRoutedRetriever(
             graph=graph,
             partitioner=partitioner,
-            k=25,  # Increased to 25 to ensure we don't miss relevant documents
-            internal_k=50,  # Retrieve 50 internally for wider search
-            hop_depth=2,  # 2-hop graph traversal
-            expansion_factor=2.0  # Balanced expansion
+            k=10,  # Final top-k returned to LLM
+            internal_k=30,  # Internal candidates before reranking
+            hop_depth=3,  # 3-hop graph traversal
+            expansion_factor=2.5  # Balanced expansion
         )
         
-        logger.info("✅ GraphRAG retriever initialized with k=15, internal_k=40, expansion=2.0")
+        logger.info("✅ GraphRAG retriever initialized with k=10, internal_k=30, expansion=2.5")
+        logger.info("💾 Cached for future queries (subsequent queries will be much faster)")
+        _RETRIEVER_CACHE = retriever
+        
         return retriever
         
     except Exception as e:

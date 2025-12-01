@@ -123,12 +123,47 @@ def split_text_with_table_preservation(text: str, chunk_size: int = 800, chunk_o
                 # Split normally
                 chunks.extend(text_splitter.split_text(text_before))
         
-        # Table itself (keep intact as one chunk)
+        # Table itself (keep intact if reasonable size, otherwise split)
         table_chunk = table['content']
         if len(table_chunk) > chunk_size * 2:
-            # Table is very large, add warning but still keep it intact
-            print(f"⚠️  Warning: Large table detected ({len(table_chunk)} chars). Keeping intact despite chunk_size={chunk_size}.")
-        chunks.append(table_chunk)
+            # Table is very large, need to split it
+            print(f"⚠️  Warning: Large table detected ({len(table_chunk)} chars). Splitting into smaller chunks.")
+            # Split large table by rows while preserving header
+            table_lines = table_chunk.split('\n')
+            header_lines = []
+            data_lines = []
+            
+            # Find header and separator
+            for i, line in enumerate(table_lines):
+                if '|' in line and re.search(r'\|[\s-]+\|', line):
+                    # This is separator, everything before is header
+                    header_lines = table_lines[:i+1]
+                    data_lines = table_lines[i+1:]
+                    break
+            
+            if header_lines and data_lines:
+                # Split data rows into chunks
+                current_table_chunk = '\n'.join(header_lines)
+                
+                for data_line in data_lines:
+                    if len(current_table_chunk + '\n' + data_line) > chunk_size:
+                        # Current chunk is full, save it
+                        if current_table_chunk.strip():
+                            chunks.append(current_table_chunk)
+                        # Start new chunk with header
+                        current_table_chunk = '\n'.join(header_lines) + '\n' + data_line
+                    else:
+                        current_table_chunk += '\n' + data_line
+                
+                # Add remaining chunk
+                if current_table_chunk.strip() and current_table_chunk != '\n'.join(header_lines):
+                    chunks.append(current_table_chunk)
+            else:
+                # No proper table structure, just split by lines
+                chunks.extend(text_splitter.split_text(table_chunk))
+        else:
+            # Small table, keep intact
+            chunks.append(table_chunk)
         
         last_end = table['end']
     

@@ -22,6 +22,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(
 from backend.auth.jwt import get_current_user
 from backend.models.user import UserResponse
 from rag.retriever import extract_text_from_file
+from rag.docling_extractor import extract_text_with_docling, is_docling_available
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -32,16 +33,11 @@ router = APIRouter()
 
 # Define the data directory path
 DATA_DIR = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "data"))
-VECTOR_DB_PATH = os.path.abspath(os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "vector_db"))
 
 # Ensure directories exist
 if not os.path.exists(DATA_DIR):
     os.makedirs(DATA_DIR)
     logger.info(f"Created data directory at {DATA_DIR}")
-    
-if not os.path.exists(VECTOR_DB_PATH):
-    os.makedirs(VECTOR_DB_PATH)
-    logger.info(f"Created vector database directory at {VECTOR_DB_PATH}")
 
 class FileInfo(BaseModel):
     """Model for file information"""
@@ -140,8 +136,25 @@ async def upload_training_file(
         with open(file_path, "wb") as f:
             f.write(content)
         
+        # Extract text using Docling for all file types
+        if is_docling_available():
+            logger.info(f"Extracting text using Docling for {safe_filename}")
+            extracted_text = extract_text_with_docling(file_path)
+            
+            if extracted_text:
+                # Save extracted text as .md file
+                md_file_path = os.path.splitext(file_path)[0] + ".md"
+                with open(md_file_path, "w", encoding="utf-8") as md_file:
+                    md_file.write(extracted_text)
+                logger.info(f"Saved extracted markdown to {md_file_path}")
+            else:
+                logger.warning(f"Failed to extract text from {safe_filename} using Docling")
+        else:
+            logger.warning("Docling not available, skipping text extraction")
+        
+        # Skip legacy text extraction
         # For non-text files, also create a text version for easy viewing/processing
-        if file_ext != '.txt':
+        if False and file_ext != '.txt':
             try:
                 logger.info(f"Extracting text from {file.filename} with content type {file.content_type}")
                 text_content = extract_text_from_file(file_path, file.content_type)
@@ -160,7 +173,6 @@ async def upload_training_file(
         
         logger.info(f"Training file uploaded successfully: {safe_filename}, Size: {file_size} bytes")
         
-        # Trả về kết quả mà không rebuild index
         return {
             "success": True,
             "fileInfo": {
@@ -170,7 +182,7 @@ async def upload_training_file(
                 "uploadedBy": current_user["username"],
                 "uploadTime": str(datetime.now())
             },
-            "message": "File uploaded successfully. Please use the 'Rebuild RAG Index' function to update the knowledge base."
+            "message": "File uploaded successfully. Please click 'Rebuild RAG Index' to update the system."
         }
     
     except Exception as e:
@@ -301,17 +313,17 @@ async def delete_training_file(
         # Delete the file
         os.remove(file_path)
         
-        # Also delete the text version if it exists
-        text_file_path = os.path.splitext(file_path)[0] + ".txt"
-        if os.path.exists(text_file_path):
-            os.remove(text_file_path)
-            logger.info(f"Deleted text version: {text_file_path}")
+        # Also delete the markdown version if it exists
+        md_file_path = os.path.splitext(file_path)[0] + ".md"
+        if os.path.exists(md_file_path):
+            os.remove(md_file_path)
+            logger.info(f"Deleted markdown version: {md_file_path}")
         
         logger.info(f"Training file deleted: {filename}")
         
         return {
             "success": True,
-            "message": f"File '{filename}' deleted successfully. Please use the 'Rebuild RAG Index' function to update the knowledge base.",
+            "message": f"File '{filename}' deleted successfully. Please click 'Rebuild RAG Index' to update the system.",
             "filename": filename
         }
     
@@ -322,58 +334,108 @@ async def delete_training_file(
 @router.post("/rebuild-rag-index", response_model=Dict[str, Any])
 async def rebuild_rag_index(current_user: dict = Depends(get_current_user)):
     """
-    Rebuild the RAG vector index from the current data directory
+    Rebuild the document graph and reload the RAG agent
     
-    This endpoint triggers a rebuild of the RAG vector index after files 
-    have been added or removed.
+    This endpoint triggers a rebuild of the document graph from data files
+    and reloads the RAG agent to use the updated graph.
     
     Returns:
         A response indicating success or failure
     """
     # Check if user is admin
     if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Only administrators can rebuild the RAG index")
+        raise HTTPException(status_code=403, detail="Only administrators can rebuild the graph")
     
     try:
-        from rag.retriever import create_vector_database
+        logger.info(f"Starting graph rebuild from data directory: {DATA_DIR}")
         
-        # Path to vector database
-        vector_db_path = os.path.abspath(os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), 
-            "vector_db"
-        ))
+        # Import required modules
+        from rag.table_aware_chunking import load_documents_from_folder
+        from graph_rag.graph_builder import DocumentGraph
+        import time
         
-        logger.info(f"Rebuilding RAG index from data directory: {DATA_DIR}")
-        logger.info(f"Saving vector database to: {vector_db_path}")
+        # Get project root and output folder
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        output_folder = os.path.join(project_root, "document_graph")
+        os.makedirs(output_folder, exist_ok=True)
         
-        # Rebuild the vector database
-        chunks = create_vector_database(vector_db_path, DATA_DIR)
+        # Step 1: Load documents with table-aware chunking
+        logger.info("Loading documents with table-aware chunking...")
+        start_time = time.time()
+        documents = load_documents_from_folder(
+            data_folder=DATA_DIR,
+            chunk_size=800,
+            chunk_overlap=200
+        )
+        load_time = time.time() - start_time
+        logger.info(f"Loaded {len(documents)} document chunks in {load_time:.2f}s")
         
-        logger.info(f"RAG index rebuilt successfully with {len(chunks)} chunks")
+        # Count special chunks
+        table_chunks = sum(1 for doc in documents if doc.metadata.get('contains_table', False))
+        logger.info(f"Table chunks: {table_chunks}, Regular chunks: {len(documents) - table_chunks}")
         
-        # Tải lại ReActGraph để sử dụng chỉ mục mới
+        # Step 2: Build document graph
+        logger.info("Building document graph...")
+        start_time = time.time()
+        graph_builder = DocumentGraph(
+            semantic_threshold=0.7,
+            max_semantic_edges_per_node=5
+        )
+        graph = graph_builder.build_graph(documents)
+        graph_build_time = time.time() - start_time
+        
+        logger.info(f"Graph built in {graph_build_time:.2f}s")
+        logger.info(f"Nodes: {graph.number_of_nodes()}, Edges: {graph.number_of_edges()}")
+        
+        # Step 3: Save graph
+        graph_path = os.path.join(output_folder, "graph.pkl")
+        graph_builder.save_graph(graph_path)
+        logger.info(f"Graph saved to: {graph_path}")
+        
+        # Step 3.5: Clear GraphRAG cache to force reload of new graph
+        logger.info("Clearing GraphRAG cache...")
+        try:
+            from rag.rag_graph import clear_retriever_cache
+            clear_retriever_cache()
+            logger.info("✅ GraphRAG cache cleared successfully")
+        except Exception as cache_error:
+            logger.warning(f"⚠️  Could not clear cache: {cache_error}")
+        
+        # Step 4: Reload ReActGraph agent
+        logger.info("Reloading ReActGraph agent...")
         from backend.api.chat import agent
         from agent.supervisor_agent import ReActGraph
         
-        # Khởi tạo lại agent với chỉ mục mới
+        # Reinitialize agent with new graph
         new_agent = ReActGraph()
         new_agent.create_graph()
         
-        # Gán lại biến toàn cục agent trong module chat
+        # Reassign global agent variable in chat module
         import backend.api.chat
         backend.api.chat.agent = new_agent
         
-        logger.info("ReActGraph agent reinitialized with new index")
+        logger.info("ReActGraph agent reloaded successfully")
+        
+        total_time = load_time + graph_build_time
         
         return {
             "success": True,
-            "message": f"RAG index rebuilt successfully with {len(chunks)} chunks",
-            "chunks": len(chunks)
+            "message": f"Document graph rebuilt successfully with {len(documents)} chunks, {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges",
+            "details": {
+                "total_chunks": len(documents),
+                "table_chunks": table_chunks,
+                "regular_chunks": len(documents) - table_chunks,
+                "graph_nodes": graph.number_of_nodes(),
+                "graph_edges": graph.number_of_edges(),
+                "build_time_seconds": round(total_time, 2)
+            }
         }
     
     except Exception as e:
-        logger.error(f"Error rebuilding RAG index: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error rebuilding RAG index: {str(e)}")
+        logger.error(f"Error rebuilding graph: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Error rebuilding graph: {str(e)}")
 
 # Folder Management Endpoints
 @router.get("/list-folders", response_model=Dict[str, Any])

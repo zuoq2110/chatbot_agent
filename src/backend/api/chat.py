@@ -544,3 +544,72 @@ async def test_rag_endpoint(message: MessageQuickChat):
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, 
             detail=f"Test failed: {str(e)}"
         )
+
+
+@router.get("/list-folders")
+async def list_folders():
+    """
+    Get list of available folders/departments for chat scope selection
+    This scans the actual data directory recursively to get all folders including nested ones
+    
+    Returns:
+        List of folder names (strings only), including nested paths like "phongdaotao/daihoc"
+    """
+    try:
+        # Get the data directory path - go up from src/backend/api to chatbot_agent root
+        current_file = os.path.abspath(__file__)
+        # From chat.py -> api -> backend -> src -> chatbot_agent
+        chatbot_agent_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(current_file))))
+        data_dir = os.path.join(chatbot_agent_root, 'data')
+        
+        logger.info(f"Scanning data directory: {data_dir}")
+        logger.info(f"Data directory exists: {os.path.exists(data_dir)}")
+        
+        folders = ["default"]  # Always include default
+        
+        # Recursive function to scan all subfolders
+        def scan_folders(directory, parent_path=""):
+            folder_list = []
+            if not os.path.exists(directory):
+                logger.warning(f"Directory does not exist: {directory}")
+                return folder_list
+            
+            try:
+                items = os.listdir(directory)
+                logger.info(f"Items in {directory}: {items}")
+            except Exception as e:
+                logger.error(f"Error listing directory {directory}: {e}")
+                return folder_list
+                
+            for item in items:
+                item_path = os.path.join(directory, item)
+                # Only include directories, exclude files and hidden folders
+                if os.path.isdir(item_path) and not item.startswith('.') and item != "__pycache__":
+                    folder_name = item
+                    if parent_path:
+                        folder_name = f"{parent_path}/{item}"
+                    logger.info(f"Found folder: {folder_name}")
+                    folder_list.append(folder_name)
+                    # Recursively scan subfolders
+                    folder_list.extend(scan_folders(item_path, folder_name))
+            return folder_list
+        
+        # Get all folders including subfolders
+        folders.extend(scan_folders(data_dir))
+        
+        # Sort folders alphabetically
+        folders.sort()
+        
+        logger.info(f"Found {len(folders)} folders in data directory: {folders}")
+        
+        return {
+            "success": True,
+            "folders": folders,  # This includes nested paths like "phongdaotao/daihoc"
+            "count": len(folders)
+        }
+    except Exception as e:
+        logger.error(f"Error getting folders: {e}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to get folders: {str(e)}"
+        )

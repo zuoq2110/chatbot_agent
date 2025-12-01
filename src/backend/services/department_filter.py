@@ -48,7 +48,7 @@ class DepartmentFilterService:
         
         Args:
             query: The user query
-            selected_folder: Folder selected by user (e.g., 'phongdaotao')  
+            selected_folder: Folder selected by user (e.g., 'phongdaotao', 'default')  
             query_metadata_department: Department detected from query content
             
         Returns:
@@ -58,8 +58,8 @@ class DepartmentFilterService:
         if not selected_folder or selected_folder == 'all':
             return True, "General access - all folders allowed"
         
-        # Allow all queries if 'chung' (all) is selected
-        if selected_folder == 'chung':
+        # Allow all queries if 'chung', 'default', or any "all" variant is selected
+        if selected_folder in ['chung', 'default']:
             return True, "General folder selected - all queries allowed"
         
         # Check if selected folder exists in our mappings

@@ -10,7 +10,7 @@ class UserCreate(BaseModel):
     student_name: Optional[str] = None
     student_class: Optional[str] = None
     role: Optional[str] = "user"  # Thêm role, mặc định là "user"
-    email: EmailStr = Field(..., description="Email là bắt buộc")
+    email: Optional[EmailStr] = None  # Email là optional
 
 
 class UserLogin(BaseModel):

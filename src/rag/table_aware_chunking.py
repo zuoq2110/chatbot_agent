@@ -26,6 +26,7 @@ def is_legal_document(content: str) -> bool:
 def detect_markdown_tables(text: str) -> List[Dict[str, Any]]:
     """
     Detect markdown tables in text and return their positions
+    IMPROVED: Stricter table detection to avoid false positives
     
     Returns:
         List of dicts with 'start', 'end', 'content', 'header_lines' for each table
@@ -35,29 +36,50 @@ def detect_markdown_tables(text: str) -> List[Dict[str, Any]]:
     i = 0
     
     while i < len(lines):
-        line = lines[i]
+        line = lines[i].strip()
         
-        # Check if line contains table separator (|---|---| or | --- | --- |)
-        if '|' in line and re.search(r'\|[\s-]+\|', line):
-            # Found potential table separator
-            # Look back for header (previous line with |)
-            if i > 0 and '|' in lines[i-1]:
-                # Found table! Collect all table rows
-                table_start = i - 1
-                table_end = i + 1
+        # STRICTER: Check if line is a proper table separator
+        # Must have at least 2 columns and proper separator format
+        if ('|' in line and 
+            re.search(r'\|\s*[-:]+\s*\|', line) and  # Proper separator with dashes/colons
+            line.count('|') >= 3):  # At least 2 columns (3 pipes)
+            
+            # Look back for header (previous line with similar pipe count)
+            if (i > 0 and 
+                '|' in lines[i-1] and 
+                abs(lines[i-1].count('|') - line.count('|')) <= 1):  # Similar column count
                 
-                # Collect following rows that are part of table
-                while table_end < len(lines) and '|' in lines[table_end]:
-                    table_end += 1
+                # Validate it's actually a table by checking structure
+                header_line = lines[i-1].strip()
+                if (not header_line.startswith('#') and  # Not a heading
+                    '|' in header_line and 
+                    len(header_line.split('|')) >= 3):  # Proper header structure
+                    
+                    # Found valid table! Collect all table rows
+                    table_start = i - 1
+                    table_end = i + 1
                 
-                # Look for context before table (up to 2 lines)
-                context_start = max(0, table_start - 2)
-                header_lines = []
-                for j in range(context_start, table_start):
-                    line_text = lines[j].strip()
-                    # Include lines that describe the table (Bảng X, Table X, etc.)
-                    if line_text and ('bảng' in line_text.lower() or 'table' in line_text.lower() or line_text.startswith('#')):
-                        header_lines.append(line_text)
+                    # Collect following rows that are part of table
+                    table_row_count = 0
+                    while (table_end < len(lines) and 
+                           '|' in lines[table_end] and 
+                           table_row_count < 50):  # Limit table size
+                        # Validate row structure matches header
+                        row_pipe_count = lines[table_end].count('|')
+                        if abs(row_pipe_count - line.count('|')) <= 1:
+                            table_end += 1
+                            table_row_count += 1
+                        else:
+                            break  # Not a table row
+                    
+                    # Look for context before table (up to 2 lines)
+                    context_start = max(0, table_start - 2)
+                    header_lines = []
+                    for j in range(context_start, table_start):
+                        line_text = lines[j].strip()
+                        # Include lines that describe the table (Bảng X, Table X, etc.)
+                        if line_text and ('bảng' in line_text.lower() or 'table' in line_text.lower() or line_text.startswith('#')):
+                            header_lines.append(line_text)
                 
                 # Extract table content with context
                 table_content_lines = header_lines + lines[table_start:table_end]
@@ -88,11 +110,19 @@ def split_text_with_table_preservation(text: str, chunk_size: int = 800, chunk_o
     2. Split text around tables (tables become their own chunks)
     3. Split non-table text normally
     """
-    # Detect tables
+    # Detect tables with improved validation
     tables = detect_markdown_tables(text)
     
-    if not tables:
-        # No tables found, use standard splitting
+    # IMPROVEMENT: Validate table detection results
+    # If too many tables detected (likely false positives), fall back to normal splitting
+    total_table_chars = sum(len(table['content']) for table in tables)
+    table_coverage = total_table_chars / len(text) if text else 0
+    
+    if not tables or table_coverage > 0.8:  # If >80% is "tables", likely false positive
+        if table_coverage > 0.8:
+            print(f"   ⚠️  Table coverage too high ({table_coverage:.1%}) - likely false positive, using normal split")
+        
+        # No tables found or too many false positives, use standard splitting
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap,
@@ -333,7 +363,211 @@ def ensure_chunk_overlap(chunks: List[str], target_overlap: int) -> List[str]:
     return enhanced_chunks
 
 
+def force_split_large_content(content: str, chunk_size: int = 1500, chunk_overlap: int = 300) -> List[str]:
+    """
+    Force split large content into manageable chunks, ignoring table preservation
+    Used for very large files (like textbooks) that would otherwise become single giant chunks
+    
+    Args:
+        content: Large text content
+        chunk_size: Target chunk size (larger for big files)
+        chunk_overlap: Overlap between chunks
+        
+    Returns:
+        List of text chunks
+    """
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    
+    # Use aggressive splitting with multiple separators
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        separators=[
+            "\n\n## ",  # Major sections
+            "\n\n# ",   # Headers
+            "\n\n",     # Paragraphs
+            "\n",       # Lines
+            ". ",       # Sentences
+            " ",        # Words
+            ""
+        ],
+        keep_separator=True
+    )
+    
+    chunks = splitter.split_text(content)
+    print(f"   → Force split into {len(chunks)} chunks (avg {sum(len(c) for c in chunks)/len(chunks):.0f} chars each)")
+    return chunks
+
+
 def enhanced_text_chunking(content: str, chunk_settings: Dict[str, Any]) -> List[str]:
+    """
+    Enhanced chunking with table preservation và Vietnamese legal structure awareness
+    IMPROVED: Size-based fallback for very large files
+    
+    Strategy:
+    1. Check if file is too large - if so, force split regardless of tables
+    2. Detect tables and preserve them intact (with stricter validation)
+    3. Use Vietnamese legal structure for legal documents (Điều/Khoản)
+    4. Use recursive splitting for regular text
+    
+    Args:
+        content: Text content to chunk
+        chunk_settings: Settings dict with chunk_size, chunk_overlap, etc.
+        
+    Returns:
+        List of text chunks
+    """
+    chunk_size = chunk_settings.get('chunk_size', 800)
+    chunk_overlap = chunk_settings.get('chunk_overlap', 200)
+    max_chunk_size = chunk_settings.get('max_chunk_size', 1500)
+    
+    # IMPROVEMENT: Force split for very large files (>100KB)
+    if len(content) > 100000:  # 100KB threshold
+        print(f"📄 Large file ({len(content)} chars) - forcing split to avoid single giant chunk")
+        return force_split_large_content(content, chunk_size=1500, chunk_overlap=300)
+    
+    # Check if it's a legal document
+    if is_legal_document(content):
+        return vietnamese_legal_chunking(content, chunk_size, chunk_overlap)
+    
+    # Use table-aware chunking with improved detection
+    return split_text_with_table_preservation(content, chunk_size, chunk_overlap)
+
+
+def is_legal_document(content: str) -> bool:
+    """
+    Detect if document is a Vietnamese legal document
+    
+    Args:
+        content: Text content to check
+        
+    Returns:
+        True if appears to be a legal document
+    """
+    legal_indicators = [
+        'Điều ',
+        'Khoản ',
+        'điểm ',
+        'Chương ',
+        'Quy định',
+        'Quy chế',
+        'Nghị định',
+        'Thông tư',
+        'Ban hành'
+    ]
+    
+    # Count legal structure indicators
+    indicator_count = sum(1 for indicator in legal_indicators if indicator in content)
+    
+    # If multiple indicators found, likely a legal document
+    return indicator_count >= 3
+
+
+def vietnamese_legal_chunking(content: str, chunk_size: int, chunk_overlap: int) -> List[str]:
+    """
+    Chunk Vietnamese legal documents by preserving legal structure (Điều/Khoản/Điểm)
+    
+    Args:
+        content: Legal document content
+        chunk_size: Target chunk size
+        chunk_overlap: Overlap between chunks
+        
+    Returns:
+        List of text chunks respecting legal structure
+    """
+    # Split by Điều (Articles)
+    dieu_pattern = r'(?:^|\n)(Điều\s+\d+[^\n]*)'
+    parts = re.split(dieu_pattern, content, flags=re.MULTILINE)
+    
+    chunks = []
+    current_chunk = ""
+    min_chunk_size = chunk_size // 2
+    max_chunk_size = chunk_size * 2
+    
+    for i, part in enumerate(parts):
+        if not part.strip():
+            continue
+            
+        # Check if this part is a Điều header
+        if re.match(r'Điều\s+\d+', part.strip()):
+            # This is a Điều header, combine with next part (content)
+            if i + 1 < len(parts):
+                dieu_content = part + "\n" + parts[i + 1] if i + 1 < len(parts) else part
+            else:
+                dieu_content = part
+            
+            # Check if adding this Điều would exceed max size
+            if len(current_chunk + dieu_content) > max_chunk_size:
+                # Save current chunk if it has content
+                if current_chunk.strip() and len(current_chunk) >= min_chunk_size:
+                    chunks.append(current_chunk.strip())
+                
+                # Start new chunk with this Điều
+                current_chunk = dieu_content
+            else:
+                # Add to current chunk
+                current_chunk += "\n\n" + dieu_content if current_chunk else dieu_content
+        else:
+            # This is content, might already be handled above
+            continue
+    
+    # Add final chunk
+    if current_chunk.strip():
+        chunks.append(current_chunk.strip())
+    
+    # If no structure found, fall back to regular chunking
+    if len(chunks) <= 1:
+        from langchain_text_splitters import RecursiveCharacterTextSplitter
+        splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            length_function=len,
+            separators=["\n\n", "\n", ". ", " ", ""]
+        )
+        return splitter.split_text(content)
+    
+    return chunks
+
+
+def force_split_large_content(content: str, chunk_size: int = 1500, chunk_overlap: int = 300) -> List[str]:
+    """
+    Force split large content into manageable chunks, ignoring table preservation
+    Used for very large files (like textbooks) that would otherwise become single giant chunks
+    
+    Args:
+        content: Large text content
+        chunk_size: Target chunk size (larger for big files)
+        chunk_overlap: Overlap between chunks
+        
+    Returns:
+        List of text chunks
+    """
+    from langchain_text_splitters import RecursiveCharacterTextSplitter
+    
+    # Use aggressive splitting with multiple separators
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=chunk_overlap,
+        length_function=len,
+        separators=[
+            "\n\n## ",  # Major sections
+            "\n\n# ",   # Headers
+            "\n\n",     # Paragraphs
+            "\n",       # Lines
+            ". ",       # Sentences
+            " ",        # Words
+            ""
+        ],
+        keep_separator=True
+    )
+    
+    chunks = splitter.split_text(content)
+    print(f"   → Force split into {len(chunks)} chunks (avg {sum(len(c) for c in chunks)/len(chunks):.0f} chars each)")
+    return chunks
+
+
+def enhanced_text_chunking_old(content: str, chunk_settings: Dict[str, Any]) -> List[str]:
     """
     Structure-aware chunking that respects Vietnamese document structure
     - Keeps complete Điều (articles) together when possible

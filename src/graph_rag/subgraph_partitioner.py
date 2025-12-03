@@ -220,12 +220,29 @@ class SubgraphPartitioner:
                 'node_count': len(node_ids)
             }
             
-            # 3. Create centroid: average of all embeddings
+            # 3. Create WEIGHTED centroid: top-k + weighted average
             if embeddings:
-                centroid = np.mean(embeddings, axis=0)
-                self.community_centroids[comm_id] = centroid
+                # Method 1: Use ALL embeddings but weight by node importance
+                weights = []
+                for node_id in list(node_ids)[:len(embeddings)]:
+                    # Weight by node degree (more connected = more important)
+                    degree = self.graph.degree(node_id)
+                    # Weight by content length (longer = more informative)
+                    content_len = len(self.graph.nodes[node_id].get('content', ''))
+                    # Combined weight
+                    weight = np.log(degree + 1) * np.log(content_len + 1)
+                    weights.append(weight)
+                
+                # Normalize weights
+                weights = np.array(weights)
+                weights = weights / weights.sum() if weights.sum() > 0 else np.ones_like(weights) / len(weights)
+                
+                # Weighted average
+                weighted_centroid = np.average(embeddings, axis=0, weights=weights)
+                self.community_centroids[comm_id] = weighted_centroid
         
         logger.info(f"✅ Generated enhanced metadata for {len(self.subgraphs)} communities")
+        logger.info(f"💡 Using weighted centroids based on node degree + content length")
     
     def get_subgraph(self, subgraph_id: Any) -> Set[int]:
         """Get node IDs in a subgraph"""
@@ -242,73 +259,95 @@ class SubgraphPartitioner:
                 return subgraph_id
         return None
     
-    def route_query_to_communities(self, query_embedding: np.ndarray, top_k: int = 5, min_similarity: float = 0.35) -> List[Tuple[int, float]]:
+    def route_query_to_communities(self, query_embedding: np.ndarray, top_k: int = 3, min_similarity: float = 0.25, adaptive: bool = True) -> List[Tuple[int, float]]:
         """
-        IMPROVED ROUTING: Two-stage with adaptive threshold to avoid centroid averaging problem
+        ENHANCED ROUTING: Multi-stage routing với weighted centroids
         
-        FIXES:
-        - Increased top_k from 2 to 5 to avoid missing relevant communities
-        - Added min_similarity threshold to filter out low-confidence matches
-        - Adaptive fallback: returns more communities if confidence is low
+        Quy trình:
+        1. Chuyển query thành embedding ✓ 
+        2. So sánh với weighted community centroids ✓
+        3. Multi-factor scoring (semantic + metadata + size) ✓
+        4. Adaptive top-k selection ✓
+        5. Quality threshold filtering ✓
         
         Args:
             query_embedding: Query embedding vector
-            top_k: Maximum number of communities to route to (default: 5, increased from 2)
-            min_similarity: Minimum similarity threshold (default: 0.35)
+            top_k: Base number of communities (default: 3, balanced choice)
+            min_similarity: Minimum similarity threshold (default: 0.25, more permissive)
+            adaptive: Enable adaptive expansion if confidence is low
             
         Returns:
-            List of (community_id, similarity_score) tuples
+            List of (community_id, similarity_score) tuples, ranked by relevance
         """
         if not self.community_centroids:
             logger.warning("No community centroids available. Run partition_by_community_detection first.")
             return []
         
-        # IMPROVEMENT 3: Multi-factor scoring
+        # ENHANCED: Multi-factor scoring với weighted centroids
         community_scores = []
         
         for comm_id, centroid in self.community_centroids.items():
-            # Factor 1: Semantic similarity (embedding)
+            # Factor 1: Semantic similarity với weighted centroid
             semantic_sim = np.dot(query_embedding, centroid) / (
                 np.linalg.norm(query_embedding) * np.linalg.norm(centroid)
             )
             
-            # Factor 2: Metadata boost (community size/importance)
-            metadata_boost = 0.0
+            # Factor 2: Community quality/diversity boost
+            diversity_boost = 0.0
+            size_boost = 0.0
             if hasattr(self, 'community_metadata'):
                 meta = self.community_metadata.get(comm_id, {})
-                # Boost larger communities (more comprehensive information)
-                size_boost = min(0.1, meta.get('node_count', 0) / 100)
-                metadata_boost += size_boost
+                node_count = meta.get('node_count', 0)
+                
+                # Size boost: Moderate preference for larger communities (more information)
+                size_boost = min(0.05, node_count / 1000)  # Max 0.05 boost for 1000+ nodes
+                
+                # Diversity boost: Multi-category communities get slight boost
+                categories = meta.get('categories', [])
+                if len(categories) > 1:
+                    diversity_boost = 0.02
             
-            # Combined score: 85% semantic + 15% metadata
-            final_score = 0.85 * semantic_sim + 0.15 * metadata_boost
+            # Combined score: 90% semantic + 5% size + 5% diversity
+            final_score = 0.90 * semantic_sim + 0.05 * size_boost + 0.05 * diversity_boost
             community_scores.append((comm_id, float(final_score)))
         
         # Sort by score desc
         community_scores.sort(key=lambda x: x[1], reverse=True)
         
-        # IMPROVEMENT: Adaptive threshold-based selection
-        # Take top-k communities that meet minimum similarity threshold
-        candidate_communities = [
-            (comm_id, score) for comm_id, score in community_scores
-            if score >= min_similarity
-        ][:top_k]
+        # ADAPTIVE: Quality-based selection strategy
+        if not community_scores:
+            logger.warning("No community centroids available")
+            return []
         
-        # FALLBACK: If confidence is low (best score < 0.5), expand search
-        if candidate_communities and candidate_communities[0][1] < 0.5:
-            logger.warning(f"⚠️  Low routing confidence (best={candidate_communities[0][1]:.3f}). Expanding to top {min(top_k + 3, len(community_scores))} communities.")
-            candidate_communities = community_scores[:min(top_k + 3, len(community_scores))]
+        best_score = community_scores[0][1]
         
-        # FALLBACK 2: If no communities meet threshold, take top-3 anyway
-        if not candidate_communities:
-            logger.warning(f"⚠️  No communities above threshold {min_similarity}. Taking top-3 by default.")
-            candidate_communities = community_scores[:3]
+        # Strategy 1: High confidence (best score > 0.5) → take top-k
+        if best_score > 0.5:
+            selected = [item for item in community_scores[:top_k] if item[1] >= min_similarity]
+            logger.info(f"🎯 High confidence routing: best_score={best_score:.3f}, selected {len(selected)}/{top_k}")
+            
+        # Strategy 2: Medium confidence (0.3-0.5) → expand to top_k+2  
+        elif best_score > 0.3:
+            expanded_k = min(top_k + 2, len(community_scores))
+            selected = [item for item in community_scores[:expanded_k] if item[1] >= min_similarity]
+            logger.info(f"🎯 Medium confidence routing: best_score={best_score:.3f}, expanded to {len(selected)}/{expanded_k}")
+            
+        # Strategy 3: Low confidence (< 0.3) → search more broadly
+        else:
+            expanded_k = min(top_k + 4, len(community_scores))
+            selected = community_scores[:expanded_k]  # Ignore threshold for low confidence
+            logger.info(f"⚠️ Low confidence routing: best_score={best_score:.3f}, searching {len(selected)}/{expanded_k} communities")
         
-        top_communities = candidate_communities
+        # Fallback: Always return at least 1 community
+        if not selected and community_scores:
+            selected = [community_scores[0]]
+            logger.warning(f"⚠️ Fallback: No communities above threshold, using best match (score={selected[0][1]:.3f})")
         
-        logger.info(f"Query routed to {len(top_communities)} communities (threshold={min_similarity}):")
-        for comm_id, score in top_communities:
-            summary = self.community_summaries.get(comm_id, '')[:60]
-            logger.info(f"  Community {comm_id} (sim={score:.3f}): {summary}...")
+        # Log selected communities for debugging
+        logger.info("🏘️ Selected communities:")
+        for i, (comm_id, score) in enumerate(selected[:5]):
+            node_count = len(self.subgraphs.get(comm_id, []))
+            summary = self.community_summaries.get(comm_id, '')[:50]
+            logger.info(f"   {i+1}. Community {comm_id}: score={score:.3f}, size={node_count}, summary='{summary}...'")
         
-        return top_communities
+        return selected

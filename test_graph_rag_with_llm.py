@@ -215,7 +215,7 @@ TRẢ LỜI:"""
 
 
 if __name__ == "__main__":
-    # Test với query TOEIC sau khi rebuild graph với table preservation
-    query = """Sinh viên năm 4 tích lũy được bao nhiêu tín chỉ"""
+    # Test với query có trong data về phần mềm mã nguồn mở
+    query = """Làm sao thỏa mãn nhu cầu của các cơ quan hành chính nhà nước?"""
     
     asyncio.run(test_graph_rag_with_answer(query))

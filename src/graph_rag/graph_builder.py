@@ -23,7 +23,7 @@ class DocumentGraph:
     """Build and manage document graph with multiple edge types"""
     
     def __init__(self, 
-                 semantic_threshold: float = 0.8,  # Increase threshold to reduce noise
+                 semantic_threshold: float = 0.7,  # Increase threshold to reduce noise
                  max_semantic_edges_per_node: int = 5,  # Limit edges per node
                  embeddings_model: str = None):
         """

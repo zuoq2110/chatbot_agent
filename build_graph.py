@@ -58,8 +58,8 @@ print()
 
 start_time = time.time()
 graph_builder = DocumentGraph(
-    semantic_threshold=0.7,
-    max_semantic_edges_per_node=5
+    semantic_threshold=0.55,  # Lower threshold for better connectivity
+    max_semantic_edges_per_node=10  # More edges for richer connections
 )
 graph = graph_builder.build_graph(documents)
 graph_build_time = time.time() - start_time
@@ -71,17 +71,47 @@ if graph.number_of_nodes() > 0:
     avg_degree = 2 * graph.number_of_edges() / graph.number_of_nodes()
     print(f"   📈 Average degree: {avg_degree:.2f} edges/node")
 
-# Save graph
-print(f"\n💾 Saving graph to: {output_folder}")
+# Partition graph into communities using Louvain algorithm
+print("\n🔍 Partitioning graph into communities...")
+print("   Using Louvain algorithm for optimal community detection")
+
+start_time = time.time()
+from graph_rag.subgraph_partitioner import SubgraphPartitioner
+
+partitioner = SubgraphPartitioner(graph)
+communities = partitioner.partition_by_community_detection(algorithm='louvain')
+partition_time = time.time() - start_time
+
+print(f"✅ Community detection completed in {partition_time:.2f}s")
+print(f"   🏘️  Found {len(communities)} communities")
+
+# Show community statistics
+total_nodes = sum(len(nodes) for nodes in communities.values())
+avg_community_size = total_nodes / len(communities) if communities else 0
+print(f"   📊 Average community size: {avg_community_size:.1f} nodes")
+
+for comm_id, nodes in list(communities.items())[:5]:  # Show first 5
+    summary = partitioner.community_summaries.get(comm_id, 'No summary')[:80]
+    print(f"   Community {comm_id}: {len(nodes)} nodes - {summary}...")
+
+if len(communities) > 5:
+    print(f"   ... and {len(communities) - 5} more communities")
+
+# Save graph with communities
+print(f"\n💾 Saving graph with communities to: {output_folder}")
 os.makedirs(output_folder, exist_ok=True)
 graph_path = os.path.join(output_folder, "graph.pkl")
 graph_builder.save_graph(graph_path)
 
 print("\n" + "=" * 80)
-print("✅ GRAPH BUILD COMPLETE!")
+print("✅ GRAPH BUILD & COMMUNITY DETECTION COMPLETE!")
 print("=" * 80)
-print(f"\nTotal time: {load_time + graph_build_time:.2f}s")
-print(f"Graph saved: {graph_path}")
+print(f"\nTotal time: {load_time + graph_build_time + partition_time:.2f}s")
+print(f"  - Document loading: {load_time:.2f}s")
+print(f"  - Graph building: {graph_build_time:.2f}s") 
+print(f"  - Community detection: {partition_time:.2f}s")
+print(f"Graph with communities saved: {graph_path}")
+print(f"Communities: {len(communities)} (Louvain algorithm)")
 
 # Quick verification
 print("\n🔍 Verifying saved graph...")

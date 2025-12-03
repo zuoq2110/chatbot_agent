@@ -429,42 +429,109 @@ def enhanced_text_chunking(content: str, chunk_settings: Dict[str, Any]) -> List
     
     # Check if it's a legal document
     if is_legal_document(content):
-        return vietnamese_legal_chunking(content, chunk_size, chunk_overlap)
+        return vietnamese_legal_chunking_with_tables(content, chunk_size, chunk_overlap)
     
     # Use table-aware chunking with improved detection
     return split_text_with_table_preservation(content, chunk_size, chunk_overlap)
 
 
-def is_legal_document(content: str) -> bool:
+# Removed duplicate function - using the one at line 15 instead
+
+
+def vietnamese_legal_chunking_with_tables(content: str, chunk_size: int, chunk_overlap: int) -> List[str]:
     """
-    Detect if document is a Vietnamese legal document
+    Chunk Vietnamese legal documents by preserving both legal structure (Điều/Khoản/Điểm) AND tables
     
     Args:
-        content: Text content to check
+        content: Legal document content
+        chunk_size: Target chunk size
+        chunk_overlap: Overlap between chunks
         
     Returns:
-        True if appears to be a legal document
+        List of text chunks respecting both legal structure and table preservation
     """
-    legal_indicators = [
-        'Điều ',
-        'Khoản ',
-        'điểm ',
-        'Chương ',
-        'Quy định',
-        'Quy chế',
-        'Nghị định',
-        'Thông tư',
-        'Ban hành'
-    ]
+    # First detect and extract tables
+    tables = detect_markdown_tables(content)
     
-    # Count legal structure indicators
-    indicator_count = sum(1 for indicator in legal_indicators if indicator in content)
+    if not tables:
+        # No tables, use regular legal chunking
+        return vietnamese_legal_chunking_original(content, chunk_size, chunk_overlap)
     
-    # If multiple indicators found, likely a legal document
-    return indicator_count >= 3
+    # Process content with table preservation
+    chunks = []
+    last_end = 0
+    
+    for table_info in tables:
+        table_start = table_info['start']
+        table_end = table_info['end']
+        
+        # Process text before table with legal chunking
+        if table_start > last_end:
+            text_before = content[last_end:table_start].strip()
+            if text_before:
+                legal_chunks = vietnamese_legal_chunking_original(text_before, chunk_size, chunk_overlap)
+                chunks.extend(legal_chunks)
+        
+        # Add table as single chunk (with size check)
+        table_content = table_info['content']
+        if len(table_content) > chunk_size * 2:
+            # Table too large, try to split by rows while preserving structure
+            table_chunks = split_large_table(table_content, chunk_size)
+            chunks.extend(table_chunks)
+        else:
+            chunks.append(table_content)
+        
+        last_end = table_end
+    
+    # Process remaining text after last table
+    if last_end < len(content):
+        remaining_text = content[last_end:].strip()
+        if remaining_text:
+            legal_chunks = vietnamese_legal_chunking_original(remaining_text, chunk_size, chunk_overlap)
+            chunks.extend(legal_chunks)
+    
+    return chunks
 
 
-def vietnamese_legal_chunking(content: str, chunk_size: int, chunk_overlap: int) -> List[str]:
+def split_large_table(table_content: str, chunk_size: int) -> List[str]:
+    """Split large table while preserving header and structure"""
+    lines = table_content.split('\n')
+    
+    # Find header and separator
+    header_lines = []
+    data_start = 0
+    
+    for i, line in enumerate(lines):
+        if '|' in line and re.search(r'\|\s*[-:]+\s*\|', line):
+            # This is separator line, header is everything before + separator
+            header_lines = lines[:i+1]
+            data_start = i + 1
+            break
+    
+    if not header_lines:
+        # No proper table structure, split normally
+        return [table_content]
+    
+    # Split data rows into chunks
+    header_text = '\n'.join(header_lines)
+    chunks = []
+    current_chunk = header_text
+    
+    for i in range(data_start, len(lines)):
+        line = lines[i]
+        if len(current_chunk + '\n' + line) > chunk_size and len(current_chunk) > len(header_text):
+            chunks.append(current_chunk)
+            current_chunk = header_text + '\n' + line
+        else:
+            current_chunk += '\n' + line
+    
+    if current_chunk.strip():
+        chunks.append(current_chunk)
+    
+    return chunks
+
+
+def vietnamese_legal_chunking_original(content: str, chunk_size: int, chunk_overlap: int) -> List[str]:
     """
     Chunk Vietnamese legal documents by preserving legal structure (Điều/Khoản/Điểm)
     
@@ -665,16 +732,16 @@ def load_documents_from_folder(data_folder: str, chunk_size: int = 800, chunk_ov
             # Extract metadata
             metadata = extract_metadata_from_path(file_path, data_folder)
             metadata['source'] = os.path.basename(file_path)
+            metadata['full_path'] = file_path  # Preserve full path for department detection
             
             # Use enhanced chunking
             chunks = enhanced_text_chunking(content, chunk_settings)
             
             # Log chunking type
-            is_markdown = file_path.endswith('.md') or file_path.endswith('.markdown')
-            if is_markdown and '|' in content:
-                print(f"📊 Table-aware chunking: {os.path.basename(file_path)} -> {len(chunks)} chunks")
-            elif is_legal_document(content):
+            if is_legal_document(content):
                 print(f"📜 Vietnamese legal chunking: {os.path.basename(file_path)} -> {len(chunks)} chunks")
+            elif is_markdown and '|' in content:
+                print(f"📊 Table-aware chunking: {os.path.basename(file_path)} -> {len(chunks)} chunks")
             
             # Create Document objects
             for i, chunk in enumerate(chunks):

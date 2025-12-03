@@ -434,6 +434,81 @@ async def query_ai(
     )
 
 
+@router.post("/department-query", response_model=BaseResponse[QuickMessageResponse])
+async def department_specific_query(
+    message: MessageQuickChat,
+    department: str = Query(..., description="Department to query from"),
+    student_code: str = Header(None),
+    current_user = Depends(require_auth)
+):
+    """Query specific department using the new dual-signal GraphRAG system"""
+    
+    user_id = str(current_user.get("_id"))
+    if not user_id:
+        logger.error("User ID not found in current_user object")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User ID not found")
+    
+    # Rate limit check
+    allowed, error_message = await check_rate_limit(user_id, 0, count_as_request=False)
+    if not allowed:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=error_message)
+    
+    try:
+        # Import the agent
+        sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+        from agent.supervisor_agent import ReActGraph
+        
+        # Initialize agent
+        agent = ReActGraph()
+        agent.create_graph()
+        
+        # Add student code if provided
+        content = message.content
+        if student_code:
+            logger.info(f"Student code: {student_code}")
+            content = f"My student code is {student_code}. {content}"
+        
+        logger.info(f"Department query - Department: {department}")
+        logger.info(f"Query: {content}")
+        
+        # Use agent to process the query
+        import asyncio
+        result = await agent.chat_with_memory([], content)
+        
+        # Get the final response from agent
+        if result and len(result) > 0:
+            response_text = result[-1].content
+        else:
+            response_text = "Không thể xử lý câu hỏi của bạn. Vui lòng thử lại."
+        
+        now = datetime.utcnow()
+        response_data = QuickMessageResponse(
+            content=response_text,
+            created_at=now,
+        )
+        
+        # Update rate limit
+        estimated_tokens = estimate_token_count(content, response_text)
+        token_result, token_error = await check_rate_limit(user_id, estimated_tokens, count_as_request=True)
+        if not token_result:
+            logger.warning(f"Token limit reached: {token_error}")
+        
+        return BaseResponse(
+            statusCode=status.HTTP_200_OK,
+            message="Department query completed successfully",
+            data=response_data
+        )
+        
+    except Exception as e:
+        logger.error(f"Error in department query: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Department query failed: {str(e)}"
+        )
+
+
 @router.post("/quick-messages", response_model=BaseResponse[QuickMessageResponse])
 async def quick_chat(
     message: MessageQuickChat,

@@ -216,6 +216,6 @@ TRẢ LỜI:"""
 
 if __name__ == "__main__":
     # Test với query có trong data về phần mềm mã nguồn mở
-    query = """Làm sao thỏa mãn nhu cầu của các cơ quan hành chính nhà nước?"""
+    query = """Đánh giá học phần gồm những thành phần nào?"""
     
     asyncio.run(test_graph_rag_with_answer(query))

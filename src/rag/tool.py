@@ -6,36 +6,84 @@ rules, policies, and any other uploaded documents in the data directory.
 """
 
 import asyncio
+import logging
 from typing import Optional
 from langchain_core.tools import tool
 from pydantic import BaseModel, Field
 
 from rag.rag_graph import process_kma_query_sync
 
+logger = logging.getLogger(__name__)
+
 class KMARegulationInput(BaseModel):
-    query: str = Field(description="The query to search for in all available documents")
-    department: Optional[str] = Field(default=None, description="User's department for filtering (phongdaotao/phongkhaothi/chung)")
+    query: str = Field(description="The query to search for in documents")
+    department: Optional[str] = Field(default=None, description="Optional department filter: 'phongdaotao', 'phongkhaothi', 'khoa', 'viennghiencuuvahoptacphattrien', 'thongtinhvktmm', or None for smart auto-detection")
 
 
 @tool("search_kma_regulations", args_schema=KMARegulationInput,
-      description=("Search for information in all training documents including KMA's regulations, "
-                   "rules, policies, and any other uploaded documents in the data directory. "
-                   "Uses enhanced RAG system with smart retrieval and context boosting. "
-                   "The query must be provided."))
-def search_kma_regulations(query: str, department: str = None) -> str:
+      description=("Search for information in KMA documents using department-specific graphs. "
+                   "Each department has its own document graph to avoid cross-contamination. "
+                   "Automatically detects relevant department from query if not specified. "
+                   "Departments: phongdaotao (training), phongkhaothi (testing/quality), "
+                   "khoa (faculties), viennghiencuuvahoptacphattrien (research), thongtinhvktmm (academy info). "
+                   "ALWAYS use this tool for regulation/policy questions."))
+def search_kma_regulations(query: str, department: str = None, user_role: str = "student", user_department: str = None) -> str:
     """
-    Search for information in all training documents in the knowledge base.
-    Uses enhanced RAG system with smart retrieval, sliding window and context boosting.
-
+    Enhanced search tool với semantic department detection
+    
     Args:
-        query: The question or search query about any content in the knowledge base
-        department: User's department for content filtering (phongdaotao/phongkhaothi/chung)
-
+        query: Câu hỏi cần tìm kiếm
+        department: Phòng ban cụ thể (optional, để semantic detection tự quyết định)
+        user_role: Vai trò người dùng (student, admin, etc.)
+        user_department: Phòng ban của người dùng
+        
     Returns:
-        A string containing the retrieved information
+        Kết quả tìm kiếm với semantic routing
     """
-    import logging
-    logger = logging.getLogger(__name__)
+    try:
+        logger.info(f"🔍 search_kma_regulations called with query: {query[:100]}...")
+        logger.info(f"📁 Department filter: {department}")
+        logger.info(f"👤 User role: {user_role}, User department: {user_department}")
+        
+        # Prepare user metadata for semantic detection
+        user_metadata = {
+            'role': user_role or 'student',
+            'department': user_department or department or ''
+        }
+        
+        # Call enhanced query processing
+        result = process_kma_query_sync(
+            query=query, 
+            department_filter=department,
+            user_metadata=user_metadata
+        )
+        
+        # Extract answer from result
+        if isinstance(result, dict):
+            answer = result.get('answer', '')
+            
+            # Add department decision info if available
+            if 'department_decision' in result and result['department_decision']:
+                decision = result['department_decision']
+                logger.info(f"🎯 Semantic routing: {decision.chosen_department} (confidence: {decision.confidence:.3f})")
+                
+                if decision.conflict_detected:
+                    logger.info("⚠️ Semantic similarity resolved department conflict")
+                
+                # Optionally add metadata to answer
+                if user_role == 'admin':  # Show debug info to admin
+                    footer = f"\n\n---\n🤖 Semantic routing: {decision.chosen_department} | Confidence: {decision.confidence:.3f} | Conflicts: {decision.conflict_detected}"
+                    answer += footer
+            
+            return answer
+        else:
+            return str(result)
+        
+    except Exception as e:
+        logger.error(f"❌ Error in search_kma_regulations: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        return f"Xin lỗi, đã xảy ra lỗi khi tìm kiếm thông tin: {str(e)}"
     
     try:
         logger.info(f"🔍 search_kma_regulations called with query: {query[:100]}...")

@@ -331,20 +331,21 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
     }
 
 
-def process_kma_query_sync(query: str, retriever=None, llm=None, department_filter=None) -> Dict[str, Any]:
+def process_kma_query_sync(query: str, retriever=None, llm=None, department_filter=None, user_metadata=None) -> Dict[str, Any]:
     """
-    Synchronous GraphRAG query processing for tool usage.
+    Enhanced Department-based query processing với semantic detection.
     
     Args:
         query: The question to answer
-        retriever: Optional retriever (GraphRoutedRetriever or will create one)
+        retriever: Optional DepartmentGraphManager (will create one if not provided)
         llm: Optional LLM to use (will create Gemini if not provided)
-        department_filter: Department filter (ignored for GraphRAG - routing is automatic)
+        department_filter: Specific department to search (e.g., 'phongkhaothi')
+        user_metadata: User metadata for semantic routing {'role': 'student', 'department': 'phongdaotao'}
         
     Returns:
-        Dictionary with answer and sources
+        Dictionary with answer, sources and department decision
     """
-    from graph_rag import GraphRoutedRetriever
+    from graph_rag import DepartmentGraphManager
     
     # Create components if not provided
     if retriever is None:
@@ -358,24 +359,97 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
     with open(os.path.join(prompts_dir, "generate.txt"), "r", encoding='utf-8') as f:
         generate_prompt = f.read().strip()
 
-    # GraphRAG retrieval (automatic routing via graph)
-    if isinstance(retriever, GraphRoutedRetriever):
-        logger.info(f"🔍 GraphRAG query: {query[:100]}...")
+    # Enhanced Department-specific retrieval with semantic detection
+    if isinstance(retriever, DepartmentGraphManager):
+        logger.info(f"🏢 Enhanced department-based query: {query[:100]}...")
+        if department_filter:
+            logger.info(f"🎯 Department filter: {department_filter}")
+        if user_metadata:
+            logger.info(f"👤 User metadata: {user_metadata}")
         
-        # GraphRoutedRetriever handles routing automatically
-        # department_filter is ignored - graph routes via semantic similarity
-        docs = retriever._get_relevant_documents(query)
+        # Use semantic smart query
+        if user_metadata or not department_filter:
+            logger.info(f"🧠 Using semantic detection for department routing")
+            
+            # Prepare user metadata
+            if not user_metadata and department_filter:
+                user_metadata = {'role': 'student', 'department': department_filter}
+            
+            try:
+                # Use new query_smart method with semantic detection
+                docs, decision = retriever.query_smart(
+                    query=query,
+                    user_metadata=user_metadata,
+                    k=10
+                )
+                
+                # Log decision details
+                logger.info(f"🎯 Semantic decision: {decision.chosen_department} (confidence: {decision.confidence:.3f})")
+                logger.info(f"📝 Reasoning: {decision.reasoning}")
+                
+                if decision.conflict_detected:
+                    logger.warning("⚠️ Conflict detected and resolved using semantic similarity")
+                
+                if not decision.permission_granted:
+                    return {
+                        'answer': "Xin lỗi, bạn không có quyền truy cập thông tin này. Vui lòng liên hệ quản trị viên.",
+                        'sources': [],
+                        'department_decision': decision,
+                        'retrieval_method': 'semantic_permission_denied'
+                    }
+                
+                retrieval_method = f"semantic_{decision.chosen_department}"
+                
+                # Convert string results to documents if needed
+                if docs and isinstance(docs[0], str):
+                    from langchain_core.documents import Document
+                    docs = [Document(page_content=doc, metadata={'source': 'semantic_retrieval'}) for doc in docs]
+                
+            except Exception as e:
+                logger.error(f"❌ Semantic detection failed: {e}, falling back to legacy mode")
+                # Fallback to legacy mode
+                docs = []
+                decision = None
         
-        logger.info(f"📊 Retrieved {len(docs)} documents from graph")
+        # Fallback for specific department filter (legacy mode)
+        if (not docs or len(docs) == 0) and department_filter:
+            logger.info(f"📁 Fallback: Searching in specific department: {department_filter}")
+            try:
+                # Check if department has graphs loaded
+                if hasattr(retriever, 'department_retrievers') and department_filter in retriever.department_retrievers:
+                    dept_retriever = retriever.department_retrievers[department_filter]
+                    results = dept_retriever.retrieve_context(query, k=10)
+                    
+                    # Convert to documents
+                    from langchain_core.documents import Document
+                    docs = [Document(page_content=result, metadata={'source': f'{department_filter}_graph'}) for result in results]
+                    retrieval_method = f"legacy_{department_filter}"
+                else:
+                    logger.warning(f"❌ No graph found for department: {department_filter}")
+                    docs = []
+                    retrieval_method = "no_graph"
+            except Exception as e:
+                logger.error(f"❌ Legacy retrieval failed: {e}")
+                docs = []
+                retrieval_method = "error"
         
-        # Log first doc preview for debugging
+        logger.info(f"📊 Retrieved {len(docs)} documents from enhanced department search")
+        
+        # Log document sources for debugging
         if docs:
-            first_doc_preview = docs[0].page_content[:200].replace('\n', ' ')
-            logger.info(f"📄 First doc preview: {first_doc_preview}...")
+            for i, doc in enumerate(docs[:3]):
+                if hasattr(doc, 'metadata'):
+                    source = os.path.basename(doc.metadata.get('source', 'unknown'))
+                    dept = doc.metadata.get('query_department', 'semantic')
+                    logger.info(f"   📄 Doc {i+1}: [{dept}] {source}")
+                else:
+                    logger.info(f"   📄 Doc {i+1}: {doc[:100]}...")
     else:
         # Fallback for other retriever types (shouldn't happen now)
-        logger.warning(f"⚠️  Non-GraphRAG retriever detected: {type(retriever)}")
-        docs = retriever.get_relevant_documents(query)
+        logger.warning(f"⚠️  Non-DepartmentGraphManager detected: {type(retriever)}")
+        docs = retriever.get_relevant_documents(query) if hasattr(retriever, 'get_relevant_documents') else []
+        retrieval_method = "fallback"
+        decision = None
 
     # Combine document content
     context = "\n\n".join([doc.page_content for doc in docs])
@@ -385,9 +459,10 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
     if not context or len(context.strip()) == 0:
         logger.error("❌ Empty context! No documents were retrieved or documents are empty")
         return {
-            "answer": "Xin lỗi, tôi không tìm thấy thông tin phù hợp với câu hỏi của bạn.",
+            "answer": "Xin lỗi, tôi không tìm thấy thông tin phù hợp với câu hỏi của bạn trong phòng ban liên quan.",
             "sources": [],
-            "retrieval_method": "graphrag"
+            "retrieval_method": retrieval_method,
+            "department_decision": getattr(locals(), 'decision', None)
         }
     
     logger.info(f"📄 Context preview (first 300 chars): {context[:300]}...")
@@ -397,7 +472,7 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
     logger.info(f"📋 Prompt length: {len(prompt)} chars")
     logger.info(f"🤖 Invoking LLM...")
     
-    # Call LLM directly with prompt string (same as test file)
+    # Call LLM directly with prompt string
     response = llm.invoke(prompt)
     
     logger.info(f"✅ LLM response received, length: {len(response.content)} chars")
@@ -408,15 +483,25 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
         return {
             "answer": "Xin lỗi, không thể tạo câu trả lời từ thông tin tìm được.",
             "sources": [doc.page_content for doc in docs[:3]],
-            "retrieval_method": "graphrag"
+            "retrieval_method": retrieval_method,
+            "department_decision": getattr(locals(), 'decision', None)
         }
 
-    # Return the answer and sources
-    return {
+    # Return the enhanced answer and metadata
+    result = {
         "answer": response.content,
         "sources": [doc.page_content for doc in docs[:3]],
-        "retrieval_method": "graphrag"
+        "retrieval_method": retrieval_method
     }
+    
+    # Add department decision if available
+    if 'decision' in locals() and decision:
+        result["department_decision"] = decision
+        result["chosen_department"] = decision.chosen_department
+        result["conflict_detected"] = decision.conflict_detected
+        result["permission_granted"] = decision.permission_granted
+    
+    return result
 
 
 # Helper function for processing uploaded file queries
@@ -482,76 +567,65 @@ def clear_retriever_cache():
 
 def get_retriever():
     """
-    Get GraphRAG retriever with caching (ONLY GraphRAG - no mode switching)
+    Get DepartmentGraphManager with cached graphs (DEPARTMENT-SPECIFIC RETRIEVAL)
     
-    Returns GraphRoutedRetriever initialized from pre-built document graph.
-    Graph must be built using: python build_graph.py
+    Returns DepartmentGraphManager that routes queries to appropriate department graphs.
+    Department graphs must be built using: python build_department_graphs.py
     
     Performance: First call ~2-3s, subsequent calls ~0.01s (cached)
     """
-    global _GRAPH_CACHE, _PARTITIONER_CACHE, _RETRIEVER_CACHE
+    global _RETRIEVER_CACHE
     
-    # Return cached retriever if available
+    # Return cached manager if available
     if _RETRIEVER_CACHE is not None:
-        logger.info("⚡ Using cached GraphRAG retriever (instant)")
+        logger.info("⚡ Using cached DepartmentGraphManager (instant)")
         return _RETRIEVER_CACHE
     
     import os
     from pathlib import Path
-    from graph_rag import DocumentGraph, SubgraphPartitioner, GraphRoutedRetriever
+    from graph_rag import DepartmentGraphManager
     
     # Define paths
     current_dir = Path(__file__).parent.absolute()
     project_root = current_dir.parent.parent
-    graph_path = os.path.join(project_root, "document_graph", "graph.pkl")
+    dept_graphs_dir = os.path.join(project_root, "department_graphs")
     
-    # Check if graph exists
-    if not os.path.exists(graph_path):
+    # Check if department graphs exist
+    if not os.path.exists(dept_graphs_dir):
         error_msg = (
-            f"❌ Graph file not found: {graph_path}\n"
-            f"Please build the graph first using: python build_graph.py"
+            f"❌ Department graphs directory not found: {dept_graphs_dir}\n"
+            f"Please build department graphs first using: python build_department_graphs.py"
         )
         logger.error(error_msg)
         raise FileNotFoundError(error_msg)
     
     try:
-        # Load pre-built graph (only once)
-        logger.info(f"🔄 Loading graph from: {graph_path} (first time - caching for future queries)")
-        graph_builder = DocumentGraph()
-        graph_builder.load_graph(graph_path)
-        graph = graph_builder.graph
+        # Create department graph manager
+        logger.info(f"🔄 Loading department graphs from: {dept_graphs_dir} (first time - caching)")
+        dept_manager = DepartmentGraphManager(dept_graphs_dir)
         
-        logger.info(f"✅ Graph loaded: {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
-        _GRAPH_CACHE = graph
+        # Load all department graphs
+        success = dept_manager.load_existing_graphs()
         
-        # Create partitioner (community detection) - only once
-        logger.info("🔄 Creating subgraph partitioner (first time - caching)...")
-        partitioner = SubgraphPartitioner(graph=graph)
+        if not success:
+            raise RuntimeError("Failed to load department graphs")
         
-        # Partition using label_propagation (same as test file for consistency)
-        partitioner.partition_by_community_detection(algorithm='label_propagation')
+        # Get stats
+        stats = dept_manager.get_department_stats()
+        departments = list(stats.keys())
+        total_nodes = sum(stat['nodes'] for stat in stats.values())
         
-        logger.info(f"✅ Partitioner created: {len(partitioner.subgraphs)} communities")
-        _PARTITIONER_CACHE = partitioner
+        logger.info(f"✅ Department graphs loaded: {len(departments)} departments, {total_nodes} total nodes")
+        for dept, stat in stats.items():
+            logger.info(f"   📁 {dept}: {stat['nodes']} nodes, {stat['communities']} communities")
         
-        # Create GraphRoutedRetriever with optimized settings
-        retriever = GraphRoutedRetriever(
-            graph=graph,
-            partitioner=partitioner,
-            k=10,  # Final top-k returned to LLM
-            internal_k=30,  # Internal candidates before reranking
-            hop_depth=3,  # 3-hop graph traversal
-            expansion_factor=2.5  # Balanced expansion
-        )
-        
-        logger.info("✅ GraphRAG retriever initialized with k=10, internal_k=30, expansion=2.5")
         logger.info("💾 Cached for future queries (subsequent queries will be much faster)")
-        _RETRIEVER_CACHE = retriever
+        _RETRIEVER_CACHE = dept_manager
         
-        return retriever
+        return dept_manager
         
     except Exception as e:
-        logger.error(f"Failed to load GraphRAG retriever: {e}")
+        logger.error(f"Failed to load DepartmentGraphManager: {e}")
         raise
 
 
@@ -681,38 +755,53 @@ class KMAChatAgent:
         return state # Trả về toàn bộ state đã cập nhật
 
     def retrieve_documents(self, state: MessagesState):
-        """Retrieve documents using GraphRAG (graph-based routing)"""
+        """Retrieve documents using DepartmentGraphManager (department-based routing)"""
         query = state["messages"][0].content
         logger.info(f"Retrieving documents for query: {query}")
         
         # Debug: Check retriever type
         logger.info(f"Retriever type: {type(self.retriever).__name__}")
         
-        # GraphRoutedRetriever uses BaseRetriever interface
-        from graph_rag import GraphRoutedRetriever
+        # DepartmentGraphManager uses smart query routing
+        from graph_rag import DepartmentGraphManager
         
-        if isinstance(self.retriever, GraphRoutedRetriever):
-            logger.info("📊 Using GraphRAG retrieval (graph-based routing)")
-            docs = self.retriever._get_relevant_documents(query)
-            logger.info(f"GraphRAG returned {len(docs)} documents")
+        if isinstance(self.retriever, DepartmentGraphManager):
+            logger.info("🏢 Using Department-based retrieval (smart routing)")
+            docs = self.retriever.query_smart(query, k=10)
+            logger.info(f"Department-based retrieval returned {len(docs)} documents")
+            
+            # Log department distribution
+            dept_distribution = {}
+            for doc in docs:
+                dept = doc.metadata.get('query_department', 'unknown')
+                dept_distribution[dept] = dept_distribution.get(dept, 0) + 1
+            logger.info(f"📊 Department distribution: {dept_distribution}")
+            
         else:
             # Fallback for other retriever types
             logger.warning(f"Unknown retriever type: {type(self.retriever).__name__}, using generic retrieval")
-            docs = self.retriever.get_relevant_documents(query)
+            if hasattr(self.retriever, 'get_relevant_documents'):
+                docs = self.retriever.get_relevant_documents(query)
+            elif hasattr(self.retriever, '_get_relevant_documents'):
+                docs = self.retriever._get_relevant_documents(query)
+            else:
+                logger.error("Retriever has no compatible retrieval method")
+                docs = []
             logger.info(f"Generic retrieval returned {len(docs)} documents")
         
         # Debug: Check first few documents
         for i, doc in enumerate(docs[:3]):
             content_preview = doc.page_content[:100].replace('\n', ' ')
-            logger.info(f"Doc {i+1}: {content_preview}...")
+            source = os.path.basename(doc.metadata.get('source', 'unknown'))
+            dept = doc.metadata.get('query_department', 'unknown')
+            logger.info(f"Doc {i+1}: [{dept}] {source} - {content_preview}...")
             
         # Combine document content
         combined_content = "\n\n".join([doc.page_content for doc in docs])
         logger.info(f"Combined content length: {len(combined_content)} characters")
-        logger.info(f"Combined content contains 'Quân y': {'quân y' in combined_content.lower()}")
         
         # Add the retrieved content as a system message
-        retrieval_message = AIMessage(content=combined_content, name="retrieved_context") # Đặt tên để dễ debug
+        retrieval_message = AIMessage(content=combined_content, name="retrieved_context")
         # Update the state with the retrieved documents
         logger.info(f"Retrieved {len(docs)} documents.")
         return {"messages": state["messages"] + [retrieval_message]}

@@ -372,8 +372,10 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
             logger.info(f"🧠 Using semantic detection for department routing")
             
             # Prepare user metadata
+            # Only create metadata from department_filter if no user_metadata at all
             if not user_metadata and department_filter:
                 user_metadata = {'role': 'student', 'department': department_filter}
+            # Don't override user choice with department_filter
             
             try:
                 # Use new query_smart method with semantic detection

@@ -8,3 +8,4 @@ from pydantic import BaseModel, Field
 # --- Định nghĩa State ---
 class MyAgentState(TypedDict):
     messages: Annotated[Sequence[BaseMessage], add_messages]
+    department: Optional[str]  # Add department to state

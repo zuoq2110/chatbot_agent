@@ -25,6 +25,8 @@ async def test_graph_rag_with_answer(query: str):
     
     # Load or build graph
     graph_path = "document_graph/graph.pkl"
+    # graph_path = "department_graphs/common_graph/common_graph.pkl"
+
     if os.path.exists(graph_path):
         print("Loading pre-built graph...")
         start_time = time.time()
@@ -56,14 +58,38 @@ async def test_graph_rag_with_answer(query: str):
         graph_builder.save_graph(graph_path)
         print(f"   ✅ Graph saved to {graph_path}")
     
-    # Partition graph
-    print("\n🔍 Partitioning graph...")
+    # Partition graph (only if not already partitioned)
+    print("\n🔍 Checking graph partitioning...")
     start_time = time.time()
     partitioner = SubgraphPartitioner(graph)
-    partitioner.partition_by_community_detection(algorithm='label_propagation')
-    partition_time = time.time() - start_time
-    print(f"✅ Partitioning completed in {partition_time:.2f}s")
-    print(f"   Communities: {len(partitioner.get_all_subgraphs())}")
+    
+    # Check if graph already has communities
+    has_communities = any('community' in node_data for _, node_data in graph.nodes(data=True))
+    
+    if has_communities:
+        print("✅ Graph already has communities, skipping partitioning")
+        # Populate partitioner with existing communities
+        communities = {}
+        for node_id, node_data in graph.nodes(data=True):
+            comm_id = node_data.get('community', 0)
+            if comm_id not in communities:
+                communities[comm_id] = set()
+            communities[comm_id].add(node_id)
+        partitioner.subgraphs = communities
+        
+        # Load community metadata from graph builder if available
+        metadata = graph_builder.get_community_metadata()
+        partitioner.community_summaries = metadata['summaries']
+        partitioner.community_centroids = metadata['centroids']
+        
+        print(f"   Found {len(communities)} existing communities")
+        print(f"   Loaded {len(metadata['summaries'])} summaries, {len(metadata['centroids'])} centroids")
+    else:
+        print("Graph not partitioned yet, running community detection...")
+        partitioner.partition_by_community_detection(algorithm='label_propagation')
+        partition_time = time.time() - start_time
+        print(f"✅ Partitioning completed in {partition_time:.2f}s")
+        print(f"   Communities: {len(partitioner.get_all_subgraphs())}")
     
     # Create retriever with balanced parameters
     print("\n🤖 Creating Graph-Routed retriever...")
@@ -216,6 +242,7 @@ TRẢ LỜI:"""
 
 if __name__ == "__main__":
     # Test với query có trong data về phần mềm mã nguồn mở
-    query = """Đánh giá học phần gồm những thành phần nào?"""
+    query = """Trách nhiệm chung của cán bộ coi thi là gì?
+"""
     
     asyncio.run(test_graph_rag_with_answer(query))

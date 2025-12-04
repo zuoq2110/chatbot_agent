@@ -3,7 +3,7 @@ Graph-Routed Retriever
 Retrieval dựa trên graph traversal với routing strategies
 """
 import logging
-from typing import List, Dict, Any, Optional, Set
+from typing import List, Dict, Any, Optional, Set, Tuple
 import networkx as nx
 from langchain_core.documents import Document
 from langchain_core.retrievers import BaseRetriever
@@ -122,13 +122,14 @@ class GraphRoutedRetriever(BaseRetriever, BaseModel):
             
             # Boost if in BOTH results (hybrid bonus)
             if semantic_score > 0 and keyword_score > 0:
-                doc_scores[doc_id]['final'] = semantic_score * 0.6 + keyword_score * 0.4 + 50  # Hybrid boost
+                # FIXED: Increased semantic weight and hybrid boost for better CVS retrieval
+                doc_scores[doc_id]['final'] = semantic_score * 0.85 + keyword_score * 0.15 + 120  # Higher semantic weight + boost
             else:
-                doc_scores[doc_id]['final'] = semantic_score * 0.6 + keyword_score * 0.4
+                doc_scores[doc_id]['final'] = semantic_score * 0.85 + keyword_score * 0.15
             
-            # Extra boost for table chunks
+            # REDUCED table boost to prevent irrelevant documents with tables from dominating
             if doc_scores[doc_id]['doc'].metadata.get('contains_table', False):
-                doc_scores[doc_id]['final'] *= 1.3
+                doc_scores[doc_id]['final'] *= 1.1  # Reduced from 1.3 to 1.1
         
         # Rank by final score
         ranked = sorted(doc_scores.items(), key=lambda x: x[1]['final'], reverse=True)
@@ -138,96 +139,123 @@ class GraphRoutedRetriever(BaseRetriever, BaseModel):
         logger.info("=" * 60)
         return final_docs
     
-    def _route_query_automated(self, query: str, top_k_communities: int = 15) -> Dict[Any, Set[int]]:
+    def _route_query_automated(self, query: str) -> Dict[Any, Set[int]]:
         """
-        AUTOMATED ROUTING: Route query to relevant communities
-        Uses embedding similarity - NO HARDCODED RULES
-        OPTIMIZED: Cache query embeddings
-        ENHANCED: Route to top-5 communities (increased from 3) for better coverage
-        IMPROVED: Increased default top_k from 10 to 15 to avoid centroid averaging problem
-        
-        Returns:
-            Dict mapping community_id -> node_ids to search
+        Hybrid routing: Semantic + BM25 + Reranking
         """
-        # Cache query embedding
+
+        # 1. Ensure partition
+        if not self.partitioner.get_all_subgraphs():
+            self.partitioner.partition_by_community_detection()
+
+        # 2. Cache embedding
         if query not in self._query_embedding_cache:
-            self._query_embedding_cache[query] = np.array(self.embeddings.embed_query(query))
-        
+            self._query_embedding_cache[query] = np.array(
+                self.embeddings.embed_query(query)
+            )
         query_embedding = self._query_embedding_cache[query]
-        
-        # Route to top-k most similar communities (increased from 2 to 3)
-        top_communities = self.partitioner.route_query_to_communities(
-            query_embedding, 
-            top_k=top_k_communities
+
+        # 3. Semantic top-k (base)
+        semantic_top = self.partitioner.route_query_to_communities(
+            query_embedding, top_k=5
         )
-        
-        # DEBUG: Log selected communities
-        logger.info(f"🎯 Routing selected {len(top_communities)} communities:")
-        for comm_id, score in top_communities[:5]:
-            size = len(self.partitioner.get_subgraph(comm_id))
-            marker = "👉 Bảng 3 HERE" if comm_id == 0 else ""
-            logger.info(f"   Community {comm_id}: score={score:.4f}, size={size} nodes {marker}")
-        
-        if not top_communities:
-            # Fallback: search all subgraphs
-            logger.warning("No communities found, searching all nodes")
-            return self.partitioner.get_all_subgraphs()
-        
-        # Get node IDs for selected communities
-        target_subgraphs = {}
-        for comm_id, similarity in top_communities:
-            node_ids = self.partitioner.get_subgraph(comm_id)
-            if node_ids:
-                target_subgraphs[comm_id] = node_ids
-        
-        return target_subgraphs
+
+        # 4. BM25 top-k (base)
+        bm25_scores = self._compute_community_bm25_scores(query)
+        bm25_top = sorted(bm25_scores.items(), key=lambda x: x[1], reverse=True)[:5]
+
+        # 5. Merge candidates
+        candidate_ids = {cid for cid, _ in semantic_top} | {cid for cid, _ in bm25_top}
+
+        # 6. Hybrid reranking
+        reranked = self._rerank_communities_hybrid(
+            semantic_top, bm25_scores, query
+        )
+
+        # 7. Convert to actual node sets
+        result = {}
+        for comm_id, _ in reranked:
+            nodes = self.partitioner.get_subgraph(comm_id)
+            if nodes:
+                result[comm_id] = nodes
+
+        return result
+
     
     def _search_in_subgraph(self, query: str, node_ids: Set[int]) -> List[Document]:
         """
-        IMPROVED: Document-level similarity search to avoid centroid averaging problem
+        ENHANCED SUBGRAPH SEARCH: Multi-stage search with neighbor expansion & reranking
         
-        FIX: Previously relied on centroid-based routing which could miss relevant documents
-        if they were "drowned out" by majority documents in the community.
-        
-        NEW Strategy:
-        1. Compute similarity with EVERY document (not just centroid)
-        2. Use cached embeddings from graph nodes (fast!)
-        3. Expand from high-scoring seeds with weighted BFS
-        4. Return diverse results
+        Strategy:
+        1. Find top-K semantic nodes in community (seed nodes)
+        2. Expand subgraph with neighbors (1-hop + limited 2-hop)
+        3. Boost neighbor scores based on proximity to top-K seeds
+        4. Rerank entire expanded subgraph
+        5. Return final top documents
         """
         if not node_ids:
             return []
         
-        logger.info(f"🔍 Document-level search in subgraph with {len(node_ids)} nodes")
+        logger.info(f"🔍 Enhanced subgraph search with {len(node_ids)} nodes")
         
-        # Get cached query embedding
+        # Cache query embedding
         if query not in self._query_embedding_cache:
             self._query_embedding_cache[query] = np.array(self.embeddings.embed_query(query))
         query_embedding = self._query_embedding_cache[query]
         
-        # IMPROVEMENT: Compute similarities with ALL documents (not just centroid)
-        # This avoids the "centroid averaging" problem where relevant docs are hidden
-        node_scores = {}
+        # STEP 1: Compute initial semantic similarities for all community nodes
+        initial_scores = {}
         for node_id in node_ids:
             if node_id not in self.graph.nodes:
                 continue
             
-            # Use cached embedding from graph builder (NO API CALL!)
             doc_embedding = self.graph.nodes[node_id].get('embedding')
-            
             if doc_embedding is None:
-                continue  # Skip if no embedding cached
+                continue
             
-            # Fast cosine similarity at DOCUMENT level (no API calls!)
+            # Semantic similarity
             similarity = np.dot(query_embedding, doc_embedding) / (
                 np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding)
             )
-            node_scores[node_id] = similarity
+            initial_scores[node_id] = similarity
         
-        logger.info(f"✅ Computed {len(node_scores)} document-level similarities (avg={np.mean(list(node_scores.values())):.3f})")
+        logger.info(f"✅ Initial semantic scores: {len(initial_scores)} nodes (avg={np.mean(list(initial_scores.values())):.3f})")
         
-        # Sort by similarity
-        sorted_nodes = sorted(node_scores.items(), key=lambda x: x[1], reverse=True)
+        # STEP 2: Find top-K seed nodes (high-scoring nodes in community)
+        sorted_initial = sorted(initial_scores.items(), key=lambda x: x[1], reverse=True)
+        top_k = min(10, len(sorted_initial))  # Top-10 seeds
+        seed_nodes = {node_id for node_id, _ in sorted_initial[:top_k]}
+        
+        logger.info(f"🌱 Selected {len(seed_nodes)} seed nodes from community")
+        
+        # STEP 3: Expand subgraph with neighbors (1-hop + limited 2-hop)
+        expanded_nodes = self._expand_subgraph_with_neighbors(seed_nodes, node_ids)
+        
+        logger.info(f"🔗 Expanded to {len(expanded_nodes)} nodes (from {len(node_ids)} original)")
+        
+        # STEP 4: Compute BM25 scores for expanded nodes
+        bm25_scores = self._compute_subgraph_bm25_scores(query, expanded_nodes)
+        
+        # STEP 5: Boost neighbor scores based on proximity to seeds
+        boosted_scores = self._boost_neighbor_scores(expanded_nodes, seed_nodes, initial_scores, bm25_scores)
+        
+        # STEP 6: Final reranking with hybrid scores
+        final_scores = self._rerank_subgraph_hybrid(query, expanded_nodes, boosted_scores, seed_nodes)
+        
+        # STEP 7: Convert top nodes to documents
+        target_docs = min(20, len(final_scores))  # 5-20 chunks as requested
+        sorted_final = sorted(final_scores.items(), key=lambda x: x[1], reverse=True)
+        
+        docs = []
+        for node_id, score in sorted_final[:target_docs]:
+            if node_id in self.graph.nodes and 'document' in self.graph.nodes[node_id]:
+                doc = self.graph.nodes[node_id]['document']
+                doc.metadata['relevance_score'] = float(score)
+                doc.metadata['is_seed'] = node_id in seed_nodes
+                docs.append(doc)
+        
+        logger.info(f"📄 Final: {len(docs)} documents selected from expanded subgraph")
+        return docs
         
         # IMPROVED: Adaptive expansion with aggressive graph traversal for tables
         # Tables/data often have low semantic similarity but high structural relevance
@@ -763,3 +791,386 @@ class GraphRoutedRetriever(BaseRetriever, BaseModel):
                 remaining.remove(best)
         
         return selected
+    
+    def _compute_community_bm25_scores(self, query: str) -> Dict[int, float]:
+        """
+        Compute BM25 scores for each community based on aggregated content
+        
+        Args:
+            query: User query string
+            
+        Returns:
+            Dict mapping community_id -> BM25 score
+        """
+        from collections import Counter
+        import math
+        
+        # Preprocess query
+        query_keywords = set(query.lower().split())
+        stop_words = {'là', 'của', 'và', 'có', 'để', 'trong', 'được', 'cho', 'các', 'một', 'này', 'đó'}
+        query_keywords = {kw for kw in query_keywords if kw not in stop_words and len(kw) > 2}
+        
+        if not query_keywords:
+            return {}
+        
+        # Build community documents (aggregated content)
+        community_docs = {}
+        for comm_id, node_ids in self.partitioner.get_all_subgraphs().items():
+            # Aggregate content from top nodes in community
+            content_parts = []
+            for node_id in list(node_ids)[:50]:  # Limit to top 50 nodes per community
+                if node_id in self.graph.nodes:
+                    content = self.graph.nodes[node_id].get('content', '')
+                    if content.strip():
+                        content_parts.append(content)
+            
+            # Combine content + community summary
+            combined_content = ' '.join(content_parts)
+            summary = self.partitioner.community_summaries.get(comm_id, '')
+            community_docs[comm_id] = f"{combined_content} {summary}".lower()
+        
+        # Compute document frequencies for IDF
+        N = len(community_docs)
+        doc_freqs = Counter()
+        
+        for doc_content in community_docs.values():
+            doc_tokens = set(doc_content.split())
+            for keyword in query_keywords:
+                if keyword in doc_tokens:
+                    doc_freqs[keyword] += 1
+        
+        # Compute IDF scores
+        idf = {}
+        for keyword in query_keywords:
+            df = doc_freqs.get(keyword, 0)
+            idf[keyword] = math.log((N - df + 0.5) / (df + 0.5) + 1)
+        
+        # Compute BM25 for each community
+        k1, b = 1.5, 0.75
+        avg_len = sum(len(doc.split()) for doc in community_docs.values()) / N if N > 0 else 1
+        
+        scores = {}
+        for comm_id, doc_content in community_docs.items():
+            doc_tokens = doc_content.split()
+            doc_len = len(doc_tokens)
+            token_freqs = Counter(doc_tokens)
+            
+            score = 0.0
+            for keyword in query_keywords:
+                if keyword in token_freqs:
+                    tf = token_freqs[keyword]
+                    score += idf.get(keyword, 0) * (tf * (k1 + 1)) / (
+                        tf + k1 * (1 - b + b * doc_len / avg_len)
+                    )
+            
+            # Normalize by query length
+            scores[comm_id] = score / len(query_keywords)
+        
+        return scores
+    
+    def _rerank_communities_hybrid(self, semantic_communities: List[Tuple[int, float]], 
+                                   bm25_scores: Dict[int, float], 
+                                   query: str) -> List[Tuple[int, float]]:
+        """
+        Hybrid reranking combining semantic similarity + BM25 + metadata boosting
+        
+        Args:
+            semantic_communities: List of (community_id, semantic_score)
+            bm25_scores: Dict of community_id -> BM25 score
+            query: Original query for metadata analysis
+            
+        Returns:
+            List of (community_id, final_score) sorted by relevance
+        """
+        query_lower = query.lower()
+        
+        # Identify query type for metadata boosting
+        is_academic_query = any(kw in query_lower for kw in [
+            'đào tạo', 'sinh viên', 'học', 'thi', 'điểm', 'khóa', 'ngành'
+        ])
+        is_research_query = any(kw in query_lower for kw in [
+            'nghiên cứu', 'khoa học', 'đề tài', 'hợp tác', 'phát triển'
+        ])
+        is_numeric_query = any(kw in query_lower for kw in [
+            'bao nhiêu', 'điểm', 'quy đổi', 'bảng', 'toeic', 'ielts', 'toefl'
+        ])
+        
+        # Normalize BM25 scores
+        max_bm25 = max(bm25_scores.values()) if bm25_scores else 1.0
+        normalized_bm25 = {k: v / max_bm25 for k, v in bm25_scores.items()} if max_bm25 > 0 else {}
+        
+        # Compute hybrid scores
+        hybrid_scores = []
+        
+        for comm_id, semantic_score in semantic_communities:
+            bm25_score = normalized_bm25.get(comm_id, 0.0)
+            
+            # Base hybrid score: 70% semantic + 30% BM25
+            base_score = 0.70 * semantic_score + 0.30 * bm25_score
+            
+            # Metadata boosting based on query type
+            metadata_boost = 0.0
+            
+            if hasattr(self.partitioner, 'community_metadata'):
+                meta = self.partitioner.community_metadata.get(comm_id, {})
+                categories = meta.get('categories', [])
+                
+                for category in categories:
+                    # Academic query boost
+                    if is_academic_query and any(dept in category for dept in [
+                        'phongdaotao', 'phongkhaothi', 'daihoc', 'thacsi'
+                    ]):
+                        metadata_boost += 0.15
+                    
+                    # Research query boost  
+                    if is_research_query and 'viennghiencuuvahoptacphattrien' in category:
+                        metadata_boost += 0.20
+                    
+                    # Numeric/table query boost (for score conversion tables)
+                    if is_numeric_query and any(indicator in category for indicator in [
+                        'quy_doi', 'bang', 'diem'
+                    ]):
+                        metadata_boost += 0.25
+            
+            # Special boost for table-heavy communities on numeric queries
+            if is_numeric_query:
+                node_ids = self.partitioner.get_subgraph(comm_id)
+                table_count = sum(1 for nid in list(node_ids)[:20] 
+                                if nid in self.graph.nodes and 
+                                self.graph.nodes[nid].get('metadata', {}).get('contains_table', False))
+                if table_count > 0:
+                    metadata_boost += min(0.30, table_count * 0.05)  # Up to 30% boost
+            
+            final_score = base_score + metadata_boost
+            hybrid_scores.append((comm_id, final_score))
+        
+        # Sort by final score and apply adaptive selection
+        hybrid_scores.sort(key=lambda x: x[1], reverse=True)
+        
+        # Adaptive selection based on score distribution
+        if hybrid_scores:
+            best_score = hybrid_scores[0][1]
+            
+            if best_score > 0.8:
+                # High confidence: take top 3-5
+                selected = hybrid_scores[:min(5, len(hybrid_scores))]
+            elif best_score > 0.6:
+                # Medium confidence: take top 5-7
+                selected = hybrid_scores[:min(7, len(hybrid_scores))]
+            else:
+                # Low confidence: take more communities
+                selected = hybrid_scores[:min(len(hybrid_scores), len(self.partitioner.get_all_subgraphs()))]
+        else:
+            selected = []
+        
+        return selected
+    
+    def _expand_subgraph_with_neighbors(self, seed_nodes: Set[int], original_nodes: Set[int]) -> Set[int]:
+        """
+        Expand subgraph by adding neighbors of seed nodes (1-hop + limited 2-hop)
+        
+        Args:
+            seed_nodes: High-scoring seed nodes
+            original_nodes: Original nodes in the community
+            
+        Returns:
+            Set of expanded node IDs (original + neighbors)
+        """
+        expanded = set(original_nodes)  # Start with original community nodes
+        
+        # 1-hop expansion: Add direct neighbors of seeds
+        one_hop_neighbors = set()
+        for seed in seed_nodes:
+            for neighbor in self.graph.neighbors(seed):
+                if neighbor not in expanded:  # Don't add nodes already in community
+                    one_hop_neighbors.add(neighbor)
+        
+        expanded.update(one_hop_neighbors)
+        logger.info(f"   1-hop: +{len(one_hop_neighbors)} neighbors")
+        
+        # Limited 2-hop expansion: Add neighbors of 1-hop neighbors (with limits)
+        two_hop_neighbors = set()
+        max_two_hop = 50  # Limit 2-hop expansion to prevent explosion
+        
+        for one_hop in list(one_hop_neighbors)[:20]:  # Only expand from top 20 1-hop neighbors
+            for neighbor in self.graph.neighbors(one_hop):
+                if neighbor not in expanded and len(two_hop_neighbors) < max_two_hop:
+                    two_hop_neighbors.add(neighbor)
+        
+        expanded.update(two_hop_neighbors)
+        logger.info(f"   2-hop: +{len(two_hop_neighbors)} neighbors (limited)")
+        
+        return expanded
+    
+    def _compute_subgraph_bm25_scores(self, query: str, node_ids: Set[int]) -> Dict[int, float]:
+        """
+        Compute BM25 scores for nodes in expanded subgraph
+        """
+        from collections import Counter
+        import math
+        
+        # Preprocess query
+        query_keywords = set(query.lower().split())
+        stop_words = {'là', 'của', 'và', 'có', 'để', 'trong', 'được', 'cho', 'các', 'một', 'này', 'đó'}
+        query_keywords = {kw for kw in query_keywords if kw not in stop_words and len(kw) > 2}
+        
+        if not query_keywords:
+            return {nid: 0.0 for nid in node_ids}
+        
+        # Collect documents
+        node_contents = {}
+        for node_id in node_ids:
+            if node_id in self.graph.nodes:
+                content = self.graph.nodes[node_id].get('content', '').lower()
+                if content.strip():
+                    node_contents[node_id] = content
+        
+        if not node_contents:
+            return {nid: 0.0 for nid in node_ids}
+        
+        # Compute document frequencies for IDF
+        N = len(node_contents)
+        doc_freqs = Counter()
+        
+        for content in node_contents.values():
+            doc_tokens = set(content.split())
+            for keyword in query_keywords:
+                if keyword in doc_tokens:
+                    doc_freqs[keyword] += 1
+        
+        # Compute IDF scores
+        idf = {}
+        for keyword in query_keywords:
+            df = doc_freqs.get(keyword, 0)
+            idf[keyword] = math.log((N - df + 0.5) / (df + 0.5) + 1)
+        
+        # Compute BM25 for each node
+        k1, b = 1.5, 0.75
+        avg_len = sum(len(content.split()) for content in node_contents.values()) / N
+        
+        scores = {}
+        for node_id, content in node_contents.items():
+            doc_tokens = content.split()
+            doc_len = len(doc_tokens)
+            token_freqs = Counter(doc_tokens)
+            
+            score = 0.0
+            for keyword in query_keywords:
+                if keyword in token_freqs:
+                    tf = token_freqs[keyword]
+                    score += idf.get(keyword, 0) * (tf * (k1 + 1)) / (
+                        tf + k1 * (1 - b + b * doc_len / avg_len)
+                    )
+            
+            scores[node_id] = score / len(query_keywords)
+        
+        # Fill in zeros for nodes without content
+        for node_id in node_ids:
+            if node_id not in scores:
+                scores[node_id] = 0.0
+        
+        return scores
+    
+    def _boost_neighbor_scores(self, expanded_nodes: Set[int], seed_nodes: Set[int], 
+                               semantic_scores: Dict[int, float], bm25_scores: Dict[int, float]) -> Dict[int, float]:
+        """
+        Boost scores of neighbors based on proximity to high-scoring seed nodes
+        """
+        boosted_scores = {}
+        
+        for node_id in expanded_nodes:
+            # Base scores (semantic + BM25)
+            semantic_score = semantic_scores.get(node_id, 0.0)
+            bm25_score = bm25_scores.get(node_id, 0.0)
+            
+            # Base hybrid score
+            base_score = 0.7 * semantic_score + 0.3 * bm25_score
+            
+            # Proximity boost: boost nodes that are neighbors of seed nodes
+            proximity_boost = 0.0
+            
+            if node_id in seed_nodes:
+                # Seed nodes get maximum boost
+                proximity_boost = 0.5
+            else:
+                # Check if this node is a neighbor of any seed
+                for seed in seed_nodes:
+                    if self.graph.has_edge(node_id, seed):
+                        edge_data = self.graph.get_edge_data(node_id, seed)
+                        edge_weight = edge_data.get('weight', 0.5) if edge_data else 0.5
+                        edge_type = edge_data.get('edge_type', '') if edge_data else ''
+                        
+                        # Different boost based on edge type
+                        if edge_type == 'structural':
+                            proximity_boost = max(proximity_boost, 0.4 * edge_weight)  # Strong boost for structural neighbors
+                        elif edge_type == 'semantic':
+                            proximity_boost = max(proximity_boost, 0.3 * edge_weight)  # Medium boost for semantic neighbors
+                        else:
+                            proximity_boost = max(proximity_boost, 0.2 * edge_weight)  # General boost
+                        
+                        # Don't check more seeds if we already have a good boost
+                        if proximity_boost >= 0.4:
+                            break
+            
+            final_score = base_score + proximity_boost
+            boosted_scores[node_id] = final_score
+        
+        return boosted_scores
+    
+    def _rerank_subgraph_hybrid(self, query: str, expanded_nodes: Set[int], 
+                                boosted_scores: Dict[int, float], seed_nodes: Set[int]) -> Dict[int, float]:
+        """
+        Final hybrid reranking of entire expanded subgraph
+        """
+        query_lower = query.lower()
+        
+        # Query type detection for additional boosting
+        is_numeric_query = any(kw in query_lower for kw in [
+            'điểm', 'bao nhiêu', 'quy đổi', 'bảng', 'table', 'số'
+        ])
+        
+        final_scores = {}
+        
+        for node_id in expanded_nodes:
+            base_score = boosted_scores.get(node_id, 0.0)
+            
+            # Additional metadata boosting
+            metadata_boost = 0.0
+            
+            if node_id in self.graph.nodes:
+                metadata = self.graph.nodes[node_id].get('metadata', {})
+                
+                # Table boost for numeric queries
+                if is_numeric_query and metadata.get('contains_table', False):
+                    metadata_boost += 0.3
+                
+                # Department relevance boost
+                category = metadata.get('category', '').lower()
+                if any(dept in category for dept in ['phongdaotao', 'phongkhaothi']):
+                    if any(kw in query_lower for kw in ['học', 'thi', 'điểm', 'sinh viên']):
+                        metadata_boost += 0.2
+            
+            # Diversity penalty: slightly reduce score for nodes too similar to already high-scoring seeds
+            diversity_penalty = 0.0
+            if node_id not in seed_nodes and len(seed_nodes) > 0:
+                # Check similarity to top seeds
+                node_embedding = self.graph.nodes[node_id].get('embedding') if node_id in self.graph.nodes else None
+                if node_embedding is not None:
+                    max_similarity = 0.0
+                    for seed in list(seed_nodes)[:3]:  # Check against top 3 seeds only
+                        if seed in self.graph.nodes:
+                            seed_embedding = self.graph.nodes[seed].get('embedding')
+                            if seed_embedding is not None:
+                                sim = np.dot(node_embedding, seed_embedding) / (
+                                    np.linalg.norm(node_embedding) * np.linalg.norm(seed_embedding)
+                                )
+                                max_similarity = max(max_similarity, sim)
+                    
+                    # Apply small diversity penalty if too similar
+                    if max_similarity > 0.95:
+                        diversity_penalty = 0.1 * (max_similarity - 0.95) / 0.05
+            
+            final_score = base_score + metadata_boost - diversity_penalty
+            final_scores[node_id] = final_score
+        
+        return final_scores

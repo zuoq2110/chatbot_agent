@@ -734,6 +734,9 @@ def load_documents_from_folder(data_folder: str, chunk_size: int = 800, chunk_ov
             metadata['source'] = os.path.basename(file_path)
             metadata['full_path'] = file_path  # Preserve full path for department detection
             
+            # Check if file is markdown
+            is_markdown = file_path.lower().endswith(('.md', '.markdown'))
+            
             # Use enhanced chunking
             chunks = enhanced_text_chunking(content, chunk_settings)
             

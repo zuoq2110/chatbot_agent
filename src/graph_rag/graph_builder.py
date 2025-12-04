@@ -47,6 +47,11 @@ class DocumentGraph:
         )
         self.doc_embeddings = {}  # Cache embeddings
         
+        # Community metadata for persistence
+        self.community_summaries = {}      # Dict[community_id, summary_text]
+        self.community_centroids = {}      # Dict[community_id, centroid_vector] 
+        self.community_members = {}        # Dict[community_id, Set[node_ids]]
+        
     def build_graph(self, documents: List[Document]) -> nx.Graph:
         """
         Xây dựng graph từ documents với 3 loại edges:
@@ -71,7 +76,39 @@ class DocumentGraph:
         self._add_semantic_edges(documents)
         
         logger.info(f"Graph built: {self.graph.number_of_nodes()} nodes, {self.graph.number_of_edges()} edges")
+        
+        # Build communities and generate metadata
+        logger.info("Building communities and generating metadata...")
+        self._build_communities()
+        
         return self.graph
+    
+    def _build_communities(self):
+        """Build communities and generate LLM-based summaries"""
+        from .subgraph_partitioner import SubgraphPartitioner
+        
+        # Create partitioner and run community detection
+        partitioner = SubgraphPartitioner(self.graph)
+        partitioner.partition_by_community_detection(algorithm='louvain')
+        
+        # Store community metadata for persistence
+        self.community_summaries = partitioner.community_summaries.copy()
+        self.community_centroids = partitioner.community_centroids.copy()
+        self.community_members = {}
+        
+        # Convert subgraphs (Set) to members (Set) for serialization
+        for comm_id, node_set in partitioner.subgraphs.items():
+            self.community_members[comm_id] = set(node_set)  # Ensure it's a set
+        
+        logger.info(f"✅ Built {len(self.community_summaries)} communities with LLM summaries")
+    
+    def get_community_metadata(self):
+        """Get community metadata for external use"""
+        return {
+            'summaries': self.community_summaries,
+            'centroids': self.community_centroids,
+            'members': self.community_members
+        }
     
     def _add_structural_edges(self, documents: List[Document]):
         """Add edges between chunks from the same file"""
@@ -256,23 +293,33 @@ class DocumentGraph:
         return self.graph.nodes[node_id]['document']
     
     def save_graph(self, filepath: str):
-        """Save graph to file"""
+        """Save graph to file with community metadata"""
         import pickle
         with open(filepath, 'wb') as f:
-            # Save graph và embeddings cache
+            # Save graph, embeddings cache, AND community metadata
             pickle.dump({
                 'graph': self.graph,
                 'doc_embeddings': self.doc_embeddings,
-                'semantic_threshold': self.semantic_threshold
+                'semantic_threshold': self.semantic_threshold,
+                # Community metadata for routing
+                'community_summaries': self.community_summaries,
+                'community_centroids': self.community_centroids,
+                'community_members': self.community_members
             }, f)
-        logger.info(f"Graph saved to {filepath}")
+        logger.info(f"Graph saved to {filepath} (with community metadata)")
     
     def load_graph(self, filepath: str):
-        """Load graph from file"""
+        """Load graph from file with community metadata"""
         import pickle
         with open(filepath, 'rb') as f:
             data = pickle.load(f)
             self.graph = data['graph']
             self.doc_embeddings = data['doc_embeddings']
             self.semantic_threshold = data['semantic_threshold']
-        logger.info(f"Graph loaded from {filepath}")
+            
+            # Load community metadata if available
+            self.community_summaries = data.get('community_summaries', {})
+            self.community_centroids = data.get('community_centroids', {})
+            self.community_members = data.get('community_members', {})
+            
+        logger.info(f"Graph loaded from {filepath} (communities: {len(self.community_summaries)})")

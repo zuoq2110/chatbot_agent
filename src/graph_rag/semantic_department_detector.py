@@ -140,9 +140,9 @@ class SemanticDepartmentDetector:
     def build_department_embeddings(self, documents_by_dept: Dict[str, List[Document]]):
         """
         Build representative embeddings cho từng department
-        Tính average embedding của tất cả documents trong department
+        Chỉ tính từ các file có đuôi .md
         """
-        logger.info("🧠 BUILDING DEPARTMENT EMBEDDINGS")
+        logger.info("🧠 BUILDING DEPARTMENT EMBEDDINGS (MD files only)")
         logger.info("=" * 60)
         
         self._init_embedding_model()
@@ -156,11 +156,22 @@ class SemanticDepartmentDetector:
                 logger.warning(f"⚠️ No documents for {dept}, skipping")
                 continue
                 
-            logger.info(f"📄 Processing {dept}: {len(documents)} documents")
+            # Filter chỉ các file .md
+            md_documents = []
+            for doc in documents:
+                source = doc.metadata.get('source', '')
+                if source.lower().endswith('.md'):
+                    md_documents.append(doc)
+            
+            if len(md_documents) == 0:
+                logger.warning(f"⚠️ No .md documents for {dept}, skipping")
+                continue
+                
+            logger.info(f"📄 Processing {dept}: {len(md_documents)} .md documents (filtered from {len(documents)} total)")
             
             # Combine all document content for department
             combined_text = []
-            for doc in documents:
+            for doc in md_documents:
                 content = doc.page_content[:1000]  # Limit per doc
                 combined_text.append(content)
             
@@ -503,6 +514,20 @@ class SemanticDepartmentDetector:
         
         # Signal 1: User metadata
         user_signal = self.get_user_department_signal(user_metadata)
+        
+        # Check if user has no department metadata -> use document_graph
+        user_dept = user_metadata.get('department', '').strip()
+        if not user_dept:
+            logger.info("📂 No user department metadata -> using document_graph")
+            return DepartmentDecision(
+                chosen_department='document_graph',
+                confidence=0.8,
+                signals=[],
+                reasoning="No user department metadata, using document_graph for general queries",
+                conflict_detected=False,
+                permission_granted=True
+            )
+        
         if user_signal:
             logger.info(f"📊 User signal: {user_signal.department} (confidence: {user_signal.confidence})")
         

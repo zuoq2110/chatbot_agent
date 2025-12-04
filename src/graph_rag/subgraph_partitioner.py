@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Set, Tuple
 import networkx as nx
 from langchain_core.documents import Document
 import numpy as np
+from src.llm.config import get_gemini_llm
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +24,9 @@ class SubgraphPartitioner:
         self.graph = graph
         self.subgraphs = {}  # Dict[subgraph_id, Set[node_ids]]
         self.community_summaries = {}  # Dict[community_id, summary_text]
-        self.community_centroids = {}  # Dict[community_id, centroid_embedding]
+        self.community_embeddings = {}  # Dict[community_id, embedding_vector]
+        self.community_centroids = {}  # Dict[community_id, centroid_vector]
+        self.llm = None  # Will be initialized when needed
     
     @property
     def communities(self):
@@ -61,13 +64,14 @@ class SubgraphPartitioner:
         
         return subgraphs
     
-    def partition_by_community_detection(self, algorithm: str = 'louvain') -> Dict[int, Set[int]]:
+    def partition_by_community_detection(self, algorithm: str = 'louvain', generate_summaries: bool = True) -> Dict[int, Set[int]]:
         """
         HYBRID: Partition graph using metadata-aware community detection
         Combines structural clustering with metadata constraints
         
         Args:
             algorithm: 'louvain' (default) or 'label_propagation'
+            generate_summaries: Whether to generate LLM summaries (False for loading existing graphs)
             
         Returns:
             Dict mapping community_id -> set of node IDs
@@ -127,8 +131,11 @@ class SubgraphPartitioner:
             for node_id in node_ids:
                 self.graph.nodes[node_id]['community'] = comm_id
         
-        # Auto-generate community summaries and centroids
-        self._generate_community_metadata()
+        # Auto-generate community summaries and centroids (optional)
+        if generate_summaries:
+            self._generate_community_metadata()
+        else:
+            logger.info("Skipping community summary generation (load mode)")
         
         # Log statistics
         logger.info(f"Found {len(all_subgraphs)} communities (metadata-aware)")
@@ -166,25 +173,98 @@ class SubgraphPartitioner:
         logger.info(f"Pre-grouped into {len(groups)} metadata categories")
         return groups
     
+    def _select_top_k_nodes(self, node_ids: Set[int], k: int = 20) -> List[int]:
+        """
+        Intelligent selection of top-k most important nodes from community
+        Based on: content length, node degree, keyword relevance
+        """
+        node_scores = []
+        
+        for node_id in node_ids:
+            content = self.graph.nodes[node_id].get('content', '')
+            degree = self.graph.degree(node_id)
+            
+            # Score based on multiple factors
+            content_score = len(content.strip())  # Content length
+            connectivity_score = degree * 10  # Node connectivity
+            
+            # Keyword importance (boost nodes with important keywords)
+            keyword_score = 0
+            important_keywords = ['hệ thống', 'phần mềm', 'quản lý', 'phiên bản', 'CVS', 'git', 'subversion']
+            content_lower = content.lower()
+            for keyword in important_keywords:
+                if keyword in content_lower:
+                    keyword_score += 50
+            
+            total_score = content_score + connectivity_score + keyword_score
+            node_scores.append((node_id, total_score, content))
+        
+        # Sort by score and return top-k
+        node_scores.sort(key=lambda x: x[1], reverse=True)
+        return [node_id for node_id, _, _ in node_scores[:k]]
+    
+    def _generate_llm_summary(self, node_contents: List[str], community_id: int) -> str:
+        """
+        Generate community summary using LLM
+        """
+        if self.llm is None:
+            self.llm = get_gemini_llm()
+        
+        # Prepare context from top nodes
+        context_parts = []
+        for i, content in enumerate(node_contents[:10], 1):  # Use top 10 for LLM
+            context_parts.append(f"[Node {i}]: {content[:500]}...")  # 500 chars per node
+        
+        context = "\n\n".join(context_parts)
+        
+        prompt = f"""Cho các đoạn văn bản sau thuộc cùng một community trong GraphRAG.
+Hãy tóm tắt nội dung chính, các khái niệm quan trọng và mối quan hệ giữa chúng.
+Không được suy diễn hoặc thêm thông tin không tồn tại.
+
+Trả về theo cấu trúc:
+
+**Tóm tắt:** [Tóm tắt ngắn gọn nội dung chính]
+
+**Chủ đề chính:** [Lĩnh vực/chủ đề chính được đề cập]
+
+**Khái niệm & quan hệ:** [Các khái niệm quan trọng và mối liên hệ giữa chúng]
+
+Nội dung:
+{context}"""
+        
+        try:
+            response = self.llm.invoke(prompt)
+            summary = response.content.strip()
+            logger.info(f"✅ Generated LLM summary for Community {community_id}: {summary[:100]}...")
+            return summary
+        except Exception as e:
+            logger.error(f"❌ LLM summary generation failed for Community {community_id}: {e}")
+            # Fallback to simple concatenation
+            return " | ".join([content[:200] for content in node_contents[:3]])
+    
     def _generate_community_metadata(self):
         """
-        ENHANCED: Create metadata-enriched summaries and centroids
-        Includes hierarchical category info for better routing
+        ENHANCED: Create LLM-generated summaries with intelligent node selection
         """
-        logger.info("Generating enhanced community metadata...")
+        logger.info("Generating enhanced community metadata with LLM...")
         
         for comm_id, node_ids in self.subgraphs.items():
-            # 1. Extract representative texts AND metadata
-            texts = []
+            logger.info(f"Processing Community {comm_id} with {len(node_ids)} nodes...")
+            
+            # 1. Select top-k most important nodes
+            top_nodes = self._select_top_k_nodes(node_ids, k=20)
+            
+            # 2. Extract content from selected nodes
+            node_contents = []
             embeddings = []
             categories = []
             
-            for node_id in list(node_ids)[:10]:  # Sample up to 10 nodes
+            for node_id in top_nodes:
                 content = self.graph.nodes[node_id].get('content', '')
                 metadata = self.graph.nodes[node_id].get('metadata', {})
                 
-                if content:
-                    texts.append(content[:200])
+                if content.strip():
+                    node_contents.append(content)
                 
                 # Collect category info
                 category = metadata.get('category', '')
@@ -196,20 +276,17 @@ class SubgraphPartitioner:
                 if embedding is not None:
                     embeddings.append(embedding)
             
-            # 2. Create ENRICHED summary: metadata + content
-            summary_parts = []
+            # 3. Generate LLM summary
+            if node_contents:
+                summary = self._generate_llm_summary(node_contents, comm_id)
+            else:
+                summary = f"Community {comm_id} (no content)"
             
-            # Add metadata prefix (hierarchical path)
+            # 4. Add category prefix if available
             if categories:
-                # Use most common category or first one
                 primary_category = categories[0]
-                summary_parts.append(f"[{primary_category}]")
+                summary = f"[{primary_category}] {summary}"
             
-            # Add content snippets
-            if texts:
-                summary_parts.extend(texts[:2])  # Top 2 texts
-            
-            summary = " | ".join(summary_parts)
             self.community_summaries[comm_id] = summary
             
             # Store metadata for routing
@@ -259,7 +336,7 @@ class SubgraphPartitioner:
                 return subgraph_id
         return None
     
-    def route_query_to_communities(self, query_embedding: np.ndarray, top_k: int = 3, min_similarity: float = 0.25, adaptive: bool = True) -> List[Tuple[int, float]]:
+    def route_query_to_communities(self, query_embedding: np.ndarray, top_k: int = 5, min_similarity: float = 0.25, adaptive: bool = True) -> List[Tuple[int, float]]:
         """
         ENHANCED ROUTING: Multi-stage routing với weighted centroids
         
@@ -272,7 +349,7 @@ class SubgraphPartitioner:
         
         Args:
             query_embedding: Query embedding vector
-            top_k: Base number of communities (default: 3, balanced choice)
+            top_k: Base number of communities (default: 5, optimized for 9 total communities)
             min_similarity: Minimum similarity threshold (default: 0.25, more permissive)
             adaptive: Enable adaptive expansion if confidence is low
             
@@ -326,17 +403,17 @@ class SubgraphPartitioner:
             selected = [item for item in community_scores[:top_k] if item[1] >= min_similarity]
             logger.info(f"🎯 High confidence routing: best_score={best_score:.3f}, selected {len(selected)}/{top_k}")
             
-        # Strategy 2: Medium confidence (0.3-0.5) → expand to top_k+2  
+        # Strategy 2: Medium confidence (0.3-0.5) → expand to top_k+2 (max 7)
         elif best_score > 0.3:
-            expanded_k = min(top_k + 2, len(community_scores))
+            expanded_k = min(top_k + 2, 7, len(community_scores))
             selected = [item for item in community_scores[:expanded_k] if item[1] >= min_similarity]
             logger.info(f"🎯 Medium confidence routing: best_score={best_score:.3f}, expanded to {len(selected)}/{expanded_k}")
             
-        # Strategy 3: Low confidence (< 0.3) → search more broadly
+        # Strategy 3: Low confidence (< 0.3) → search all communities
         else:
-            expanded_k = min(top_k + 4, len(community_scores))
+            expanded_k = len(community_scores)  # Search all 9 communities
             selected = community_scores[:expanded_k]  # Ignore threshold for low confidence
-            logger.info(f"⚠️ Low confidence routing: best_score={best_score:.3f}, searching {len(selected)}/{expanded_k} communities")
+            logger.info(f"⚠️ Low confidence routing: best_score={best_score:.3f}, searching all {len(selected)} communities")
         
         # Fallback: Always return at least 1 community
         if not selected and community_scores:

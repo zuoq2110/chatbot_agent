@@ -99,6 +99,14 @@ if len(communities) > 5:
 
 # Save graph with communities
 print(f"\n💾 Saving graph with communities to: {output_folder}")
+
+# Copy community metadata to graph_builder before saving
+graph_builder.community_summaries = partitioner.community_summaries.copy()
+graph_builder.community_centroids = partitioner.community_centroids.copy()
+graph_builder.community_members = {}
+for comm_id, node_set in communities.items():
+    graph_builder.community_members[comm_id] = set(node_set)
+
 os.makedirs(output_folder, exist_ok=True)
 graph_path = os.path.join(output_folder, "graph.pkl")
 graph_builder.save_graph(graph_path)

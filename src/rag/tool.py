@@ -46,15 +46,27 @@ def search_kma_regulations(query: str, department: str = None, user_role: str = 
         logger.info(f"👤 User role: {user_role}, User department: {user_department}")
         
         # Prepare user metadata for semantic detection
+        # Logic: If this is a department-specific API call (department param exists),
+        # then user made a choice -> use that department
+        # If user_department is explicitly None -> user chose "all" -> use common
+        if user_department is None and department:
+            # This is department-specific API call -> user chose this department
+            user_dept_choice = department
+        else:
+            # Use explicit user_department (including empty string for "no choice")
+            user_dept_choice = user_department or ''
+            
         user_metadata = {
             'role': user_role or 'student',
-            'department': user_department or department or ''
+            'department': user_dept_choice
         }
         
         # Call enhanced query processing
+        # Pass department_filter when user explicitly chose a department
+        effective_department_filter = department if user_dept_choice else None
         result = process_kma_query_sync(
             query=query, 
-            department_filter=department,
+            department_filter=effective_department_filter,
             user_metadata=user_metadata
         )
         

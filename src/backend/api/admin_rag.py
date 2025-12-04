@@ -63,7 +63,7 @@ class FolderRenameRequest(BaseModel):
 @router.post("/upload-training-file", response_model=Dict[str, Any])
 async def upload_training_file(
     file: UploadFile = File(...),
-    folder: str = Query("default", description="Folder to store the file in"),
+    folder: str = Query(..., description="Folder to store the file in (department folder required)"),
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -71,10 +71,11 @@ async def upload_training_file(
     
     This endpoint allows administrators to upload documents for RAG training.
     Supported file types include PDF, DOCX, TXT.
+    A valid department folder is required.
     
     Args:
         file: The file to upload
-        folder: The folder to store the file in (default: "default")
+        folder: The department folder to store the file in (required)
         
     Returns:
         A dictionary with file information
@@ -103,27 +104,23 @@ async def upload_training_file(
                 detail=f"Unsupported file type. Please upload files with these extensions: {', '.join(allowed_extensions)}"
             )
         
-        # Determine folder path
-        if folder == "default":
-            folder_path = DATA_DIR
+        # Determine folder path - always use subfolders, no more root DATA_DIR storage
+        if "/" in folder:
+            # Đây là subfolder, cần xử lý đường dẫn đặc biệt
+            folder_parts = folder.split("/")
+            # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
+            current_path = DATA_DIR
+            for part in folder_parts:
+                current_path = os.path.join(current_path, part)
+            folder_path = current_path
         else:
-            # Xử lý subfolder
-            if "/" in folder:
-                # Đây là subfolder, cần xử lý đường dẫn đặc biệt
-                folder_parts = folder.split("/")
-                # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
-                current_path = DATA_DIR
-                for part in folder_parts:
-                    current_path = os.path.join(current_path, part)
-                folder_path = current_path
-            else:
-                # Đây là folder thông thường
-                folder_path = os.path.join(DATA_DIR, folder)
-            
-            # Create folder if it doesn't exist
-            if not os.path.exists(folder_path):
-                os.makedirs(folder_path)
-                logger.info(f"Created folder: {folder_path}")
+            # Tất cả folders đều là subfolders của DATA_DIR, kể cả "default"
+            folder_path = os.path.join(DATA_DIR, folder)
+        
+        # Create folder if it doesn't exist
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
+            logger.info(f"Created folder: {folder_path}")
         
         # Use original filename for simplicity in this version
         safe_filename = file.filename
@@ -267,7 +264,7 @@ async def list_training_files(current_user: dict = Depends(get_current_user)):
 @router.delete("/delete-training-file/{filename}", response_model=Dict[str, Any])
 async def delete_training_file(
     filename: str,
-    folder: str = Query("default", description="Folder containing the file"),
+    folder: str = Query(..., description="Folder containing the file"),
     current_user: dict = Depends(get_current_user)
 ):
     """
@@ -277,7 +274,7 @@ async def delete_training_file(
     
     Args:
         filename: The name of the file to delete
-        folder: The folder containing the file (default: "default")
+        folder: The folder containing the file (required)
         
     Returns:
         A response indicating success or failure
@@ -287,22 +284,18 @@ async def delete_training_file(
         raise HTTPException(status_code=403, detail="Only administrators can delete training files")
     
     try:
-        # Determine folder path
-        if folder == "default":
-            folder_path = DATA_DIR
+        # Determine folder path - always use subfolders, no more root DATA_DIR storage
+        if "/" in folder:
+            # Đây là subfolder, cần xử lý đường dẫn đặc biệt
+            folder_parts = folder.split("/")
+            # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
+            current_path = DATA_DIR
+            for part in folder_parts:
+                current_path = os.path.join(current_path, part)
+            folder_path = current_path
         else:
-            # Xử lý subfolder
-            if "/" in folder:
-                # Đây là subfolder, cần xử lý đường dẫn đặc biệt
-                folder_parts = folder.split("/")
-                # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
-                current_path = DATA_DIR
-                for part in folder_parts:
-                    current_path = os.path.join(current_path, part)
-                folder_path = current_path
-            else:
-                # Đây là folder thông thường
-                folder_path = os.path.join(DATA_DIR, folder)
+            # Tất cả folders đều là subfolders của DATA_DIR, kể cả "default"
+            folder_path = os.path.join(DATA_DIR, folder)
             
         file_path = os.path.join(folder_path, filename)
         
@@ -435,50 +428,253 @@ async def rebuild_rag_index(current_user: dict = Depends(get_current_user)):
         logger.error(f"Error rebuilding graph: {str(e)}")
         import traceback
         logger.error(traceback.format_exc())
-        raise HTTPException(status_code=500, detail=f"Error rebuilding graph: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error rebuilding common graph: {str(e)}")
 
-# Folder Management Endpoints
-@router.get("/list-folders", response_model=Dict[str, Any])
-async def list_folders(current_user: dict = Depends(get_current_user)):
+@router.post("/rebuild-department-rag-index", response_model=Dict[str, Any])
+async def rebuild_department_rag_index(
+    department: str = Body(..., description="Department name to rebuild"),
+    current_user: dict = Depends(get_current_user)
+):
     """
-    List all folders in the data directory
+    Rebuild the RAG index for a specific department only
     
+    This endpoint triggers a rebuild of the graph for a specific department
+    from its data files and reloads the RAG agent.
+    
+    Args:
+        department: Name of the department to rebuild (e.g., 'phongdaotao', 'phongkhaothi')
+        
     Returns:
-        A response containing a list of folders
+        A response indicating success or failure
     """
     # Check if user is admin
     if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Only administrators can list folders")
-        
+        raise HTTPException(status_code=403, detail="Only administrators can rebuild the graph")
+    
     try:
-        # Get list of subdirectories in DATA_DIR
-        folders = ["default"]  # Always include default
+        logger.info(f"Starting department-specific graph rebuild: {department}")
         
-        # Function to scan all subfolders
-        def scan_folders(directory, parent_path=""):
-            folder_list = []
-            for item in os.listdir(directory):
-                item_path = os.path.join(directory, item)
-                if os.path.isdir(item_path) and item != "__pycache__":
-                    folder_name = item
-                    if parent_path:
-                        folder_name = f"{parent_path}/{item}"
-                    folder_list.append(folder_name)
-                    # Scan subfolders
-                    folder_list.extend(scan_folders(item_path, folder_name))
-            return folder_list
-                
-        # Get all folders including subfolders
-        folders.extend(scan_folders(DATA_DIR))
-                
+        # Import required modules
+        from rag.table_aware_chunking import load_documents_from_folder
+        from graph_rag.department_graph_manager import DepartmentGraphManager
+        import time
+        
+        # Get project root and output folder
+        project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
+        output_folder = os.path.join(project_root, "department_graphs")
+        
+        # Get available departments dynamically - scan for actual department folders including 'default'
+        available_departments = []
+        
+        # Scan for department folders in DATA_DIR
+        if os.path.exists(DATA_DIR):
+            for item in os.listdir(DATA_DIR):
+                item_path = os.path.join(DATA_DIR, item)
+                if os.path.isdir(item_path) and not item.startswith('.') and item != '__pycache__':
+                    available_departments.append(item)
+        
+        logger.info(f"Available departments: {available_departments}")
+        
+        # Validate department - allow any folder including 'default'
+        if department not in available_departments and department != 'default':
+            # If department not in available list, but we allow creating new departments
+            logger.info(f"Department {department} not found in available departments, but allowing anyway")
+        
+        # Step 1: Load documents for specific department
+        logger.info(f"Loading documents for department: {department}...")
+        start_time = time.time()
+        
+        # Load from specific department folder
+        dept_data_folder = os.path.join(DATA_DIR, department)
+        logger.info(f"Department data folder: {dept_data_folder}")
+        logger.info(f"Folder exists: {os.path.exists(dept_data_folder)}")
+        
+        if not os.path.exists(dept_data_folder):
+            # If folder doesn't exist, create it or return error
+            logger.warning(f"Department folder not found: {dept_data_folder}")
+            return {
+                "success": True,
+                "message": f"Department folder '{department}' not found. Nothing to rebuild.",
+                "details": {
+                    "department": department,
+                    "total_chunks": 0,
+                    "build_time_seconds": 0
+                }
+            }
+        
+        # List files in the department folder for debugging
+        files_in_folder = []
+        try:
+            for item in os.listdir(dept_data_folder):
+                item_path = os.path.join(dept_data_folder, item)
+                if os.path.isfile(item_path):
+                    file_size = os.path.getsize(item_path)
+                    files_in_folder.append(f"{item} ({file_size} bytes)")
+            logger.info(f"Files found in {department} folder: {files_in_folder}")
+        except Exception as e:
+            logger.error(f"Error listing files in {dept_data_folder}: {e}")
+        
+        # Try to load documents with more detailed logging
+        logger.info(f"Attempting to load documents from: {dept_data_folder}")
+        try:
+            documents = load_documents_from_folder(
+                data_folder=dept_data_folder,
+                chunk_size=800,
+                chunk_overlap=200
+            )
+            logger.info(f"Successfully loaded {len(documents)} documents")
+            if len(documents) > 0:
+                logger.info(f"First document metadata: {documents[0].metadata}")
+                logger.info(f"First document content preview: {documents[0].page_content[:200]}...")
+        except Exception as e:
+            logger.error(f"Error in load_documents_from_folder: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            # Return with specific error
+            return {
+                "success": False,
+                "message": f"Error loading documents from department {department}: {str(e)}",
+                "details": {
+                    "department": department,
+                    "total_chunks": 0,
+                    "build_time_seconds": 0,
+                    "error": str(e)
+                }
+            }
+        
+        logger.info(f"Documents loaded by load_documents_from_folder: {len(documents)}")
+        
+        # For department rebuild, we want all documents from that specific folder
+        dept_documents = documents  # Use all documents from the department folder
+        
+        load_time = time.time() - start_time
+        logger.info(f"Loaded {len(dept_documents)} documents for {department} in {load_time:.2f}s")
+        
+        if len(dept_documents) == 0:
+            return {
+                "success": True,
+                "message": f"No documents found for department {department}. Nothing to rebuild.",
+                "details": {
+                    "department": department,
+                    "total_chunks": 0,
+                    "build_time_seconds": 0
+                }
+            }
+        
+        # Step 2: Build graph for specific department
+        logger.info(f"Đang xây dựng chỉ mục cho phòng ban: {department}...")
+        start_time = time.time()
+        
+        dept_manager = DepartmentGraphManager(output_folder)
+        
+        # Create department documents dictionary for build function
+        dept_docs_dict = {department: dept_documents}
+        # Pass empty list as first param and override dict as second param
+        department_stats = dept_manager.build_department_graphs([], dept_documents_override=dept_docs_dict)
+        
+        graph_build_time = time.time() - start_time
+        
+        nodes_count = department_stats.get(department, 0)
+        logger.info(f"Graph for {department} built in {graph_build_time:.2f}s")
+        logger.info(f"Nodes: {nodes_count}")
+        
+        # Step 3: Clear GraphRAG cache to force reload
+        logger.info("Clearing GraphRAG cache...")
+        try:
+            from rag.rag_graph import clear_retriever_cache
+            clear_retriever_cache()
+            logger.info("✅ GraphRAG cache cleared successfully")
+        except Exception as cache_error:
+            logger.warning(f"⚠️  Could not clear cache: {cache_error}")
+        
+        # Step 4: Reload ReActGraph agent
+        logger.info("Reloading ReActGraph agent...")
+        from backend.api.chat import agent
+        from agent.supervisor_agent import ReActGraph
+        
+        # Reinitialize agent with updated department graphs
+        new_agent = ReActGraph()
+        new_agent.create_graph()
+        
+        # Reassign global agent variable in chat module
+        import backend.api.chat
+        backend.api.chat.agent = new_agent
+        
+        logger.info("ReActGraph agent reloaded successfully")
+        
+        total_time = load_time + graph_build_time
+        
         return {
             "success": True,
-            "folders": folders,
-            "count": len(folders)
+            "message": f"Chỉ mục cho phòng ban '{department}' được xây dựng lại thành công với {len(dept_documents)} đoạn và {nodes_count} nút",
+            "details": {
+                "department": department,
+                "total_chunks": len(dept_documents),
+                "graph_nodes": nodes_count,
+                "build_time_seconds": round(total_time, 2)
+            }
         }
+    
     except Exception as e:
-        logger.error(f"Error listing folders: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error listing folders: {str(e)}")
+        logger.error(f"Error rebuilding graph for department {department}: {str(e)}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Lỗi khi xây dựng lại chỉ mục cho phòng ban {department}: {str(e)}")
+
+@router.get("/list-departments", response_model=Dict[str, Any])
+async def list_departments(current_user: dict = Depends(get_current_user)):
+    """
+    List available departments for RAG index rebuilding
+    
+    Returns:
+        A response containing a list of available departments
+    """
+    # Check if user is admin
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only administrators can view departments")
+    
+    try:
+        departments = []
+        
+        # Scan for department folders dynamically - no default folder
+        if os.path.exists(DATA_DIR):
+            for item in os.listdir(DATA_DIR):
+                item_path = os.path.join(DATA_DIR, item)
+                if os.path.isdir(item_path) and not item.startswith('.') and item != '__pycache__':
+                    # Check if folder has any files
+                    has_data = False
+                    try:
+                        files_in_dept = [f for f in os.listdir(item_path) if os.path.isfile(os.path.join(item_path, f)) and not f.startswith('.')]
+                        has_data = len(files_in_dept) > 0
+                    except:
+                        has_data = False
+                    
+                    # Create display names (with fallback for unknown departments)
+                    display_names = {
+                        'default': 'Thư mục mặc định',
+                        'phongdaotao': 'Phòng Đào Tạo',
+                        'phongkhaothi': 'Phòng Khảo Thí',
+                        'viennghiencuuvahoptacphattrien': 'Viện Nghiên Cứu và Hợp Tác Phát Triển'
+                    }
+                    
+                    departments.append({
+                        "name": item,
+                        "display_name": display_names.get(item, item.title()),
+                        "description": f"Dữ liệu của {display_names.get(item, item.title())}",
+                        "has_data": has_data
+                    })
+        
+        return {
+            "success": True,
+            "departments": departments,
+            "count": len(departments)
+        }
+    
+    except Exception as e:
+        logger.error(f"Error listing departments: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error listing departments: {str(e)}")
+
+# Folder Management Endpoints
 
 @router.post("/create-folder", response_model=Dict[str, Any])
 async def create_folder(request: FolderRequest, current_user: dict = Depends(get_current_user)):
@@ -533,9 +729,6 @@ async def delete_folder(folder_name: str, delete_files: bool = Query(True), curr
     # Check if user is admin
     if current_user["role"] != "admin":
         raise HTTPException(status_code=403, detail="Only administrators can delete folders")
-        
-    if folder_name == "default":
-        raise HTTPException(status_code=400, detail="Cannot delete the default folder")
         
     # Xử lý subfolder
     if "/" in folder_name:
@@ -611,9 +804,6 @@ async def rename_folder(request: FolderRenameRequest, current_user: dict = Depen
     old_name = request.old_name.strip()
     new_name = request.new_name.strip()
     
-    if old_name == "default":
-        raise HTTPException(status_code=400, detail="Cannot rename the default folder")
-        
     if not new_name:
         raise HTTPException(status_code=400, detail="New folder name cannot be empty")
     
@@ -691,10 +881,7 @@ async def create_subfolder(request: SubfolderRequest, current_user: dict = Depen
         raise HTTPException(status_code=400, detail="Parent folder and subfolder name cannot be empty")
     
     # Determine parent folder path
-    if parent_folder == "default":
-        parent_path = DATA_DIR
-    else:
-        parent_path = os.path.join(DATA_DIR, parent_folder)
+    parent_path = os.path.join(DATA_DIR, parent_folder)
     
     # Check if parent folder exists
     if not os.path.exists(parent_path) or not os.path.isdir(parent_path):
@@ -713,11 +900,7 @@ async def create_subfolder(request: SubfolderRequest, current_user: dict = Depen
         logger.info(f"Created subfolder: {subfolder_path}")
         
         # Create the full folder path for response
-        full_folder_name = parent_folder
-        if parent_folder != "default":
-            full_folder_name = f"{parent_folder}/{subfolder_name}"
-        else:
-            full_folder_name = subfolder_name
+        full_folder_name = f"{parent_folder}/{subfolder_name}"
         
         return {
             "success": True,
@@ -729,7 +912,96 @@ async def create_subfolder(request: SubfolderRequest, current_user: dict = Depen
         raise HTTPException(status_code=500, detail=f"Error creating subfolder: {str(e)}")
 
 # Thêm endpoint cho download file
-@router.get("/download-training-file/{filename}", response_model=None)
+@router.get("/download-file/{file_path:path}", response_class=FileResponse)
+async def download_file_by_path(
+    file_path: str = Path(..., description="Path to the file to download, can include folder/subfolder"),
+    current_user: dict = Depends(get_current_user)
+):
+    """
+    Download a file from the data directory by file path
+    
+    This endpoint allows administrators to download a file from the data directory.
+    
+    Args:
+        file_path: Path to the file to download, can include folder/subfolder
+        
+    Returns:
+        The file for download
+    """
+    # Check if user is admin
+    if current_user["role"] != "admin":
+        raise HTTPException(status_code=403, detail="Only administrators can download training files")
+    
+    try:
+        logger.info(f"Download request received for file path: {file_path}")
+        
+        # Handle URL decoding if needed
+        import urllib.parse
+        decoded_path = urllib.parse.unquote(file_path)
+        logger.info(f"Decoded file path: {decoded_path}")
+        
+        # Split path into folder and filename
+        if "/" not in decoded_path:
+            # File in root data directory or single folder
+            full_file_path = os.path.join(DATA_DIR, decoded_path)
+        else:
+            # File in subfolder - build path properly
+            path_parts = decoded_path.split("/")
+            current_path = DATA_DIR
+            for part in path_parts:
+                current_path = os.path.join(current_path, part)
+            full_file_path = current_path
+        
+        logger.info(f"Full file path constructed: {full_file_path}")
+        
+        # Check if file exists
+        if not os.path.exists(full_file_path):
+            logger.error(f"File not found: {full_file_path}")
+            raise HTTPException(status_code=404, detail=f"File {decoded_path} not found")
+        
+        if not os.path.isfile(full_file_path):
+            logger.error(f"Path is not a file: {full_file_path}")
+            raise HTTPException(status_code=400, detail=f"Path {decoded_path} is not a file")
+        
+        logger.info(f"Serving file for download: {full_file_path}")
+        
+        # Get filename for Content-Disposition header
+        filename = os.path.basename(full_file_path)
+        
+        # Encode filename for Content-Disposition header to handle Unicode characters
+        # Use URL encoding for filename to avoid latin-1 encoding issues
+        from urllib.parse import quote
+        encoded_filename = quote(filename, safe='')
+        
+        # Try to create a safe ASCII-only filename as fallback
+        try:
+            safe_filename = filename.encode('ascii', 'ignore').decode('ascii')
+            if not safe_filename:
+                safe_filename = 'download_file'
+        except:
+            safe_filename = 'download_file'
+        
+        # Return file for download with proper headers using both formats for compatibility
+        return FileResponse(
+            path=full_file_path, 
+            filename=filename,
+            media_type="application/octet-stream",
+            headers={
+                "Content-Disposition": f"attachment; filename=\"{safe_filename}\"; filename*=UTF-8''{encoded_filename}"
+            }
+        )
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading file: {str(e)}")
+        logger.error(f"Exception details: {type(e).__name__}: {e}")
+        import traceback
+        logger.error(f"Traceback: {traceback.format_exc()}")
+        raise HTTPException(status_code=500, detail=f"Error downloading file: {str(e)}")
+
+# Legacy endpoint for backward compatibility
+@router.get("/download-training-file/{filename}", response_class=FileResponse)
 async def download_training_file(
     filename: str,
     folder: str = Query("default", description="Folder containing the file"),
@@ -752,22 +1024,18 @@ async def download_training_file(
         raise HTTPException(status_code=403, detail="Only administrators can download training files")
     
     try:
-        # Determine folder path
-        if folder == "default":
-            folder_path = DATA_DIR
+        # Determine folder path - always use subfolders, no more root DATA_DIR storage
+        if "/" in folder:
+            # Đây là subfolder, cần xử lý đường dẫn đặc biệt
+            folder_parts = folder.split("/")
+            # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
+            current_path = DATA_DIR
+            for part in folder_parts:
+                current_path = os.path.join(current_path, part)
+            folder_path = current_path
         else:
-            # Xử lý subfolder
-            if "/" in folder:
-                # Đây là subfolder, cần xử lý đường dẫn đặc biệt
-                folder_parts = folder.split("/")
-                # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
-                current_path = DATA_DIR
-                for part in folder_parts:
-                    current_path = os.path.join(current_path, part)
-                folder_path = current_path
-            else:
-                # Đây là folder thông thường
-                folder_path = os.path.join(DATA_DIR, folder)
+            # Tất cả folders đều là subfolders của DATA_DIR, kể cả "default"
+            folder_path = os.path.join(DATA_DIR, folder)
             
         file_path = os.path.join(folder_path, filename)
         
@@ -777,7 +1045,6 @@ async def download_training_file(
         
         logger.info(f"Downloading file: {file_path}")
         
-        from fastapi.responses import FileResponse
         return FileResponse(
             path=file_path, 
             filename=filename,
@@ -823,22 +1090,18 @@ async def get_file_content(
         raise HTTPException(status_code=403, detail="Only administrators can edit training files")
     
     try:
-        # Determine folder path
-        if folder == "default":
-            folder_path = DATA_DIR
+        # Determine folder path - always use subfolders, no more root DATA_DIR storage
+        if "/" in folder:
+            # Đây là subfolder, cần xử lý đường dẫn đặc biệt
+            folder_parts = folder.split("/")
+            # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
+            current_path = DATA_DIR
+            for part in folder_parts:
+                current_path = os.path.join(current_path, part)
+            folder_path = current_path
         else:
-            # Xử lý subfolder
-            if "/" in folder:
-                # Đây là subfolder, cần xử lý đường dẫn đặc biệt
-                folder_parts = folder.split("/")
-                # Bắt đầu từ DATA_DIR và xây dựng đường dẫn dựa trên các phần của folder
-                current_path = DATA_DIR
-                for part in folder_parts:
-                    current_path = os.path.join(current_path, part)
-                folder_path = current_path
-            else:
-                # Đây là folder thông thường
-                folder_path = os.path.join(DATA_DIR, folder)
+            # Tất cả folders đều là subfolders của DATA_DIR, kể cả "default"
+            folder_path = os.path.join(DATA_DIR, folder)
             
         file_path = os.path.join(folder_path, filename)
         
@@ -938,64 +1201,37 @@ async def update_file_content(
         logger.error(f"Error updating file content: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error updating file content: {str(e)}")
 
-# Thêm endpoint cho download file
-@router.get("/download-file/{path:path}", response_class=FileResponse)
-async def download_file(
-    path: str = Path(..., description="Path to the file to download, can include folder/subfolder"),
-    current_user: dict = Depends(get_current_user)
-):
+@router.get("/list-folders", response_model=Dict[str, Any])
+async def list_folders(current_user: dict = Depends(get_current_user)):
     """
-    Download a file from the data directory
+    List available folders for file upload/management
+    Returns all department folders including 'default' folder
     
-    This endpoint allows administrators to download a file from the data directory.
-    
-    Args:
-        path: Path to the file to download, can include folder/subfolder
-        
     Returns:
-        The file for download
+        A response containing a list of available folders (all folders including default)
     """
     # Check if user is admin
     if current_user["role"] != "admin":
-        raise HTTPException(status_code=403, detail="Only administrators can download training files")
+        raise HTTPException(status_code=403, detail="Only administrators can view folders")
     
     try:
-        # Split path into folder and filename
-        # If path has no slashes, assume it's a file in the root data directory
-        if "/" not in path:
-            file_path = os.path.join(DATA_DIR, path)
-        else:
-            # Split by last slash to get folder path and filename
-            *folder_parts, filename = path.split("/")
-            folder = "/".join(folder_parts)
-            
-            # Determine folder path
-            if folder == "default" or not folder:
-                folder_path = DATA_DIR
-            else:
-                # Xây dựng đường dẫn dựa trên các phần của folder
-                current_path = DATA_DIR
-                for part in folder_parts:
-                    current_path = os.path.join(current_path, part)
-                folder_path = current_path
-                
-            file_path = os.path.join(folder_path, filename)
+        folders = []
         
-        # Check if file exists
-        if not os.path.exists(file_path):
-            raise HTTPException(status_code=404, detail=f"File {path} not found")
+        # Scan for all folders including 'default' folder
+        if os.path.exists(DATA_DIR):
+            for item in os.listdir(DATA_DIR):
+                item_path = os.path.join(DATA_DIR, item)
+                if os.path.isdir(item_path) and not item.startswith('.') and item != '__pycache__':
+                    folders.append(item)
         
-        logger.info(f"Downloading file: {file_path}")
+        logger.info(f"Available folders: {folders}")
         
-        # Return file for download
-        return FileResponse(
-            path=file_path, 
-            filename=os.path.basename(file_path),
-            media_type="application/octet-stream"
-        )
+        return {
+            "success": True,
+            "folders": folders,
+            "count": len(folders)
+        }
     
-    except HTTPException:
-        raise
     except Exception as e:
-        logger.error(f"Error downloading file: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error downloading file: {str(e)}")
+        logger.error(f"Error listing folders: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error listing folders: {str(e)}")

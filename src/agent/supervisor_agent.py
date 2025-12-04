@@ -49,13 +49,17 @@ conversational_prompt = """
     and given the latest user question which might reference context in the chat history,
     formulate a standalone question which can be understood without the chat history.
     Do NOT answer the question, just reformulate it if needed and otherwise return it as is.
-    Keep the original language of the user's input (do NOT translate).
+    
+    CRITICAL: Keep the original language of the user's input (do NOT translate).
+    - If user asks in Vietnamese, respond in Vietnamese
+    - If user asks in English, respond in English
+    - NEVER change the language of the original question
     
     ** History **
     This is chat history:
     {chat_history}
     
-    ** Lateset user question **
+    ** Latest user question **
     This is latest user question:
     {question}
     """
@@ -93,6 +97,18 @@ async def summarize_conversation(state: MyAgentState) -> MyAgentState:
     chat_history_str = "" + "\n".join(chat_history)
 
     if len(chat_history_str) == 0:
+        return state
+
+    # Check if query is already standalone and in Vietnamese
+    # Skip summarization to avoid language conversion
+    def is_vietnamese_and_standalone(query):
+        vietnamese_chars = any(ord(c) > 127 for c in query)  # Contains non-ASCII
+        reference_words = ['này', 'kia', 'đó', 'đây', 'trước', 'sau', 'ở trên', 'vừa nói']
+        has_references = any(word in query.lower() for word in reference_words)
+        return vietnamese_chars and not has_references
+    
+    if is_vietnamese_and_standalone(latest_query):
+        logger.info(f"🇻🇳 Skipping summarization for Vietnamese standalone query: {latest_query}")
         return state
 
     logger.info(f"Chat history str: {chat_history_str}")
@@ -164,12 +180,14 @@ async def call_model_no_human_loop(state: MyAgentState) -> MyAgentState:
         # Extract query
         query = last_message.content
         
-        # Determine department from keywords
-        department = None
-        if any(kw in query_lower for kw in ['thi', 'kiểm tra', 'đình chỉ', 'phúc khảo', 'khảo thí']):
-            department = 'phongkhaothi'
-        elif any(kw in query_lower for kw in ['đào tạo', 'tốt nghiệp', 'học tập', 'tín chỉ']):
-            department = 'phongdaotao'
+        # Use department from state if provided, otherwise detect from keywords
+        department = state.get('department')
+        if not department:
+            # Fallback to keyword detection
+            if any(kw in query_lower for kw in ['thi', 'kiểm tra', 'đình chỉ', 'phúc khảo', 'khảo thí']):
+                department = 'phongkhaothi'
+            elif any(kw in query_lower for kw in ['đào tạo', 'tốt nghiệp', 'học tập', 'tín chỉ']):
+                department = 'phongdaotao'
         
         # Call RAG tool directly
         logger.info(f"⚡ FORCING search_kma_regulations: query='{query}', department='{department}'")
@@ -345,13 +363,14 @@ class ReActGraph:
 
         return current_messages
         
-    async def chat_with_memory(self, conversation_history: List[BaseMessage], query: str) -> List[BaseMessage]:
+    async def chat_with_memory(self, conversation_history: List[BaseMessage], query: str, department: str = None) -> List[BaseMessage]:
         """
         Process a query while maintaining conversation history.
         
         Args:
             conversation_history: Previous messages in the conversation
             query: The new user query to process
+            department: Optional department to route the query to
             
         Returns:
             Updated conversation history with the agent's response
@@ -360,7 +379,7 @@ class ReActGraph:
         updated_history = conversation_history.copy() + [HumanMessage(content=query)]
         
         # Prepare the initial state with the full conversation history
-        initial_state = {"messages": updated_history}
+        initial_state = {"messages": updated_history, "department": department}
         
         # Create the workflow if it doesn't exist
         if self.workflow is None:

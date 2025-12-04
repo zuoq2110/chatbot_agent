@@ -41,7 +41,7 @@ class DepartmentGraphManager:
             'khoa': ['khoa'],
             'viennghiencuuvahoptacphattrien': ['viennghiencuu', 'nghien_cuu', 'hop_tac'],
             'thongtinhvktmm': ['thongtin', 'hvktmm', 'hoc_vien'],
-            'common': ['giao_trinh', 'chung']  # Tài liệu chung
+            'document_graph': ['giao_trinh', 'chung']  # Tài liệu chung
         }
     
     def detect_department_from_path(self, file_path: str) -> str:
@@ -83,8 +83,8 @@ class DepartmentGraphManager:
                 if part in aliases:
                     return department
         
-        # Mặc định: common (đã bỏ warning để giảm noise)
-        return 'common'  # Default
+        # Mặc định: document_graph (đã bỏ warning để giảm noise)
+        return 'document_graph'  # Default
     
     def detect_department_smart(
         self, 
@@ -104,10 +104,10 @@ class DepartmentGraphManager:
         """
         decision = self.semantic_detector.detect_department(query, user_metadata={'role': 'student'})
         
-        # Nếu permission denied, fallback to common
+        # Nếu permission denied, fallback to document_graph
         if not decision.permission_granted:
             logger.warning(f"🚫 Permission denied for department {decision.chosen_department}")
-            return ['common']
+            return ['document_graph']
         
         # Return chosen department + fallbacks
         result = [decision.chosen_department]
@@ -121,10 +121,14 @@ class DepartmentGraphManager:
         
         return result[:top_k]
         
-    def build_department_graphs(self, documents: List[Document]) -> Dict[str, int]:
+    def build_department_graphs(self, documents: List[Document], dept_documents_override: Dict[str, List[Document]] = None) -> Dict[str, int]:
         """
         Xây dựng graph riêng cho từng phòng ban từ documents
         ENHANCED: Cũng build semantic embeddings cho từng department
+        
+        Args:
+            documents: List of all documents
+            dept_documents_override: Optional dict to override department document grouping
         
         Returns:
             Dict[department, node_count] - Thống kê số node mỗi phòng ban
@@ -132,15 +136,39 @@ class DepartmentGraphManager:
         logger.info("=" * 80)
         logger.info("🏢 BUILDING DEPARTMENT-SPECIFIC GRAPHS WITH SEMANTIC EMBEDDINGS")
         logger.info("=" * 80)
-        
-        # Phân loại documents theo phòng ban using full_path
-        dept_documents = {}
-        for doc in documents:
-            # Use full_path if available, fallback to source
-            source_path = doc.metadata.get('full_path', doc.metadata.get('source', ''))
-            dept = self.detect_department_from_path(source_path)
-            
-            if dept not in dept_documents:
+
+        # Use provided dept_documents or classify documents by department
+        if dept_documents_override:
+            dept_documents = dept_documents_override
+            logger.info("🔄 Using provided department document grouping")
+        else:
+            # Phân loại documents theo phòng ban using full_path - chỉ lấy docs trong thư mục phòng ban
+            dept_documents = {}
+            for doc in documents:
+                # Use full_path if available, fallback to source
+                source_path = doc.metadata.get('full_path', doc.metadata.get('source', ''))
+                
+                # Skip documents without folder structure (root level files)
+                if '/' not in source_path and '\\' not in source_path:
+                    continue
+                
+                # Check if it's actually in a department folder, not just detected by keywords
+                path_lower = source_path.lower().replace('\\', '/')
+                folder_depth = doc.metadata.get('folder_depth', 0)
+                
+                # Skip if folder_depth is 0 (root level files like "Giao trinh _ Phần mềm mã nguồn mở.md")
+                if folder_depth == 0:
+                    continue
+                
+                dept = self.detect_department_from_path(source_path)
+                
+                # Skip document_graph (general documents without specific department folder)
+                if dept == 'document_graph':
+                    continue
+                
+                if dept not in dept_documents:
+                    dept_documents[dept] = []
+                dept_documents[dept].append(doc)
                 dept_documents[dept] = []
             dept_documents[dept].append(doc)
         
@@ -192,12 +220,23 @@ class DepartmentGraphManager:
                 
                 # Create subgraph partitioner
                 partitioner = SubgraphPartitioner(graph)
+                
+                # Run community detection with summary generation (build mode)
+                logger.info(f"🏘️ Running community detection for {dept}...")
+                partitioner.partition_by_community_detection(generate_summaries=True)
+                logger.info(f"   ✅ Detected {len(partitioner.communities)} communities")
+                
                 self.department_partitioners[dept] = partitioner
                 
-                # Create retriever
+                # Create retriever với advanced parameters
                 retriever = GraphRoutedRetriever(
                     graph=graph,
-                    partitioner=partitioner
+                    partitioner=partitioner,
+                    embeddings_model="nomic-embed-text:latest",
+                    k=10,  # FINAL: Top-10 sent to LLM (balance context size)
+                    internal_k=30,  # INTERNAL: Expand from 30*2.5=75 candidates
+                    hop_depth=3,  # Moderate hop depth for good coverage
+                    expansion_factor=2.5  # Balanced expansion
                 )
                 self.department_retrievers[dept] = retriever
                 
@@ -243,6 +282,52 @@ class DepartmentGraphManager:
         
         loaded_count = 0
         
+        # Special handling for document_graph at root level
+        document_graph_dir = "document_graph"
+        if os.path.exists(document_graph_dir) and os.path.isdir(document_graph_dir):
+            try:
+                # Look for graph files in document_graph directory
+                graph_path = None
+                for file in os.listdir(document_graph_dir):
+                    if file.endswith('.graphml') or file.endswith('.pkl'):
+                        graph_path = os.path.join(document_graph_dir, file)
+                        break
+                
+                if graph_path and os.path.exists(graph_path):
+                    # Load the graph from file
+                    graph_builder = DocumentGraph()
+                    graph_builder.load_graph(graph_path)
+                    graph = graph_builder.graph
+                    
+                    # Create partitioner and retriever
+                    partitioner = SubgraphPartitioner(graph)
+                    
+                    # Run community detection without summary generation (load mode)
+                    logger.info(f"🏘️ Loading community detection for document_graph...")
+                    partitioner.partition_by_community_detection(generate_summaries=False)
+                    logger.info(f"   ✅ Loaded {len(partitioner.communities)} communities")
+                    
+                    retriever = GraphRoutedRetriever(
+                        graph=graph,
+                        partitioner=partitioner,
+                        embeddings_model="nomic-embed-text:latest",
+                        k=10,
+                        internal_k=30,
+                        hop_depth=3,
+                        expansion_factor=2.5
+                    )
+                    
+                    self.department_graphs['document_graph'] = graph_builder
+                    self.department_partitioners['document_graph'] = partitioner
+                    self.department_retrievers['document_graph'] = retriever
+                    loaded_count += 1
+                    
+                    logger.info(f"✅ Loaded graph for document_graph")
+                
+            except Exception as e:
+                logger.error(f"❌ Error loading document_graph: {e}")
+        
+        # Load regular department graphs from department_graphs directory
         for dept_name in os.listdir(self.base_output_dir):
             dept_dir = os.path.join(self.base_output_dir, dept_name)
             
@@ -270,11 +355,22 @@ class DepartmentGraphManager:
                     graph_builder.load_graph(graph_path)
                     graph = graph_builder.graph
                     
-                    # Create partitioner and retriever
+                    # Create partitioner and retriever với advanced parameters
                     partitioner = SubgraphPartitioner(graph)
+                    
+                    # Run community detection without summary generation (load mode)
+                    logger.info(f"🏘️ Loading community detection for {dept}...")
+                    partitioner.partition_by_community_detection(generate_summaries=False)
+                    logger.info(f"   ✅ Loaded {len(partitioner.communities)} communities")
+                    
                     retriever = GraphRoutedRetriever(
                         graph=graph,
-                        partitioner=partitioner
+                        partitioner=partitioner,
+                        embeddings_model="nomic-embed-text:latest",
+                        k=10,  # FINAL: Top-10 sent to LLM (balance context size)
+                        internal_k=30,  # INTERNAL: Expand from 30*2.5=75 candidates
+                        hop_depth=3,  # Moderate hop depth for good coverage
+                        expansion_factor=2.5  # Balanced expansion
                     )
                     
                     self.department_graphs[dept] = graph_builder
@@ -321,6 +417,7 @@ class DepartmentGraphManager:
         
         # Step 3: Query trong department graph
         target_dept = decision.chosen_department
+        logger.info(f"🗂️ USING GRAPH: {target_dept.upper()} (confidence: {decision.confidence:.3f})")
         
         if target_dept not in self.department_retrievers:
             logger.warning(f"⚠️ No retriever for department {target_dept}, trying to load...")
@@ -342,11 +439,12 @@ class DepartmentGraphManager:
         except Exception as e:
             logger.error(f"❌ Error querying {target_dept}: {e}")
             
-            # Fallback: try common department
-            if target_dept != 'common' and 'common' in self.department_retrievers:
-                logger.info("🔄 Fallback to common department")
+            # Fallback: try document_graph department
+            if target_dept != 'document_graph' and 'document_graph' in self.department_retrievers:
+                logger.info("🔄 Fallback to document_graph department")
+                logger.info(f"🗂️ USING GRAPH: DOCUMENT_GRAPH (fallback from {target_dept.upper()})")
                 try:
-                    retriever = self.department_retrievers['common']
+                    retriever = self.department_retrievers['document_graph']
                     results = retriever._get_relevant_documents(query)
                     return [doc.page_content for doc in results[:k]], decision
                 except Exception as e2:
@@ -386,6 +484,7 @@ class DepartmentGraphManager:
         
         for dept in departments:
             if dept in self.department_retrievers:
+                logger.info(f"🗂️ USING GRAPH: {dept.upper()}")
                 try:
                     retriever = self.department_retrievers[dept]
                     dept_results = retriever._get_relevant_documents(query)
@@ -421,10 +520,12 @@ class DepartmentGraphManager:
                 if hasattr(retriever, 'partitioner') and retriever.partitioner:
                     if hasattr(retriever.partitioner, 'graph'):
                         graph = retriever.partitioner.graph
+                        # Calculate communities correctly
+                        num_communities = len(retriever.partitioner.communities) if hasattr(retriever.partitioner, 'communities') else 0
                         dept_stats.update({
                             'nodes': len(graph.nodes()) if graph else 0,
                             'edges': len(graph.edges()) if graph else 0,
-                            'communities': getattr(retriever.partitioner, 'num_communities', 0)
+                            'communities': num_communities
                         })
                 
                 stats[dept] = dept_stats

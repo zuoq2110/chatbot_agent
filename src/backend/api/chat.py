@@ -381,8 +381,8 @@ async def query_ai(
             conversation_history.append(AIMessage(content=msg["content"]))
 
     # Use the chat_with_memory method to get a response with context
-    logger.info(f"Processing query with memory: {content}")
-    updated_history = await agent.chat_with_memory(conversation_history[:-1], content)
+    logger.info(f"Processing query with memory: {content}, department: {selected_folder}")
+    updated_history = await agent.chat_with_memory(conversation_history[:-1], content, department=selected_folder)
     
     # The last message in the updated history is the AI's response
     ai_response = updated_history[-1].content
@@ -471,9 +471,9 @@ async def department_specific_query(
         logger.info(f"Department query - Department: {department}")
         logger.info(f"Query: {content}")
         
-        # Use agent to process the query
+        # Use agent to process the query with department parameter
         import asyncio
-        result = await agent.chat_with_memory([], content)
+        result = await agent.chat_with_memory([], content, department=department)
         
         # Get the final response from agent
         if result and len(result) > 0:
@@ -640,7 +640,7 @@ async def list_folders():
         logger.info(f"Scanning data directory: {data_dir}")
         logger.info(f"Data directory exists: {os.path.exists(data_dir)}")
         
-        folders = ["default"]  # Always include default
+        folders = []  # Start with empty list
         
         # Recursive function to scan all subfolders
         def scan_folders(directory, parent_path=""):
@@ -671,6 +671,14 @@ async def list_folders():
         
         # Get all folders including subfolders
         folders.extend(scan_folders(data_dir))
+        
+        # Always include "default" at the beginning if not already present
+        if "default" not in folders:
+            folders.insert(0, "default")
+        else:
+            # Move "default" to the beginning if it exists
+            folders.remove("default")
+            folders.insert(0, "default")
         
         # Sort folders alphabetically
         folders.sort()

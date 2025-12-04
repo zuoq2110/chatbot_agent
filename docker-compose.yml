@@ -16,7 +16,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: chatbot_agent_base
-    command: poetry run uvicorn src.backend.main:app --host 0.0.0.0 --port 3434
+    command: python -m uvicorn src.backend.main:app --host 0.0.0.0 --port 3434
     ports:
       - "3434:3434"
     env_file: .env
@@ -26,6 +26,7 @@ services:
       - ./src:/app/src
       - ./data:/app/data
       - ./document_graph:/app/document_graph
+      - ./department_graphs:/app/department_graphs
     working_dir: /app
     depends_on:
       - postgres
@@ -36,7 +37,7 @@ services:
       context: .
       dockerfile: Dockerfile
     image: chatbot_agent_base
-    command: poetry run streamlit run src/streamlit_ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
+    command: python -m streamlit run src/streamlit_ui/streamlit_app.py --server.port=8501 --server.address=0.0.0.0
     ports:
       - "8501:8501"
     env_file: .env
@@ -44,6 +45,7 @@ services:
       - ./src:/app/src
       - ./data:/app/data
       - ./document_graph:/app/document_graph
+      - ./department_graphs:/app/department_graphs
     working_dir: /app
     depends_on:
       - backend

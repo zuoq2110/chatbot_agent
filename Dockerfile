@@ -1,14 +1,21 @@
-FROM python:3.13-slim
+FROM python:3.12-slim
 
 WORKDIR /app
 
-# Copy requirements and install dependencies
-COPY requirements.txt /app/
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements and install Python dependencies
+COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy source code and data
+# Copy source code
 COPY src /app/src
-COPY document_graph /app/document_graph
-COPY department_graphs /app/department_graphs
 
-CMD ["sleep", "infinity"]
+# Set Python path
+ENV PYTHONPATH=/app/src
+
+# Default command
+CMD ["python", "-m", "uvicorn", "src.backend.main:app", "--host", "0.0.0.0", "--port", "3434"]

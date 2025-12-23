@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Dict, Any
 
 from langchain_core.messages import HumanMessage
-from llm import get_gemini_llm, LLMConfig
+from llm import get_llm, LLMConfig  # Sử dụng get_llm() để respect runtime model selection
 from rag.retriever import create_enhanced_hybrid_retriever, smart_retrieve, get_metadata_config, MetadataEnhancedHybridRetriever
 
 # Set up logging
@@ -18,15 +18,12 @@ class SimpleChatAgent:
     def __init__(self, custom_retriever=None, model_name: str = None):
         """Initialize the Simple Chat Agent"""
         
-        # Create LLM
-        if model_name is None:
-            model_name = LLMConfig.DEFAULT_GEMINI_MODEL
-            
+        # Sử dụng get_llm() để respect runtime model selection (Ollama/Gemini)
         try:
-            self.llm = get_gemini_llm(model_name=model_name)
-            logger.info(f"Initialized LLM with Gemini model: {model_name}")
+            self.llm = get_llm()
+            logger.info(f"Initialized LLM with runtime model selection")
         except Exception as e:
-            logger.error(f"Failed to initialize Gemini LLM: {e}")
+            logger.error(f"Failed to initialize LLM: {e}")
             raise
         
         # Store the retriever

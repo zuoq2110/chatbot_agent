@@ -256,8 +256,8 @@ from langgraph.graph import StateGraph, START, END
 from langsmith import Client
 from pydantic import Field, BaseModel
 
-# Đảm bảo bạn đã import get_gemini_llm từ llm.py
-from llm import LLMConfig, get_gemini_llm 
+# Sử dụng get_llm để respect runtime model selection (Ollama/Gemini)
+from llm import LLMConfig, get_llm
 from rag.retriever import create_hybrid_retriever
 from rag.semantic_analyzer import analyze_query_semantic_filter
 
@@ -293,9 +293,8 @@ async def process_kma_query(query: str, retriever=None, llm=None) -> Dict[str, A
         retriever = get_retriever()
 
     if llm is None:
-        # Trong hàm trợ giúp này, nếu LLM không được cung cấp,
-        # chúng ta sẽ sử dụng Gemini làm mặc định thay vì ChatOllama
-        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL) 
+        # Sử dụng get_llm() để respect runtime model selection (Ollama/Gemini)
+        llm = get_llm() 
 
     # Load prompts
     prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
@@ -352,7 +351,8 @@ def process_kma_query_sync(query: str, retriever=None, llm=None, department_filt
         retriever = get_retriever()
 
     if llm is None:
-        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL)
+        # Sử dụng get_llm() để respect runtime model selection (Ollama/Gemini)
+        llm = get_llm()
 
     # Load prompts
     prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
@@ -519,7 +519,8 @@ async def process_file_query(query: str, retriever, llm=None) -> Dict[str, Any]:
         Dictionary with answer and sources
     """
     if llm is None:
-        llm = get_gemini_llm(model_name=LLMConfig.DEFAULT_GEMINI_MODEL)
+        # Sử dụng get_llm() để respect runtime model selection (Ollama/Gemini)
+        llm = get_llm()
     
     # Load prompts
     prompts_dir = os.path.join(os.path.dirname(__file__), "prompts")
@@ -640,20 +641,14 @@ class KMAChatAgent:
         # Initialize callback manager with LangSmith tracer
         self.callback_manager = LLMConfig.create_callback_manager(project_name)
 
-        # Create models using get_gemini_llm
-        # Nếu model_name không được cung cấp, get_gemini_llm sẽ dùng DEFAULT_GEMINI_MODEL
-        # Hãy đảm bảo hàm get_gemini_llm trong llm.py đã được cập nhật để chấp nhận các tham số
-        # model_name và callback_manager như đã sửa đổi trước đó.
-        if model_name is None:
-            model_name = LLMConfig.DEFAULT_GEMINI_MODEL # Sử dụng mặc định của Gemini nếu không có tên model cụ thể được truyền vào
-
+        # Sử dụng get_llm() để respect runtime model selection (Ollama/Gemini)
         try:
-            self.llm = get_gemini_llm(model_name=model_name, callback_manager=self.callback_manager)
-            # Sử dụng cùng mô hình cho grader, Gemini thường tốt với structured_output
-            self.grader_model = get_gemini_llm(model_name=model_name, callback_manager=self.callback_manager)
-            logger.info(f"Initialized LLMs with Gemini model: {model_name}")
-        except ValueError as e:
-            logger.error(f"Failed to initialize Gemini LLM: {e}. Please ensure GOOGLE_API_KEY is set and valid.")
+            self.llm = get_llm()
+            # Sử dụng cùng model cho grader
+            self.grader_model = get_llm()
+            logger.info(f"Initialized LLMs with runtime model selection")
+        except Exception as e:
+            logger.error(f"Failed to initialize LLM: {e}.")
             raise # Re-raise error to stop initialization if LLM fails
 
         # Store the retriever - use custom retriever if provided, otherwise default KMA retriever

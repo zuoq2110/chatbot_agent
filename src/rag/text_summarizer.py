@@ -16,7 +16,7 @@ logging.basicConfig(level=logging.INFO,
 logger = logging.getLogger(__name__)
 
 try:
-    from llm.config import get_gemini_llm  # Chỉ import get_gemini_llm
+    from llm.config import get_llm  # Sử dụng get_llm() để respect runtime model selection
     LLM_AVAILABLE = True
 except ImportError as e:
     logger.error(f"Error importing LLM modules: {str(e)}")
@@ -79,10 +79,10 @@ class TextSummarizer:
         
         if LLM_AVAILABLE:
             try:
-                # Khởi tạo Gemini trực tiếp
-                logger.info(f"Using Gemini model: {os.environ.get('GEMINI_MODEL')}")
-                self.llm = get_gemini_llm()
-                logger.info(f"Initialized Gemini LLM for text summarization")
+                # Sử dụng get_llm() để respect runtime model selection
+                logger.info(f"Using runtime model selection...")
+                self.llm = get_llm()
+                logger.info(f"Initialized LLM for text summarization")
             except Exception as e:
                 logger.error(f"Failed to initialize LLM: {str(e)}")
                 self.llm = None

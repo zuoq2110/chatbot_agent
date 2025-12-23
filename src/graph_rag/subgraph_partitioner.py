@@ -8,7 +8,7 @@ from typing import List, Dict, Any, Set, Tuple
 import networkx as nx
 from langchain_core.documents import Document
 import numpy as np
-from src.llm.config import get_gemini_llm
+from src.llm.config import get_llm  # Sử dụng get_llm() để respect runtime model selection
 
 logger = logging.getLogger(__name__)
 
@@ -208,7 +208,7 @@ class SubgraphPartitioner:
         Generate community summary using LLM
         """
         if self.llm is None:
-            self.llm = get_gemini_llm()
+            self.llm = get_llm()  # Sử dụng get_llm() để respect runtime model selection
         
         # Prepare context from top nodes
         context_parts = []

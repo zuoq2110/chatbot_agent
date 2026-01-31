@@ -77,7 +77,6 @@ services:
     environment:
       - PYTHONPATH=/app/src
       - POSTGRES_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
-      - MONGODB_URL=mongodb://${MONGO_USER}:${MONGO_PASSWORD}@mongodb:27017
       - OLLAMA_HOST=http://ollama:11434
     volumes:
       - ./src:/app/src
@@ -88,8 +87,6 @@ services:
     working_dir: /app
     depends_on:
       postgres:
-        condition: service_healthy
-      mongodb:
         condition: service_healthy
       ollama:
         condition: service_started

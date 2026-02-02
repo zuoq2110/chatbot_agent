@@ -60,7 +60,6 @@ services:
       - PYTHONPATH=/app/src
       - POSTGRES_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       # Use host.docker.internal to connect to Ollama running on host machine
-      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     volumes:
       - ./src:/app/src
       - ./data:/app/data
@@ -130,4 +129,3 @@ networks:
 
 volumes:
   postgres_data:
-  ollama_data:

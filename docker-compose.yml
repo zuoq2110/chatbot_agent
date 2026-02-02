@@ -24,25 +24,7 @@ services:
       timeout: 5s
       retries: 5
 
-  # MongoDB cho chat/user data
-  mongodb:
-    image: mongo:7.0
-    container_name: chatbot_mongodb
-    restart: always
-    environment:
-      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USER}
-      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
-    volumes:
-      - mongodb_data:/data/db
-    ports:
-      - "27017:27017"
-    networks:
-      - chatbot_network
-    healthcheck:
-      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+  # MongoDB: Using MongoDB Atlas (cloud) - no local container needed
 
   # ===========================================
   # AI SERVICES (Optional - uncomment if not running Ollama locally)
@@ -78,7 +60,7 @@ services:
       - PYTHONPATH=/app/src
       - POSTGRES_URL=postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
       # Use host.docker.internal to connect to Ollama running on host machine
-      - OLLAMA_HOST=http://host.docker.internal:11434
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     volumes:
       - ./src:/app/src
       - ./data:/app/data
@@ -148,5 +130,4 @@ networks:
 
 volumes:
   postgres_data:
-  mongodb_data:
   ollama_data:
